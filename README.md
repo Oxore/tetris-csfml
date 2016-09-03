@@ -1,11 +1,10 @@
 ## Tetris CSFML
 
-This is unfinished tetris project written in pure C with CSFML-2.3-2 library. It is under development.
+This is unfinished tetris project written in pure C with CSFML-2.3-2 library. It is under development. Obvious, it depends on csfml.
 
-To compile and run the source code under __linux__ with gcc I use following commands:
+To compile and run the source code under __nix__ just enter following commands:
 ```
-gcc -g main.c functions.c shape_maps.c -o main -lcsfml-graphics -lcsfml-window -lcsfml-system
-
+./bld
 ./main
 ```
 Hit *Return* to start game.
