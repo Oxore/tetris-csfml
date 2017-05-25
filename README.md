@@ -1,13 +1,12 @@
 ## Tetris CSFML
 
-This is unfinished tetris project written in pure C with CSFML-2.3-2 library. It is under development. Obvious, it depends on csfml.
+This is unfinished tetris project written in pure C with CSFML library. It is under development. Obvious, it depends on csfml, but nothing more.
 
-To compile and run the source code under __nix__ just enter following commands:
+__Compilation__
 ```
-./bld
-./main
+make all
 ```
-Hit *Return* to start game.
+File named "tetris" is the final binary. Run it. Hit *Return* to start game.
 
 __TODO:__
 
@@ -16,4 +15,3 @@ __TODO:__
 - Three next shapes
 - Main menu with beauties
 - Look with sprites
-- Autotools script

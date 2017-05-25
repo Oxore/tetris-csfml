@@ -135,7 +135,7 @@ void scoreDisplay() {
 	for (int i=0;i<7;i++) {
 		a[i] = b[i];
 	}
-	scoreDisp = &a;
+	scoreDisp = (char *)&a;
 	sfText_setString(textScore, scoreDisp);
 }
 
