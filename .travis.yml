@@ -2,7 +2,9 @@
 language: c
 
 script: 
-    - sudo apt-get install libcsfml
+    - sudo add-apt-repository ppa:sonkun/sfml-stable
+    - sudo apt-get update
+    - sudo apt-get install csfml
     - make all
 
 compiler: 
