@@ -1,12 +1,10 @@
 
 language: c
+os: osx
 
 script: 
-    - sudo add-apt-repository ppa:sonkun/sfml-experimental -y
-    - sudo rm -rf /var/lib/apt/lists/*
-    - sudo apt-get clean
-    - sudo apt-get update
-    - sudo apt-get install libcsfml -y
+    - brew updade
+    - brew install csfml
     - make all
 
 compiler: 
