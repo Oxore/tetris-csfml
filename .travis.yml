@@ -2,7 +2,7 @@
 language: c
 
 script: 
-    - sudo add-apt-repository ppa:sonkun/sfml -y
+    - sudo add-apt-repository ppa:sonkun/sfml-experimental -y
     - sudo rm -rf /var/lib/apt/lists/*
     - sudo apt-get clean
     - sudo apt-get update
