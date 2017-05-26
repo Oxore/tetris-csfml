@@ -1,4 +1,9 @@
 
 language: c
-script: make all
-compiler: gcc
+
+script: 
+    - make all
+    - sudo apt-get install libcsfml-dev
+
+compiler: 
+    - gcc
