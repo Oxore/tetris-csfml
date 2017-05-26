@@ -1,4 +1,5 @@
 ## Tetris CSFML
+[![Build Status](https://travis-ci.org/Oxore/tetris-csfml.svg?branch=master)](https://travis-ci.org/Oxore/tetris-csfml)
 
 This is unfinished tetris project written in pure C with CSFML library. It is under development. Obvious, it depends on csfml, but nothing more.
 
