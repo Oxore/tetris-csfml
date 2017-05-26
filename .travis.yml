@@ -2,8 +2,8 @@
 language: c
 
 script: 
-    - make all
     - sudo apt-get install libcsfml-dev
+    - make all
 
 compiler: 
     - gcc
