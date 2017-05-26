@@ -3,6 +3,7 @@ language: c
 
 script: 
     - sudo apt-get install libcsfml-dev
+    - sudo apt-get install libsfml-dev
     - make all
 
 compiler: 
