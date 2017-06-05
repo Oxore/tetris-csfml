@@ -1,3 +1,6 @@
+#ifndef TCOMMON_H
+#define TCOMMON_H
+
 #include <SFML/Audio.h>
 #include <SFML/Graphics.h>
 #include <SFML/System.h>
@@ -19,3 +22,4 @@ struct tCell {
 struct tCell 	activeShape[4][4], 	// 4x4 block of active crawling shape
 				field_rAttr[20][10];// field cells attributess
 
+#endif

@@ -1,3 +1,5 @@
+#ifndef TFUNCTIONS_H
+#define TFUNCTIONS_H
 
 /* Prototypes of functions*/
 void tKeyCtrl();
@@ -17,3 +19,5 @@ void rotateS4();
 int linesRmScore();
 void scoreDisplay();
 void menuTick();
+
+#endif
