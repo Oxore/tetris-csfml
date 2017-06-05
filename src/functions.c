@@ -126,7 +126,7 @@ void initAll() {
 
 void scoreDisplay() {
 	char a[64];
-	char b[7];
+	char b[8];
 	sprintf(b, "Score: ");
 	sprintf(a, "%d", scoreCurrent);
 	for (int i=63;i>=7;i--) {
