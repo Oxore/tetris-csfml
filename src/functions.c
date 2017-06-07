@@ -113,7 +113,7 @@ void initAll() {
 	}
 	font = sfFont_createFromFile("dat/arial.ttf");
     if (!font) {
-        //printf("dat/arial.ttf font load failed");
+		printf("dat/arial.ttf font load failed");
 		exit(-1);
 	}
 	textScore_pos.x = 250+10+10;
