@@ -19,7 +19,7 @@ struct tCell {
 	sfColor fColor, oColor; // fill and outline color of cell
 };
 
-struct tCell 	activeShape[4][4], 	// 4x4 block of active crawling shape
-				field_rAttr[20][10];// field cells attributess
+struct tCell activeShape[4][4];	// 4x4 block of active crawling shape
+struct tCell fld_rAttr[20][10];// fld cells attributes
 
 #endif

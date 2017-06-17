@@ -1,6 +1,6 @@
 #define windowName_conf "SFML" // Window name
-#define hudColor1_conf sfColor_fromRGB(0, 0, 0) // Field background
-#define hudColor2_conf sfColor_fromRGB(80, 80, 80) // Field cell outline
+#define uiColor1 sfColor_fromRGB(0, 0, 0) // Field background
+#define uiColor2 sfColor_fromRGB(80, 80, 80) // Field cell outline
 #define tOrange sfColor_fromRGB(255, 130, 0) // Orange color of L shape
 #define tBlue sfColor_fromRGB(0, 0, 255)
 #define tGreen sfColor_fromRGB(0, 255, 0)
@@ -77,10 +77,4 @@
  *  .... .#.. .#.. .#..
  *  .... .... .... ....
  */
-
-
-
-
-char *aaa;
-char* aaa;
 

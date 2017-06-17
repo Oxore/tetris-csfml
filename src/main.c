@@ -9,13 +9,14 @@ sfText* textScore;
 sfFont* font;
 char *scoreDisp;
 
-sfRectangleShape* field[20][10];	// Array of field rectangles
-sfVector2f field_rPos[20][10];		// Array of absolute coordinates of field rectangles
+sfRectangleShape* fld[20][10];// Array of fld rectangles
+sfVector2f fld_rPos[20][10];	// Array of absolute coordinates of fld 
+				// rectangles
 
-int field_rOutThick = 1; 	// Field rectangles outline thickness	
-sfVector2f field_rSize;		// Field rectangles size variable x/y
-sfVector2i offsetActiveShape;   // Offset active shape relative to field
-sfVector2i fieldSize, fieldPos;
+int fld_rOutThick = 1; 	// Field rectangles outline thickness	
+sfVector2f fld_rSize;		// Field rectangles size variable x/y
+sfVector2i actiShPos;   // Offset active shape relative to fld
+sfVector2i fldSize, fldPos;
 sfVector2f textScore_pos;
 
 short arrKeys = 0b00000000; // Arrow keys states byte container
@@ -30,7 +31,11 @@ int main()
 	initAll();
 	
 	/* Create main window */
-	window = sfRenderWindow_create(mode, windowName_conf, sfResize | sfClose, NULL);
+	window = sfRenderWindow_create(mode, 
+					windowName_conf, 
+					sfResize | sfClose, 
+					NULL
+					);
 	if (!window)
 		return EXIT_FAILURE;
 	
@@ -50,36 +55,59 @@ int main()
 		if (gameIsStarted == 1) {	
 			tTick();
 			tKeyCtrl();
-			scoreDisplay();
+			scoreDisplay(scoreCurrent, textScore);
 
-			/* Colorize active cells of field */
+			/* Colorize active cells of fld */
 			for(int j=0;j<20;j++){
 				for(int i=0;i<10;i++){
-					sfRectangleShape_setFillColor(field[j][i], field_rAttr[j][i].fColor);
-					sfRectangleShape_setOutlineColor(field[j][i], field_rAttr[j][i].oColor);
+					sfRectangleShape_setFillColor(
+						fld[j][i], 
+						fld_rAttr[j][i].fColor);
+					sfRectangleShape_setOutlineColor(
+						fld[j][i], 
+						fld_rAttr[j][i].oColor);
 				}
 			}
 			
 			
-			/* Colorize active cells of active shape (overlay only active cells above background of field) */
+			/* 
+			 * Colorize active cells of active shape (overlay only 
+			 * active cells above background of fld) 
+			 *
+			 */
 			for(int j=0;j<4;j++){
 				for(int i=0;i<4;i++){
 					if (activeShape[j][i].a != 0){
-						sfRectangleShape_setFillColor(field[j+offsetActiveShape.y][i+offsetActiveShape.x], activeShape[j][i].fColor);
-						sfRectangleShape_setOutlineColor(field[j+offsetActiveShape.y][i+offsetActiveShape.x], activeShape[j][i].oColor);
+						sfRectangleShape_setFillColor(
+							fld[j
+							+actiShPos.y]
+							[i+actiShPos.x], 
+							activeShape[j][i].fColor
+							);
+						sfRectangleShape_setOutlineColor(
+							fld[j
+							+actiShPos.y]
+							[i+actiShPos.x], 
+							activeShape[j][i].oColor
+							);
 					}
 				}
 			}
 			
-			/* Draw all field cells */
-			for (int j=0;j<fieldSize.y;j++){
-				for(int i=0;i<fieldSize.x;i++){
-					sfRenderWindow_drawRectangleShape(window, field[j][i], NULL);
+			/* 
+			 * Draw all fld cells 
+			 *
+			 */
+			for (int j=0;j<fldSize.y;j++){
+				for(int i=0;i<fldSize.x;i++){
+					sfRenderWindow_drawRectangleShape(
+						window, 
+						fld[j][i], 
+						NULL);
 				}
 			}
 			sfRenderWindow_drawText(window, textScore, NULL);
-		} 
-		else {
+		} else {
 			menuTick();
 			if (sfKeyboard_isKeyPressed(sfKeyReturn) == 1) {
 				gameIsStarted = 1;
@@ -87,10 +115,13 @@ int main()
 			}
 			menuTick();
 
-			/* Draw all field cells */
-			for (int j=0;j<fieldSize.y;j++){
-				for(int i=0;i<fieldSize.x;i++){
-					sfRenderWindow_drawRectangleShape(window, field[j][i], NULL);
+			/* Draw all fld cells */
+			for (int j=0;j<fldSize.y;j++){
+				for(int i=0;i<fldSize.x;i++){
+					sfRenderWindow_drawRectangleShape(
+						window, 
+						fld[j][i], 
+						NULL);
 				}
 			}
 		}
@@ -102,9 +133,9 @@ int main()
 	printf("%d\n", scoreCurrent);
 
 	/* Cleanup resources */
-	for (int j=0;j<fieldSize.y;j++){
-		for(int i=0;i<fieldSize.x;i++){
-			sfRectangleShape_destroy(field[j][i]);
+	for (int j=0;j<fldSize.y;j++){
+		for(int i=0;i<fldSize.x;i++){
+			sfRectangleShape_destroy(fld[j][i]);
 		}
 	}
 
