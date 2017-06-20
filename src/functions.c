@@ -3,8 +3,8 @@
 
 /* Externs from main.c */
 
-extern sfRectangleShape *fld[20][10];	// Array of field rectangles
-extern sfVector2f fldCPos[20][10]; 	// Array of absolute coordinates of field rectangles
+extern sfRectangleShape *fld[25][10];	// Array of field rectangles
+extern sfVector2f fldCPos[25][10]; 	// Array of absolute coordinates of field rectangles
 extern sfVector2i fldSize; 
 extern sfVector2i fldPos;
 extern sfVector2f fldCSize;	// Field rectangles size variable x/y
@@ -12,7 +12,7 @@ extern int fldCOutThick; 	// Field rectangles outline thickness
 
 extern sfVector2f textScore_pos;
 extern sfText *textScore;
-extern sfFont *font;
+extern sfFont *fontScore;
 extern int gameIsStarted;
 
 extern uint8_t arrKeys;		// arrow keys states byte container
@@ -52,6 +52,18 @@ extern uint8_t arrShapeT[4][4];
  */
 void initAll() 
 {
+	fontScore = sfFont_createFromFile("dat/arial.ttf");
+	if (!fontScore) {
+		printf("dat/arial.ttf font load failed");
+		exit(-1);
+	}
+
+	textScore_pos.x = 250+10+10;
+	textScore_pos.y = 485;
+	textScore = sfText_create();
+	sfText_setFont(textScore, fontScore);
+	sfText_setCharacterSize(textScore, 20);
+	sfText_setPosition(textScore, textScore_pos);
 	
 	/* 
 	 * Dimensions of every fld's block
@@ -64,12 +76,11 @@ void initAll()
 	fldPos.x = 10; // Field's bottom left corner coordinates 
 	fldPos.y = 10+500-25;
 	fldSize.x = 10; // Field size in blocks
-	fldSize.y = 20;	
+	fldSize.y = 25;	
 	
 	srand( time(NULL) );
 	gameTick = sfClock_create();
 	mTick = sfClock_create();
-	resetActiveShape();
 		
 	/* Create field */
 	for (int j = 0; j < fldSize.y; j++) {
@@ -89,17 +100,7 @@ void initAll()
 				fldCOutThick);
 		}
 	}
-	font = sfFont_createFromFile("dat/arial.ttf");
-	if (!font) {
-		printf("dat/arial.ttf font load failed");
-		exit(-1);
-	}
-	textScore_pos.x = 250+10+10;
-	textScore_pos.y = 485;
-	textScore = sfText_create();
-	sfText_setFont(textScore, font);
-	sfText_setCharacterSize(textScore, 20);
-	sfText_setPosition(textScore, textScore_pos);
+	resetActiveShape();
 }
 
 /*
@@ -178,14 +179,17 @@ void putShape()
 	}
 	scoreCurrent += linesRmScore()*100; 	// Remove filled lines and 
 						// get score;
+	for (int i = 0; i < 10; i++)
+		if (fldCAtt[20][i].a) {
+			gameover();
+			return;
+		}
 	resetActiveShape();
 }
 
 void resetActiveShape() 
 {
-	actiSh.x = 3;
-	actiSh.y = 16;
-	actiSh.t = (rand()%7)+1;	// Insert new random shape of 7 variants
+	actiSh.t = (rand()%7)+1; // Insert new random shape of 7 variants
 	switch (actiSh.t) { // Copy cell active/inactive state
 		case 1 :
 			memcpy(&actiSh.c[0][0],
@@ -230,6 +234,17 @@ void resetActiveShape()
 			actiSh.fColor = tMagneta;
 			break;
 	}
+	actiSh.x = 3;
+	if (actiSh.t == 6)
+		actiSh.y = 17;
+	else
+		actiSh.y = 16;
+	for (;;) {
+		if (cellCollisionCheck(0b0010))
+			actiSh.y++;
+		else
+			break;
+	}
 }
 
 /*
@@ -241,8 +256,8 @@ void tTick()
 	if (sfClock_getElapsedTime(gameTick).microseconds >= lvlLatency) {
 		sfClock_restart(gameTick); // Restart gameTick
 		/* if bottom not reached */
-		if ((wallCollisionCheck(0b0010) == 0) &&
-		(cellCollisionCheck(0b0010) == 0))
+		if ((wallCollisionCheck(0b0010) == 0) 
+		&& (cellCollisionCheck(0b0010) == 0))
 			actiSh.y--; // Move
 		else
 			putShape(); // Just put the shape
@@ -308,15 +323,14 @@ void rotateShape()
 
 int cellRotCollisionCheck() 
 {
-	for (int j = 0; j < 4; j++) {
-		for (int i = 0; i < 4; i++) {
+	for (int j = 0; j < 4; j++)
+		for (int i = 0; i < 4; i++)
 			if (actiSh.c[j][i] 
 			&& fldCAtt[j+actiSh.y][i+actiSh.x].a)
 				return 1; // Collision happens
-		}
-	}
 	return 0; // Else it do not
 }
+
 
 int wallRotCollisionCheck() 
 {
@@ -334,6 +348,7 @@ int wallRotCollisionCheck()
 				return 1;	// Collision happens
 	return 0; // If no conditions are met collision is absent
 }
+
 
 int cellCollisionCheck(int dir) 
 {
@@ -491,8 +506,8 @@ void tKeyCtrl()
  */
 void colorizeFld()
 {
-	for(int j = 0; j < 20; j++) {
-		for(int i = 0; i < 10; i++) {
+	for(int j = 0; j < fldSize.y-5; j++) {
+		for(int i = 0; i < fldSize.x; i++) {
 			if (fldCAtt[j][i].a) {
 				sfRectangleShape_setFillColor(
 					fld[j][i], 
@@ -522,7 +537,7 @@ void colorizeActiSh()
 {
 	for(int j = 0; j < 4; j++) {
 		for(int i = 0; i < 4; i++) {
-			if (actiSh.c[j][i]) {
+			if (actiSh.c[j][i] && j+actiSh.y < 20) {
 				sfRectangleShape_setFillColor(
 						fld[j+actiSh.y][i+actiSh.x], 
 						actiSh.fColor);
@@ -537,7 +552,7 @@ void colorizeActiSh()
 
 void menuTick() 
 {
-	if(sfClock_getElapsedTime(mTick).microseconds >= lvlLatency){
+	if(sfClock_getElapsedTime(mTick).microseconds >= lvlLatency) {
 		sfClock_restart(mTick);
 		colorizeRandom();
 	}
@@ -546,11 +561,11 @@ void menuTick()
 
 void colorizeRandom() 
 {
-	for (int j = 0; j < fldSize.y; j++) {
+	int a;
+	for (int j = 0; j < fldSize.y-5; j++) {
 		for (int i = 0; i < fldSize.x; i++) {
-			int a;
 			a = rand()%7+1;
-			switch (a) {;
+			switch (a) {
 				case 1 :
 					sfRectangleShape_setFillColor(fld[j][i], 
 								tOrange);
@@ -583,4 +598,9 @@ void colorizeRandom()
 			sfRectangleShape_setOutlineColor(fld[j][i], uiColor3);
 		}
 	}
+}
+
+void gameover()
+{
+	gameIsStarted = 0;
 }

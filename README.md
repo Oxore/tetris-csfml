@@ -8,11 +8,10 @@ __Compilation__
 ```
 make all
 ```
-File named "tetris" is the final binary. Run it. Hit *Return* to start game.
+File named "tetris" is the final binary. Run it. Hit *S* to start game.
 
 __TODO:__
 
-- "Game Over" with restart
 - Levels and scores system with table of records
 - Three next shapes
 - Main menu with beauties

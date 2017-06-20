@@ -17,7 +17,7 @@ struct tCell {
 	uint8_t a; // active/empty state of cell
 	sfColor fColor;	// fill color
 };
-struct tCell fldCAtt[20][10];// fld cells attributes
+struct tCell fldCAtt[25][10];// fld cells attributes
 
 
 /*

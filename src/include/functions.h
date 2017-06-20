@@ -20,5 +20,6 @@ void colorizeFld();
 void colorizeActiSh();
 void menuTick();
 void colorizeRandom(); 
+void gameover();
 
 #endif

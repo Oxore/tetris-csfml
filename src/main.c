@@ -6,23 +6,27 @@ int gameIsStarted = 0;
 sfVideoMode mode = {450, 520, 32};
 sfRenderWindow* window;
 sfEvent event;
-sfText* textScore;
-sfFont* font; 
-char *scoreDisp;
 
-sfRectangleShape* fld[20][10];// Array of fld rectangles
-sfVector2f fldCPos[20][10];	// Array of absolute coordinates of fld 
-				// rectangles
+sfText *textMenu1;
+sfVector2f textMenu1_pos;
 
-int fldCOutThick = 1; 	// Field rectangles outline thickness	
-sfVector2f fldCSize;		// Field rectangles size variable x/y
-sfVector2i fldSize, fldPos;
+sfFont *fontScore; 
+sfText *textScore;
 sfVector2f textScore_pos;
+char *scoreDisp;
+int scoreCurrent = 0;
+
+sfRectangleShape* fld[25][10];// Array of fld rectangles
+sfVector2f fldCPos[25][10];	// Array of absolute coordinates of fld 
+				// rectangles
+int fldCOutThick = 1; 	// Field rectangles outline thickness	
+sfVector2f fldCSize;	// Field rectangles size variable x/y
+sfVector2i fldSize; 
+sfVector2i fldPos;
 
 uint8_t arrKeys = 0b00000000; // Arrow keys states byte container
 
 int lvlLatency = 500000;
-int scoreCurrent = 0;
 /* --- Variables End --- */
 
 int main()
@@ -30,12 +34,25 @@ int main()
 	
 	initAll();
 	
+	/* 
+	 * Menu texts 
+	 *
+	 */
+	textMenu1_pos.x = 10+250+30;
+	textMenu1_pos.y = 100;
+	textMenu1 = sfText_create();
+	sfText_setFont(textMenu1, fontScore);
+	sfText_setCharacterSize(textMenu1, 36);
+	sfText_setPosition(textMenu1, textMenu1_pos);
+	char b[7];
+	sprintf(b, "TETRIS");
+	sfText_setString(textMenu1, (char *)&b);
+	
 	/* Create main window */
 	window = sfRenderWindow_create(mode, 
 					windowName_conf, 
 					sfResize | sfClose, 
-					NULL
-					);
+					NULL);
 	if (!window)
 		return EXIT_FAILURE;
 	
@@ -77,7 +94,6 @@ int main()
 			sfRenderWindow_drawText(window, textScore, NULL);
 		} else {
 			menuTick();
-
 			/* Draw all fld cells */
 			for (int j=0; j < fldSize.y; j++){
 				for(int i = 0; i < fldSize.x; i++){
@@ -87,6 +103,8 @@ int main()
 						NULL);
 				}
 			}
+			sfRenderWindow_drawText(window, textMenu1, NULL);
+
 			if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
 				gameIsStarted = 1;
 				initAll();
