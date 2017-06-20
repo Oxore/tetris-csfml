@@ -4,7 +4,7 @@ FILES:=$(FILES:.c=.o)
 
 CFLAGS += -Wall
 CFLAGS += -std=c99
-CFLAGS += -O3
+CFLAGS += -O2
 LIBS += -lcsfml-graphics 
 LIBS += -lcsfml-window 
 LIBS += -lcsfml-system 

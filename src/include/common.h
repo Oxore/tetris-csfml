@@ -6,20 +6,40 @@
 #include <SFML/System.h>
 #include <SFML/Window/Keyboard.h>
 #include <stdio.h>
-#include <time.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <time.h>
 #include "functions.h"
 #include "tet_conf.h"
 
-//#define EXIT_FAILURE -1
-//#define EXIT_SUCCESS 0
-
 struct tCell {
-	short a; // active/empty state of cell
-	sfColor fColor, oColor; // fill and outline color of cell
+	uint8_t a; // active/empty state of cell
+	sfColor fColor;	// fill color
+};
+struct tCell fldCAtt[20][10];// fld cells attributes
+
+
+/*
+ * shape coords
+ * y
+ * ^. . . .
+ * |. . . .
+ * |. . . .
+ * |. . . .
+ * 0------->x
+ *
+ */
+
+struct activeShape {
+	int x; // x coord of shape's left side
+	int y; // y coord of shape's bottom
+	int r; // rotate state, one of four
+	int t; // shape type
+	sfColor fColor; // shape color
+	uint8_t c[4][4]; // array of shape cells
 };
 
-struct tCell activeShape[4][4];	// 4x4 block of active crawling shape
-struct tCell fld_rAttr[20][10];// fld cells attributes
+struct activeShape actiSh;
 
 #endif

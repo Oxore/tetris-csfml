@@ -11,13 +11,14 @@ int cellCollisionCheck(int dir);
 int wallCollisionCheck();
 int cellRotCollisionCheck();
 int wallRotCollisionCheck();
+void rotateLeft();
+void rotateRight();
 void rotateShape();
-void rotateS1();
-void rotateS2();
-void rotateS3();
-void rotateS4();
 int linesRmScore();
 void scoreDisplay();
+void colorizeFld();
+void colorizeActiSh();
 void menuTick();
+void colorizeRandom(); 
 
 #endif
