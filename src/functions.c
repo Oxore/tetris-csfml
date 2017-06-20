@@ -37,40 +37,13 @@ extern int lvlLatency;
 extern int scoreCurrent;
 extern char *scoreDisp;
 /* Shapes maps */
-extern uint8_t arrShapeL_a1[4][4];
-extern uint8_t arrShapeL_a2[4][4];
-extern uint8_t arrShapeL_a3[4][4];
-extern uint8_t arrShapeL_a4[4][4];
-
-extern uint8_t arrShapeRL_a1[4][4];
-extern uint8_t arrShapeRL_a2[4][4];
-extern uint8_t arrShapeRL_a3[4][4];
-extern uint8_t arrShapeRL_a4[4][4];
-
-extern uint8_t arrShapeZ_a1[4][4];
-extern uint8_t arrShapeZ_a2[4][4];
-extern uint8_t arrShapeZ_a3[4][4];
-extern uint8_t arrShapeZ_a4[4][4];
-
-extern uint8_t arrShapeS_a1[4][4];
-extern uint8_t arrShapeS_a2[4][4];
-extern uint8_t arrShapeS_a3[4][4];
-extern uint8_t arrShapeS_a4[4][4];
-
-extern uint8_t arrShapeB_a1[4][4];
-extern uint8_t arrShapeB_a2[4][4];
-extern uint8_t arrShapeB_a3[4][4];
-extern uint8_t arrShapeB_a4[4][4];
-
-extern uint8_t arrShapeI_a1[4][4];
-extern uint8_t arrShapeI_a2[4][4];
-extern uint8_t arrShapeI_a3[4][4];
-extern uint8_t arrShapeI_a4[4][4];
-
-extern uint8_t arrShapeT_a1[4][4];
-extern uint8_t arrShapeT_a2[4][4];
-extern uint8_t arrShapeT_a3[4][4];
-extern uint8_t arrShapeT_a4[4][4];
+extern uint8_t arrShapeL[4][4];
+extern uint8_t arrShapeRL[4][4];
+extern uint8_t arrShapeZ[4][4];
+extern uint8_t arrShapeS[4][4];
+extern uint8_t arrShapeB[4][4];
+extern uint8_t arrShapeI[4][4];
+extern uint8_t arrShapeT[4][4];
 
 
 /*
@@ -212,48 +185,47 @@ void resetActiveShape()
 {
 	actiSh.x = 3;
 	actiSh.y = 16;
-	actiSh.r = 1;
 	actiSh.t = (rand()%7)+1;	// Insert new random shape of 7 variants
 	switch (actiSh.t) { // Copy cell active/inactive state
 		case 1 :
 			memcpy(&actiSh.c[0][0],
-				&arrShapeL_a1[0][0],
+				&arrShapeL[0][0],
 				sizeof(uint8_t)*4*4);
 			actiSh.fColor = tOrange;
 			break;
 		case 2 :
 			memcpy(&actiSh.c[0][0],
-				&arrShapeRL_a1[0][0],
+				&arrShapeRL[0][0],
 				sizeof(uint8_t)*4*4);
 			actiSh.fColor = tBlue;
 			break;
 		case 3 :
 			memcpy(&actiSh.c[0][0],
-				&arrShapeZ_a1[0][0],
+				&arrShapeZ[0][0],
 				sizeof(uint8_t)*4*4);
 			actiSh.fColor = tRed;
 			break;
 		case 4 :
 			memcpy(&actiSh.c[0][0],
-				&arrShapeS_a1[0][0],
+				&arrShapeS[0][0],
 				sizeof(uint8_t)*4*4);
 			actiSh.fColor = tGreen;
 			break;
 		case 5 :
 			memcpy(&actiSh.c[0][0],
-				&arrShapeB_a1[0][0],
+				&arrShapeB[0][0],
 				sizeof(uint8_t)*4*4);
 			actiSh.fColor = tYellow;
 			break;
 		case 6 :
 			memcpy(&actiSh.c[0][0],
-				&arrShapeI_a1[0][0],
+				&arrShapeI[0][0],
 				sizeof(uint8_t)*4*4);
 			actiSh.fColor = tCyan;
 			break;
 		case 7 :
 			memcpy(&actiSh.c[0][0],
-				&arrShapeT_a1[0][0],
+				&arrShapeT[0][0],
 				sizeof(uint8_t)*4*4);
 			actiSh.fColor = tMagneta;
 			break;

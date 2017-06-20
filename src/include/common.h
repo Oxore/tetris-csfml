@@ -34,7 +34,6 @@ struct tCell fldCAtt[20][10];// fld cells attributes
 struct activeShape {
 	int x; // x coord of shape's left side
 	int y; // y coord of shape's bottom
-	int r; // rotate state, one of four
 	int t; // shape type
 	sfColor fColor; // shape color
 	uint8_t c[4][4]; // array of shape cells
