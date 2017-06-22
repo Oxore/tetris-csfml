@@ -3,20 +3,20 @@
 
 /* Externs from main.c */
 
-extern sfRectangleShape *fld[25][10];	// Array of field rectangles
-extern sfVector2f fldCPos[25][10]; 	// Array of absolute coordinates of field rectangles
+extern sfRectangleShape *fld[25][10]; // Array of field rectangles
+extern sfVector2f fldCPos[25][10]; // Array of abs coords of field rectangles
 extern sfVector2i fldSize;
 extern sfVector2i fldPos;
-extern sfVector2f fldCSize;	// Field rectangles size variable x/y
-extern int fldCOutThick; 	// Field rectangles outline thickness
+extern sfVector2f fldCSize; // Field rectangles size variable x/y
+extern int fldCOutThick; // Field rectangles outline thickness
 
 extern sfVector2f textScore_pos;
 extern sfText *textScore;
 extern sfFont *fontScore;
 extern int gameIsStarted;
 
-extern uint8_t arrKeys;		// arrow keys states byte container
-/* arrKeys = ...n|7|6|5|4|3|2|1|0| (just a little bit of such called "bit fucking")
+extern uint8_t arrKeys;	// Arrow keys states byte container
+/* arrKeys = ...n|7|6|5|4|3|2|1|0| (just a bit of "bit fucking")
  * 0 - Right arrow pushed and held
  * 1 - Down arrow pushed and held
  * 2 - N/A
@@ -405,23 +405,23 @@ int wallCollisionCheck(int dir)
 void tKeyCtrl()
 {
 	/* Up arrow key 'hold' handler */
-	if (sfKeyboard_isKeyPressed(sfKeyUp) == 1) {
-		if ((arrKeys & 0b0100) == 0) {
+	if (sfKeyboard_isKeyPressed(sfKeyUp)) {
+		if (!(arrKeys & 0b0100)) {
 			arrKeys = arrKeys | 0b0100;
 			rotateShape();
 		}
 	} else {
-		if ((arrKeys & 0b0100) != 0) {
+		if ((arrKeys & 0b0100)) {
 			arrKeys = arrKeys & ~0b0100;
 		}
 	}
 
 	/* Down Arrow Key 'hold' handler */
-	if (sfKeyboard_isKeyPressed(sfKeyDown) == 1) {
-		if ((arrKeys & 0b0010) == 0) {
+	if (sfKeyboard_isKeyPressed(sfKeyDown)) {
+		if (!(arrKeys & 0b0010)) {
 			arrKeys = arrKeys | 0b0010;
-			if ((wallCollisionCheck(0b0010) == 0)
-			&& (cellCollisionCheck(0b0010) == 0)) {
+			if (!wallCollisionCheck(0b0010)
+			&& !cellCollisionCheck(0b0010)) {
 				actiSh.y--;
 				// Avoid excess move down by gameTick
 				sfClock_restart(gameTick);
@@ -434,65 +434,69 @@ void tKeyCtrl()
 				arrKeys = arrKeys & ~0b0010;
 		}
 	} else {
-		if ((arrKeys & 0b0010) != 0) {
+		if ((arrKeys & 0b0010)) {
 			arrKeys = arrKeys & ~0b0010;
 			arrKeys = arrKeys & ~0b100000;
 		}
 	}
 
 	/* Left Arrow Key 'hold' handler */
-	if ((sfKeyboard_isKeyPressed(sfKeyLeft) == 1)
-	&& (sfKeyboard_isKeyPressed(sfKeyRight) == 0)) {
-		if ((arrKeys & 0b1000) == 0){
+	if (sfKeyboard_isKeyPressed(sfKeyLeft)
+	&& !sfKeyboard_isKeyPressed(sfKeyRight)) {
+		if (!(arrKeys & 0b1000)) {
 			arrKeys = arrKeys | 0b1000;
-			if ((wallCollisionCheck(0b1000) == 0)
-			&& (cellCollisionCheck(0b1000) == 0))
+			if (!wallCollisionCheck(0b1000)
+			&& !cellCollisionCheck(0b1000))
 				actiSh.x--;
 			repKeyLeft = sfClock_create();
 		} else {
-			if ((arrKeys & 0b10000000) == 0) {
-				if (sfClock_getElapsedTime(repKeyLeft).microseconds
+			if (!(arrKeys & 0b10000000)) {
+				if (sfClock_getElapsedTime(repKeyLeft)
+								.microseconds
 				>=  moveRepeatLatency1) {
 					arrKeys = arrKeys | 0b10000000;
 					arrKeys = arrKeys & ~0b1000;
 				}
 			} else {
-				if (sfClock_getElapsedTime(repKeyLeft).microseconds
+				if (sfClock_getElapsedTime(repKeyLeft)
+								.microseconds
 				>=  moveRepeatLatency2)
 					arrKeys = arrKeys & ~0b1000;
 			}
 		}
-	} else if (sfKeyboard_isKeyPressed(sfKeyLeft) == 0) {
-		if ((arrKeys & 0b1000) != 0){
+	} else if (!sfKeyboard_isKeyPressed(sfKeyLeft)) {
+		if ((arrKeys & 0b1000)){
 			arrKeys = arrKeys & ~0b1000;
 			arrKeys = arrKeys & ~0b10000000;
 		}
 	}
 
 	/* Right Arrow Key 'hold' handler */
-	if ((sfKeyboard_isKeyPressed(sfKeyRight) == 1)
-	&& (sfKeyboard_isKeyPressed(sfKeyLeft) == 0)) {
-		if ((arrKeys & 0b0001) == 0){
+	if (sfKeyboard_isKeyPressed(sfKeyRight)
+	&& !sfKeyboard_isKeyPressed(sfKeyLeft)) {
+		if (!(arrKeys & 0b0001)){
 			arrKeys = arrKeys | 0b0001;
-			if ((wallCollisionCheck(0b0001) == 0)
-			&& (cellCollisionCheck(0b0001) == 0))
+			if (!wallCollisionCheck(0b0001)
+			&& !cellCollisionCheck(0b0001))
 				actiSh.x++;
 			repKeyRight = sfClock_create();
 		} else {
-			if ((arrKeys & 0b10000) == 0) {
-				if (sfClock_getElapsedTime(repKeyRight).microseconds
+			if (!(arrKeys & 0b10000)) {
+				if (sfClock_getElapsedTime(repKeyRight)
+								.microseconds
 				>=  moveRepeatLatency1) {
 					arrKeys = arrKeys | 0b10000;
 					arrKeys = arrKeys & ~0b0001;
 				}
-			} else if (sfKeyboard_isKeyPressed(sfKeyLeft) == 0) {
-				if (sfClock_getElapsedTime(repKeyRight).microseconds
+			} else if (!sfKeyboard_isKeyPressed(sfKeyLeft)) {
+				if (sfClock_getElapsedTime(repKeyRight)
+								.microseconds
 				>=  moveRepeatLatency2) // Wait short time
 					arrKeys = arrKeys & ~0b0001;
 			}
 		}
 	} else {
-		if ((arrKeys & 0b0001) != 0) {
+		if ((arrKeys & 0b0001)) {
 			arrKeys = arrKeys & ~0b0001;
 			arrKeys = arrKeys & ~0b10000;
 		}

@@ -9,8 +9,10 @@
 #define tYellow sfColor_fromRGB(255, 255, 0)
 #define tCyan sfColor_fromRGB(0, 255, 255)
 #define tMagneta sfColor_fromRGB(192, 0, 255)
-#define moveRepeatLatency1 150000 //microseconds, only for left-right arrows, first repeat move when long push
-#define moveRepeatLatency2  30000 //microseconds, for Left, Right and Down arrows, the rest repeat move when long push
+#define moveRepeatLatency1 150000 // microseconds, only for left-right arrows,
+				  // first repeat move when long push
+#define moveRepeatLatency2  30000 // microseconds, for Left, Right and Down
+				  // arrows, the rest repeat move when long push
 
 
 /*
