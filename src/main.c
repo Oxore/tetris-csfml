@@ -10,18 +10,18 @@ sfEvent event;
 sfText *textMenu1;
 sfVector2f textMenu1_pos;
 
-sfFont *fontScore; 
+sfFont *fontScore;
 sfText *textScore;
 sfVector2f textScore_pos;
 char *scoreDisp;
 int scoreCurrent = 0;
 
-sfRectangleShape* fld[25][10];// Array of fld rectangles
-sfVector2f fldCPos[25][10];	// Array of absolute coordinates of fld 
-				// rectangles
-int fldCOutThick = 1; 	// Field rectangles outline thickness	
+sfRectangleShape* fld[25][10];  // Array of fld rectangles
+sfVector2f fldCPos[25][10];	// Array of absolute coordinates of fld
+ 				// rectangles
+int fldCOutThick = 1; 	// Field rectangles outline thickness
 sfVector2f fldCSize;	// Field rectangles size variable x/y
-sfVector2i fldSize; 
+sfVector2i fldSize;
 sfVector2i fldPos;
 
 uint8_t arrKeys = 0b00000000; // Arrow keys states byte container
@@ -31,11 +31,11 @@ int lvlLatency = 500000;
 
 int main()
 {
-	
+
 	initAll();
-	
-	/* 
-	 * Menu texts 
+
+	/*
+	 * Menu texts
 	 *
 	 */
 	textMenu1_pos.x = 10+250+30;
@@ -47,15 +47,15 @@ int main()
 	char b[7];
 	sprintf(b, "TETRIS");
 	sfText_setString(textMenu1, (char *)&b);
-	
+
 	/* Create main window */
-	window = sfRenderWindow_create(mode, 
-					windowName_conf, 
-					sfResize | sfClose, 
+	window = sfRenderWindow_create(mode,
+					windowName_conf,
+					sfResize | sfClose,
 					NULL);
 	if (!window)
 		return EXIT_FAILURE;
-	
+
 	/* colorize field once at start */
 	colorizeRandom();
 
@@ -72,22 +72,22 @@ int main()
 		/* Clear the screen */
 		sfRenderWindow_clear(window, sfBlack);
 
-		if (gameIsStarted == 1) {	
+		if (gameIsStarted == 1) {
 			tTick();
 			tKeyCtrl();
 			scoreDisplay(scoreCurrent, textScore);
-			colorizeFld();	
+			colorizeFld();
 			colorizeActiSh();
-			
-			/* 
-			 * Draw all fld cells 
+
+			/*
+			 * Draw all fld cells
 			 *
 			 */
 			for (int j = 0; j < fldSize.y; j++){
 				for(int i = 0; i < fldSize.x; i++){
 					sfRenderWindow_drawRectangleShape(
-						window, 
-						fld[j][i], 
+						window,
+						fld[j][i],
 						NULL);
 				}
 			}
@@ -98,8 +98,8 @@ int main()
 			for (int j=0; j < fldSize.y; j++){
 				for(int i = 0; i < fldSize.x; i++){
 					sfRenderWindow_drawRectangleShape(
-						window, 
-						fld[j][i], 
+						window,
+						fld[j][i],
 						NULL);
 				}
 			}

@@ -19,7 +19,7 @@ void scoreDisplay();
 void colorizeFld();
 void colorizeActiSh();
 void menuTick();
-void colorizeRandom(); 
+void colorizeRandom();
 void gameover();
 
 #endif
