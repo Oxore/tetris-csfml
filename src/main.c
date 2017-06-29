@@ -16,9 +16,12 @@ sfVector2f textScore_pos;
 char *scoreDisp;
 int scoreCurrent = 0;
 
+sfRectangleShape* ns[4][4];   // Array of next shape image rectangles
 sfRectangleShape* fld[25][10];  // Array of fld rectangles
 sfVector2f fldCPos[25][10];	// Array of absolute coordinates of fld
  				// rectangles
+sfRectangleShape* ns[4][4];   // Array of next shape image rectangles
+sfVector2f nsCSize; // Next shape rectangles size variable x/y
 int fldCOutThick = 1; 	// Field rectangles outline thickness
 sfVector2f fldCSize;	// Field rectangles size variable x/y
 sfVector2i fldSize;
@@ -78,31 +81,14 @@ int main()
 			scoreDisplay(scoreCurrent, textScore);
 			colorizeFld();
 			colorizeActiSh();
+			drawFld(window);
+			drawNextShape(window);
 
-			/*
-			 * Draw all fld cells
-			 *
-			 */
-			for (int j = 0; j < fldSize.y; j++){
-				for(int i = 0; i < fldSize.x; i++){
-					sfRenderWindow_drawRectangleShape(
-						window,
-						fld[j][i],
-						NULL);
-				}
-			}
 			sfRenderWindow_drawText(window, textScore, NULL);
 		} else {
 			menuTick();
 			/* Draw all fld cells */
-			for (int j=0; j < fldSize.y; j++){
-				for(int i = 0; i < fldSize.x; i++){
-					sfRenderWindow_drawRectangleShape(
-						window,
-						fld[j][i],
-						NULL);
-				}
-			}
+			drawFld(window);
 			sfRenderWindow_drawText(window, textMenu1, NULL);
 
 			if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {

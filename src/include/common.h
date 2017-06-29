@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
-#include "functions.h"
 #include "tet_conf.h"
 
 struct tCell {
@@ -31,7 +30,7 @@ struct tCell fldCAtt[25][10];// fld cells attributes
  *
  */
 
-struct activeShape {
+struct shapeSt {
 	int x; // x coord of shape's left side
 	int y; // y coord of shape's bottom
 	int t; // shape type
@@ -39,6 +38,7 @@ struct activeShape {
 	uint8_t c[4][4]; // array of shape cells
 };
 
-struct activeShape actiSh;
+struct shapeSt actiSh;
+struct shapeSt nxtShape;
 
 #endif

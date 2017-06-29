@@ -1,8 +1,10 @@
-#include "include/functions.h"
 #include "include/common.h"
+#include "include/functions.h"
 
 /* Externs from main.c */
 
+extern sfRectangleShape* ns[4][4];   // Array of next shape image rectangles
+extern sfVector2f nsCSize; // Next shape rectangles size variable x/y
 extern sfRectangleShape *fld[25][10]; // Array of field rectangles
 extern sfVector2f fldCPos[25][10]; // Array of abs coords of field rectangles
 extern sfVector2i fldSize;
@@ -16,7 +18,7 @@ extern sfFont *fontScore;
 extern int gameIsStarted;
 
 extern uint8_t arrKeys;	// Arrow keys states byte container
-/* arrKeys = ...n|7|6|5|4|3|2|1|0| (just a bit of "bit fucking")
+/* arrKeys = ...n|7|6|5|4|3|2|1|0| (just a bit of so called "bit fucking")
  * 0 - Right arrow pushed and held
  * 1 - Down arrow pushed and held
  * 2 - N/A
@@ -59,7 +61,8 @@ void initAll()
 	}
 
 	textScore_pos.x = 250+10+10;
-	textScore_pos.y = 485;
+	textScore_pos.y = 10;
+	//textScore_pos.y = 485;
 	textScore = sfText_create();
 	sfText_setFont(textScore, fontScore);
 	sfText_setCharacterSize(textScore, 20);
@@ -72,11 +75,15 @@ void initAll()
 	 */
 	fldCSize.x = 23;
 	fldCSize.y = 23;
-
 	fldPos.x = 10; // Field's bottom left corner coordinates
 	fldPos.y = 10+500-25;
 	fldSize.x = 10; // Field size in blocks
 	fldSize.y = 25;
+
+	nsCSize.x = 23;
+	nsCSize.y = 23;
+	nxtShape.x = 250+10+20;
+	nxtShape.y = 200;
 
 	srand( time(NULL) );
 	gameTick = sfClock_create();
@@ -94,12 +101,25 @@ void initAll()
 			sfRectangleShape_setFillColor(fld[j][i], uiColor1);
 			sfRectangleShape_setSize(fld[j][i], fldCSize);
 			sfRectangleShape_setPosition(fld[j][i], fldCPos[j][i]);
-			sfRectangleShape_setOutlineColor(fld[j][i],
-				uiColor3);
+			sfRectangleShape_setOutlineColor(fld[j][i], uiColor3);
 			sfRectangleShape_setOutlineThickness(fld[j][i],
 				fldCOutThick);
 		}
 	}
+	/* Create next shape field */
+	sfVector2f nsPos;
+	for (int j = 0; j < 4; j++) {
+		for(int i = 0; i < 4; i++) {
+			nsPos.x = nxtShape.x+i*(nsCSize.x+2*fldCOutThick);
+			nsPos.y = nxtShape.y-j*(nsCSize.y+2*fldCOutThick);
+			ns[j][i] = sfRectangleShape_create();
+			sfRectangleShape_setSize(ns[j][i], nsCSize);
+			sfRectangleShape_setPosition(ns[j][i], nsPos);
+			sfRectangleShape_setOutlineThickness(ns[j][i],
+							     fldCOutThick);
+		}
+	}
+	genNextShape();
 	resetActiveShape();
 }
 
@@ -189,51 +209,8 @@ void putShape()
 
 void resetActiveShape()
 {
-	actiSh.t = (rand()%7)+1; // Insert new random shape of 7 variants
-	switch (actiSh.t) { // Copy cell active/inactive state
-		case 1 :
-			memcpy(&actiSh.c[0][0],
-				&arrShapeL[0][0],
-				sizeof(uint8_t)*4*4);
-			actiSh.fColor = tOrange;
-			break;
-		case 2 :
-			memcpy(&actiSh.c[0][0],
-				&arrShapeRL[0][0],
-				sizeof(uint8_t)*4*4);
-			actiSh.fColor = tBlue;
-			break;
-		case 3 :
-			memcpy(&actiSh.c[0][0],
-				&arrShapeZ[0][0],
-				sizeof(uint8_t)*4*4);
-			actiSh.fColor = tRed;
-			break;
-		case 4 :
-			memcpy(&actiSh.c[0][0],
-				&arrShapeS[0][0],
-				sizeof(uint8_t)*4*4);
-			actiSh.fColor = tGreen;
-			break;
-		case 5 :
-			memcpy(&actiSh.c[0][0],
-				&arrShapeB[0][0],
-				sizeof(uint8_t)*4*4);
-			actiSh.fColor = tYellow;
-			break;
-		case 6 :
-			memcpy(&actiSh.c[0][0],
-				&arrShapeI[0][0],
-				sizeof(uint8_t)*4*4);
-			actiSh.fColor = tCyan;
-			break;
-		case 7 :
-			memcpy(&actiSh.c[0][0],
-				&arrShapeT[0][0],
-				sizeof(uint8_t)*4*4);
-			actiSh.fColor = tMagneta;
-			break;
-	}
+	genNextShape();
+	copyShape(&actiSh);
 	actiSh.x = 3;
 	if (actiSh.t == 6)
 		actiSh.y = 17;
@@ -554,6 +531,22 @@ void colorizeActiSh()
 }
 
 
+/*
+ * Draw all fld cells
+ *
+ */
+void drawFld(sfRenderWindow *window)
+{
+	for (int j = 0; j < fldSize.y; j++){
+		for(int i = 0; i < fldSize.x; i++){
+			sfRenderWindow_drawRectangleShape(window,
+							  fld[j][i],
+							  NULL);
+		}
+	}
+}
+
+
 void menuTick()
 {
 	if(sfClock_getElapsedTime(mTick).microseconds >= lvlLatency) {
@@ -604,7 +597,98 @@ void colorizeRandom()
 	}
 }
 
+
 void gameover()
 {
 	gameIsStarted = 0;
+	scoreCurrent = 0;
+}
+
+
+void genNextShape()
+{
+	actiSh.t = nxtShape.t;
+	nxtShape.t = (rand()%7)+1; // Insert new random shape of 7 variants
+	copyShape(&nxtShape);
+	if (nxtShape.t == 5)
+		for (int j = 0; j < 3; j++)
+			for (int i = 0; i < 4; i++)
+				nxtShape.c[i][j] = nxtShape.c[i][j+1];
+}
+
+
+void copyShape(struct shapeSt *localSh)
+{
+	switch (localSh->t) { // Copy cell active/inactive state
+		case 1 :
+			memcpy(&localSh->c[0][0],
+				&arrShapeL[0][0],
+				sizeof(uint8_t)*4*4);
+			localSh->fColor = tOrange;
+			break;
+		case 2 :
+			memcpy(&localSh->c[0][0],
+				&arrShapeRL[0][0],
+				sizeof(uint8_t)*4*4);
+			localSh->fColor = tBlue;
+			break;
+		case 3 :
+			memcpy(&localSh->c[0][0],
+				&arrShapeZ[0][0],
+				sizeof(uint8_t)*4*4);
+			localSh->fColor = tRed;
+			break;
+		case 4 :
+			memcpy(&localSh->c[0][0],
+				&arrShapeS[0][0],
+				sizeof(uint8_t)*4*4);
+			localSh->fColor = tGreen;
+			break;
+		case 5 :
+			memcpy(&localSh->c[0][0],
+				&arrShapeB[0][0],
+				sizeof(uint8_t)*4*4);
+			localSh->fColor = tYellow;
+			break;
+		case 6 :
+			memcpy(&localSh->c[0][0],
+				&arrShapeI[0][0],
+				sizeof(uint8_t)*4*4);
+			localSh->fColor = tCyan;
+			break;
+		case 7 :
+			memcpy(&localSh->c[0][0],
+				&arrShapeT[0][0],
+				sizeof(uint8_t)*4*4);
+			localSh->fColor = tMagneta;
+			break;
+	}
+}
+
+
+void drawNextShape(sfRenderWindow *window)
+{
+	sfText *textNextShape;
+	sfVector2f textNextShapePos;
+	textNextShapePos.x = 250+10+10;
+	textNextShapePos.y = 80;
+	textNextShape = sfText_create();
+	sfText_setFont(textNextShape, fontScore);
+	sfText_setCharacterSize(textNextShape, 20);
+	sfText_setPosition(textNextShape, textNextShapePos);
+	char a[13];
+	sprintf(a, "Next Shape: ");
+	sfText_setString(textNextShape, (char *)&a);
+	sfRenderWindow_drawText(window, textNextShape, NULL);
+	for(int j = 0; j < 4; j++)
+		for(int i = 0; i < 4; i++)
+			if (nxtShape.c[j][i]) {
+				sfRectangleShape_setFillColor(ns[j][i],
+							      nxtShape.fColor);
+				sfRectangleShape_setOutlineColor(ns[j][i],
+								 uiColor3);
+				sfRenderWindow_drawRectangleShape(window,
+								  ns[j][i],
+								  NULL);
+			}
 }
