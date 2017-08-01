@@ -19,23 +19,55 @@ int scoreCurrent = 0;
 sfRectangleShape* ns[4][4];   // Array of next shape image rectangles
 sfRectangleShape* fld[25][10];  // Array of fld rectangles
 sfVector2f fldCPos[25][10];	// Array of absolute coordinates of fld
- 				// rectangles
+				// rectangles
 sfRectangleShape* ns[4][4];   // Array of next shape image rectangles
 sfVector2f nsCSize; // Next shape rectangles size variable x/y
 int fldCOutThick = 1; 	// Field rectangles outline thickness
 sfVector2f fldCSize;	// Field rectangles size variable x/y
 sfVector2i fldSize;
-sfVector2i fldPos;
+sfVector2f fldPos;
 
 uint8_t arrKeys = 0b00000000; // Arrow keys states byte container
 
 int lvlLatency = 500000;
 /* --- Variables End --- */
 
+sfClock *gameTick;
+sfClock *mTick;
+sfClock *repPushDown;	// Clock for repeat latency when Down arrow long push
+sfClock *repKeyLeft;	// Clock for repeat latency when Left arrow long push
+sfClock *repKeyRight;	// Clock for repeat latency when Left arrow long push
+
 int main()
 {
+	srand( time(NULL) );
+	gameTick = sfClock_create();
+	mTick = sfClock_create();
+	fontScore = sfFont_createFromFile("dat/arial.ttf");
+	if (!fontScore) {
+		printf("dat/arial.ttf font load failed");
+		exit(-1);
+	}
 
-	initAll();
+
+	textScore_pos = (sfVector2f){.x = 250+10+10, .y = 10};
+	textScore = sfText_create();
+	sfText_setFont(textScore, fontScore);
+	sfText_setCharacterSize(textScore, 20);
+	sfText_setPosition(textScore, textScore_pos);
+
+	/*
+	 * Dimensions of every fld's cell
+	 * 23px - fill color 1px - for outline, 25 - at all
+	 */
+	fldCSize = (sfVector2f){.x = 23, .y = 23}; //Fld's cell size in pixels
+	fldPos = (sfVector2f){.x = 10, .y = 10+500-20}; // Fld bot left corner
+	fldSize = (sfVector2i){.x = 10, .y = 25}; // Field's size in blocks
+
+	nsCSize = (sfVector2f){.x = 23, .y = 23};
+	nxtShape = (struct shapeSt){.x = 250+10+20, .y = 200};
+
+	initFld();
 
 	/*
 	 * Menu texts
@@ -75,7 +107,7 @@ int main()
 		/* Clear the screen */
 		sfRenderWindow_clear(window, sfBlack);
 
-		if (gameIsStarted == 1) {
+		if (gameIsStarted) {
 			tTick();
 			tKeyCtrl();
 			scoreDisplay(scoreCurrent, textScore);
@@ -93,7 +125,8 @@ int main()
 
 			if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
 				gameIsStarted = 1;
-				initAll();
+				cleanup();
+				initFld();
 			}
 		}
 		/* Update the window */
@@ -103,14 +136,10 @@ int main()
 	/* Just senseless printf */
 	printf("%d\n", scoreCurrent);
 
-	/* Cleanup resources */
-	for (int j=0;j<fldSize.y;j++){
-		for(int i=0;i<fldSize.x;i++){
-			sfRectangleShape_destroy(fld[j][i]);
-		}
-	}
-
+	cleanup();
 	sfRenderWindow_destroy(window);
+	sfText_destroy(textScore);
+	sfText_destroy(textMenu1);
 
 	return EXIT_SUCCESS;
 }

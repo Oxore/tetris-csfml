@@ -3,7 +3,7 @@
 
 /* Prototypes of functions*/
 void tKeyCtrl();
-void initAll();
+void initFld();
 void tTick();
 void resetActiveShape();
 void putShape();
@@ -25,5 +25,6 @@ void gameover();
 void genNextShape();
 void copyShape(struct shapeSt *localSh);
 void drawNextShape();
+void cleanup();
 
 #endif

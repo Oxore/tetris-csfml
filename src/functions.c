@@ -8,7 +8,7 @@ extern sfVector2f nsCSize; // Next shape rectangles size variable x/y
 extern sfRectangleShape *fld[25][10]; // Array of field rectangles
 extern sfVector2f fldCPos[25][10]; // Array of abs coords of field rectangles
 extern sfVector2i fldSize;
-extern sfVector2i fldPos;
+extern sfVector2f fldPos;
 extern sfVector2f fldCSize; // Field rectangles size variable x/y
 extern int fldCOutThick; // Field rectangles outline thickness
 
@@ -29,11 +29,11 @@ extern uint8_t arrKeys;	// Arrow keys states byte container
  * 7 - Right arrow short repeat activated (after once long repeat)
  */
 
-sfClock *gameTick;
-sfClock *mTick;
-sfClock *repPushDown;	// Clock for repeat latency when Down arrow long push
-sfClock *repKeyLeft;	// Clock for repeat latency when Left arrow long push
-sfClock *repKeyRight;	// Clock for repeat latency when Left arrow long push
+extern sfClock *gameTick;
+extern sfClock *mTick;
+extern sfClock *repPushDown;	// Clock for repeat latency when Down arrow long push
+extern sfClock *repKeyLeft;	// Clock for repeat latency when Left arrow long push
+extern sfClock *repKeyRight;	// Clock for repeat latency when Left arrow long push
 
 extern int lvlLatency;
 extern int scoreCurrent;
@@ -48,47 +48,9 @@ extern uint8_t arrShapeI[4][4];
 extern uint8_t arrShapeT[4][4];
 
 
-/*
- * Init routine. Performs once per program run
- *
- */
-void initAll()
+/* Field init routine */
+void initFld()
 {
-	fontScore = sfFont_createFromFile("dat/arial.ttf");
-	if (!fontScore) {
-		printf("dat/arial.ttf font load failed");
-		exit(-1);
-	}
-
-	textScore_pos.x = 250+10+10;
-	textScore_pos.y = 10;
-	//textScore_pos.y = 485;
-	textScore = sfText_create();
-	sfText_setFont(textScore, fontScore);
-	sfText_setCharacterSize(textScore, 20);
-	sfText_setPosition(textScore, textScore_pos);
-
-	/*
-	 * Dimensions of every fld's block
-	 * 19px - fill color 1px - for outline, 20 - at all
-	 *
-	 */
-	fldCSize.x = 23;
-	fldCSize.y = 23;
-	fldPos.x = 10; // Field's bottom left corner coordinates
-	fldPos.y = 10+500-25;
-	fldSize.x = 10; // Field size in blocks
-	fldSize.y = 25;
-
-	nsCSize.x = 23;
-	nsCSize.y = 23;
-	nxtShape.x = 250+10+20;
-	nxtShape.y = 200;
-
-	srand( time(NULL) );
-	gameTick = sfClock_create();
-	mTick = sfClock_create();
-
 	/* Create field */
 	for (int j = 0; j < fldSize.y; j++) {
 		for(int i = 0; i < fldSize.x; i++) {
@@ -668,11 +630,12 @@ void copyShape(struct shapeSt *localSh)
 
 void drawNextShape(sfRenderWindow *window)
 {
-	sfText *textNextShape;
+	static sfText *textNextShape;
 	sfVector2f textNextShapePos;
 	textNextShapePos.x = 250+10+10;
 	textNextShapePos.y = 80;
-	textNextShape = sfText_create();
+	if (!textNextShape)
+		textNextShape = sfText_create();
 	sfText_setFont(textNextShape, fontScore);
 	sfText_setCharacterSize(textNextShape, 20);
 	sfText_setPosition(textNextShape, textNextShapePos);
@@ -691,4 +654,15 @@ void drawNextShape(sfRenderWindow *window)
 								  ns[j][i],
 								  NULL);
 			}
+}
+
+
+/* Cleanup resources */
+void cleanup() {
+	for (int j = 0; j < fldSize.y; j++)
+		for(int i = 0; i < fldSize.x; i++)
+			sfRectangleShape_destroy(fld[j][i]);
+	for (int j = 0; j < 4; j++)
+		for(int i = 0; i < 4; i++)
+			sfRectangleShape_destroy(ns[j][i]);
 }
