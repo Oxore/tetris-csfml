@@ -3,7 +3,7 @@ language: c
 os: osx
 
 script: 
-    - brew install csfml
+    - brew install sfml csfml
     - make all
 
 compiler: 
