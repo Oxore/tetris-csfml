@@ -10,7 +10,7 @@ sub ln80 {
 		or die("$file: no such file or direcory\n");
 	while (<FILE>) {
 		chomp;
-		1 while $_ =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
+		1 while $_ =~ s/\t+/' ' x (length($&) * 4 - length($`) % 4)/e;
 		if (length($_) > 80) {
 			print "WRN: in $file line $. has ".length($_)."/80 chars\n";
 		}
