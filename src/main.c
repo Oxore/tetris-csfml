@@ -38,8 +38,7 @@ sfClock *repPushDown;	// Clock for repeat latency when Down arrow long push
 sfClock *repKeyLeft;	// Clock for repeat latency when Left arrow long push
 sfClock *repKeyRight;	// Clock for repeat latency when Left arrow long push
 
-int main()
-{
+void prepare() {
 	srand( time(NULL) );
 	gameTick = sfClock_create();
 	mTick = sfClock_create();
@@ -82,56 +81,63 @@ int main()
 	char b[7];
 	sprintf(b, "TETRIS");
 	sfText_setString(textMenu1, (char *)&b);
+}
 
-	/* Create main window */
+void handleWindowEvents() {
+		while (sfRenderWindow_pollEvent(window, &event))
+			if (event.type == sfEvtClosed)
+				sfRenderWindow_close(window);
+}
+
+void gameLoop() {
+	tTick();
+	tKeyCtrl();
+	scoreDisplay(scoreCurrent, textScore);
+	colorizeFld();
+	colorizeActiSh();
+	drawFld(window);
+	drawNextShape(window);
+	sfRenderWindow_drawText(window, textScore, NULL);
+}
+
+void menuLoop() {
+	menuTick();
+	drawFld(window);
+	sfRenderWindow_drawText(window, textMenu1, NULL);
+	if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
+		gameIsStarted = 1;
+		cleanup();
+		initFld();
+	}
+}
+
+void mainLoop() {
+	while (sfRenderWindow_isOpen(window)) {
+		handleWindowEvents();
+		sfRenderWindow_clear(window, sfBlack);
+		if (gameIsStarted) {
+			gameLoop();
+		} else {
+			menuLoop();
+		}
+		sfRenderWindow_display(window);
+	}
+}
+
+int main()
+{
+	prepare();
 	window = sfRenderWindow_create(mode,
-					windowName_conf,
-					sfResize | sfClose,
-					NULL);
+			windowName_conf,
+			sfResize | sfClose,
+			NULL);
 	if (!window)
 		return EXIT_FAILURE;
 
 	/* colorize field once at start */
 	colorizeRandom();
 
-	/* Start the game loop */
-	while (sfRenderWindow_isOpen(window))
-	{
-		/* Process events */
-		while (sfRenderWindow_pollEvent(window, &event))
-		{
-			/* Close window : exit */
-			if (event.type == sfEvtClosed)
-				sfRenderWindow_close(window);
-		}
-		/* Clear the screen */
-		sfRenderWindow_clear(window, sfBlack);
-
-		if (gameIsStarted) {
-			tTick();
-			tKeyCtrl();
-			scoreDisplay(scoreCurrent, textScore);
-			colorizeFld();
-			colorizeActiSh();
-			drawFld(window);
-			drawNextShape(window);
-
-			sfRenderWindow_drawText(window, textScore, NULL);
-		} else {
-			menuTick();
-			/* Draw all fld cells */
-			drawFld(window);
-			sfRenderWindow_drawText(window, textMenu1, NULL);
-
-			if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
-				gameIsStarted = 1;
-				cleanup();
-				initFld();
-			}
-		}
-		/* Update the window */
-		sfRenderWindow_display(window);
-	}
+	mainLoop();
 
 	/* Just senseless printf */
 	printf("%d\n", scoreCurrent);
