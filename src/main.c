@@ -1,5 +1,5 @@
-#include "include/common.h"
-#include "include/functions.h"
+#include "common.h"
+#include "functions.h"
 
 /* --- Variables --- */
 int gameIsStarted = 0;
