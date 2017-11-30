@@ -48,13 +48,6 @@ void prepare() {
         exit(-1);
     }
 
-
-    textScore_pos = (sfVector2f){.x = 250+10+10, .y = 10};
-    textScore = sfText_create();
-    sfText_setFont(textScore, fontScore);
-    sfText_setCharacterSize(textScore, 20);
-    sfText_setPosition(textScore, textScore_pos);
-
     /*
      * Dimensions of every fld's cell
      * 23px - fill color 1px - for outline, 25 - at all
@@ -67,6 +60,12 @@ void prepare() {
     nxtShape = (struct shapeSt){.x = 250+10+20, .y = 200};
 
     initFld();
+
+    textScore_pos = (sfVector2f){.x = 250+10+10, .y = 10};
+    textScore = sfText_create();
+    sfText_setFont(textScore, fontScore);
+    sfText_setCharacterSize(textScore, 20);
+    sfText_setPosition(textScore, textScore_pos);
 
     /*
      * Menu texts
@@ -81,12 +80,19 @@ void prepare() {
     char b[7];
     sprintf(b, "TETRIS");
     sfText_setString(textMenu1, (char *)&b);
+
+    window = sfRenderWindow_create(mode,
+            windowName_conf,
+            sfResize | sfClose,
+            NULL);
+    if (!window)
+        exit(EXIT_FAILURE);
 }
 
 void handleWindowEvents() {
-        while (sfRenderWindow_pollEvent(window, &event))
-            if (event.type == sfEvtClosed)
-                sfRenderWindow_close(window);
+    while (sfRenderWindow_pollEvent(window, &event))
+        if (event.type == sfEvtClosed)
+            sfRenderWindow_close(window);
 }
 
 void gameLoop() {
@@ -106,7 +112,7 @@ void menuLoop() {
     sfRenderWindow_drawText(window, textMenu1, NULL);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         gameIsStarted = 1;
-        cleanup();
+        cleanupFld();
         initFld();
     }
 }
@@ -127,22 +133,14 @@ void mainLoop() {
 int main()
 {
     prepare();
-    window = sfRenderWindow_create(mode,
-            windowName_conf,
-            sfResize | sfClose,
-            NULL);
-    if (!window)
-        return EXIT_FAILURE;
 
-    /* colorize field once at start */
     colorizeRandom();
-
     mainLoop();
 
     /* Just senseless printf */
     printf("%d\n", scoreCurrent);
 
-    cleanup();
+    cleanupFld();
     sfRenderWindow_destroy(window);
     sfText_destroy(textScore);
     sfText_destroy(textMenu1);

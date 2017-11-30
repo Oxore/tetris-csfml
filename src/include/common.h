@@ -12,11 +12,11 @@
 #include <time.h>
 #include "tet_conf.h"
 
-struct tCell {
+typedef struct tCell {
     uint8_t a; // active/empty state of cell
     sfColor fColor; // fill color
-};
-struct tCell fldCAtt[25][10];// fld cells attributes
+} tCell;
+tCell fldCAtt[25][10];// fld cells attributes
 
 
 /*
@@ -30,15 +30,13 @@ struct tCell fldCAtt[25][10];// fld cells attributes
  *
  */
 
-struct shapeSt {
+typedef struct shapeSt {
     int x; // x coord of shape's left side
     int y; // y coord of shape's bottom
     int t; // shape type
     sfColor fColor; // shape color
     uint8_t c[4][4]; // array of shape cells
-};
-
-struct shapeSt actiSh;
-struct shapeSt nxtShape;
+} shapeSt; 
+shapeSt actiSh, nxtShape;
 
 #endif

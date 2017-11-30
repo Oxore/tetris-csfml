@@ -656,9 +656,7 @@ void drawNextShape(sfRenderWindow *window)
             }
 }
 
-
-/* Cleanup resources */
-void cleanup() {
+void cleanupFld() {
     for (int j = 0; j < fldSize.y; j++)
         for(int i = 0; i < fldSize.x; i++)
             sfRectangleShape_destroy(fld[j][i]);

@@ -25,6 +25,6 @@ void gameover();
 void genNextShape();
 void copyShape(struct shapeSt *localSh);
 void drawNextShape();
-void cleanup();
+void cleanupFld();
 
 #endif
