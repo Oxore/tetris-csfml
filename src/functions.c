@@ -70,22 +70,22 @@ void initFld()
     resetActiveShape();
 }
 
-/*
- * Refreshes score
- *
- */
+
 void scoreDisplay(int s, Text *textScore)
 {
     char a[64];
-    char b[8];
-    sprintf(b, "Score: ");
-    sprintf(a, "%d", s);
-    for (int i = 63; i >= 7; i--)
-        a[i] = a[i-7];
-    for (int i = 0; i < 7; i++)
-        a[i] = b[i];
+    sprintf(a, "Score: %d", s);
     sfText_setString(textScore->text, (char *)&a);
 }
+
+
+void levelDisplay(int s, Text *textLevel)
+{
+    char a[64];
+    sprintf(a, "Level: %d", s);
+    sfText_setString(textLevel->text, (char *)&a);
+}
+
 
 /*
  * Removes line when cells all are in row in it
@@ -144,6 +144,13 @@ void putShape()
             return;
         }
     resetActiveShape();
+    checkLevelUp(&game);
+}
+
+void checkLevelUp(Game *game)
+{
+    if (game->scoreCurrent >= game->level * 100)
+        game->level++;
 }
 
 void resetActiveShape()
@@ -169,7 +176,9 @@ void resetActiveShape()
  */
 void tTick()
 {     // If tick exceeds current level tick latency
-    if (sfClock_getElapsedTime(gameTick).microseconds >= basicLatency/game.level) {
+    if (sfClock_getElapsedTime(gameTick).microseconds
+            >= moveRepeatLatency2*(16-game.level)
+            && game.level <= 15) {
         sfClock_restart(gameTick); // Restart gameTick
         /* if bottom not reached */
         if ((wallCollisionCheck(0b0010) == 0)
@@ -506,6 +515,7 @@ void gameover(Game *game)
 {
     game->isStarted = 0;
     game->scoreCurrent = 0;
+    game->level = 1;
 }
 
 
@@ -525,45 +535,31 @@ void copyShape(Shape *localSh)
 {
     switch (localSh->t) { // Copy cell active/inactive state
         case 1 :
-            memcpy(&localSh->c[0][0],
-                &arrShapeL[0][0],
-                sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeL[0][0], sizeof(uint8_t)*4*4);
             localSh->fColor = tOrange;
             break;
         case 2 :
-            memcpy(&localSh->c[0][0],
-                &arrShapeRL[0][0],
-                sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeRL[0][0], sizeof(uint8_t)*4*4);
             localSh->fColor = tBlue;
             break;
         case 3 :
-            memcpy(&localSh->c[0][0],
-                &arrShapeZ[0][0],
-                sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeZ[0][0], sizeof(uint8_t)*4*4);
             localSh->fColor = tRed;
             break;
         case 4 :
-            memcpy(&localSh->c[0][0],
-                &arrShapeS[0][0],
-                sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeS[0][0], sizeof(uint8_t)*4*4);
             localSh->fColor = tGreen;
             break;
         case 5 :
-            memcpy(&localSh->c[0][0],
-                &arrShapeB[0][0],
-                sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeB[0][0], sizeof(uint8_t)*4*4);
             localSh->fColor = tYellow;
             break;
         case 6 :
-            memcpy(&localSh->c[0][0],
-                &arrShapeI[0][0],
-                sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeI[0][0], sizeof(uint8_t)*4*4);
             localSh->fColor = tCyan;
             break;
         case 7 :
-            memcpy(&localSh->c[0][0],
-                &arrShapeT[0][0],
-                sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeT[0][0], sizeof(uint8_t)*4*4);
             localSh->fColor = tMagneta;
             break;
     }

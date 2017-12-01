@@ -7,6 +7,7 @@ Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1};
 Text menu1;
 Text menu2;
 Text score;
+Text level;
 sfFont *fontScore;
 Shape active, next;
 Field fld;
@@ -50,6 +51,12 @@ void prepare() {
     sfText_setCharacterSize(score.text, 20);
     sfText_setPosition(score.text, score.pos);
 
+    level.pos = (sfVector2f){.x = 250+10+10, .y = 44};
+    level.text = sfText_create();
+    sfText_setFont(level.text, fontScore);
+    sfText_setCharacterSize(level.text, 20);
+    sfText_setPosition(level.text, level.pos);
+
     /*
      * Menu texts
      *
@@ -88,11 +95,13 @@ void gameLoop() {
     tTick();
     tKeyCtrl();
     scoreDisplay(game.scoreCurrent, &score);
+    levelDisplay(game.level, &level);
     colorizeFld();
     colorizeActive();
     drawFld(w.window);
     drawNextShape(w.window);
     sfRenderWindow_drawText(w.window, score.text, NULL);
+    sfRenderWindow_drawText(w.window, level.text, NULL);
 }
 
 void menuTick()
