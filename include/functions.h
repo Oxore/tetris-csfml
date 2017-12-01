@@ -17,14 +17,13 @@ void rotateShape();
 int linesRmScore();
 void scoreDisplay(int s, Text *textScore);
 void colorizeFld();
-void colorizeActiSh();
+void colorizeActive();
 void drawFld(sfRenderWindow *window);
-void menuTick();
-void colorizeRandom();
-void gameover();
+void colorizeRandom(Field *fld);
+void gameover(Game *game);
 void genNextShape();
 void copyShape(Shape *localSh);
 void drawNextShape();
-void cleanupFld();
+void freeFld();
 
 #endif

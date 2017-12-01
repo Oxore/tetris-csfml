@@ -2,9 +2,8 @@
 #include "functions.h"
 
 /* --- Variables --- */
-int gameIsStarted = 0;
 Window w = {.mode = {450, 520, 32}};
-
+Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1};
 Text menu1;
 Text menu2;
 Text score;
@@ -12,11 +11,7 @@ sfFont *fontScore;
 Shape active, next;
 Field fld;
 
-int scoreCurrent = 0;
-
 uint8_t arrKeys = 0b00000000; // Arrow keys states byte container
-
-int lvlLatency = 500000;
 /* --- Variables End --- */
 
 sfClock *gameTick;
@@ -92,12 +87,20 @@ void handleWindowEvents() {
 void gameLoop() {
     tTick();
     tKeyCtrl();
-    scoreDisplay(scoreCurrent, &score);
+    scoreDisplay(game.scoreCurrent, &score);
     colorizeFld();
-    colorizeActiSh();
+    colorizeActive();
     drawFld(w.window);
     drawNextShape(w.window);
     sfRenderWindow_drawText(w.window, score.text, NULL);
+}
+
+void menuTick()
+{
+    if(sfClock_getElapsedTime(mTick).microseconds >= basicLatency/game.level) {
+        sfClock_restart(mTick);
+        colorizeRandom(&fld);
+    }
 }
 
 void menuLoop() {
@@ -106,8 +109,8 @@ void menuLoop() {
     sfRenderWindow_drawText(w.window, menu1.text, NULL);
     sfRenderWindow_drawText(w.window, menu2.text, NULL);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
-        gameIsStarted = 1;
-        cleanupFld();
+        game.isStarted = 1;
+        freeFld();
         initFld();
     }
 }
@@ -116,7 +119,7 @@ void mainLoop() {
     while (sfRenderWindow_isOpen(w.window)) {
         handleWindowEvents();
         sfRenderWindow_clear(w.window, sfBlack);
-        if (gameIsStarted) {
+        if (game.isStarted) {
             gameLoop();
         } else {
             menuLoop();
@@ -128,14 +131,15 @@ void mainLoop() {
 int main()
 {
     prepare();
-    colorizeRandom();
+    colorizeRandom(&fld);
     mainLoop();
     /* Just senseless printf */
-    printf("%d\n", scoreCurrent);
-    cleanupFld();
+    printf("%d\n", game.scoreCurrent);
+    freeFld();
     sfRenderWindow_destroy(w.window);
     sfText_destroy(score.text);
     sfText_destroy(menu1.text);
+    sfText_destroy(menu2.text);
 
     return EXIT_SUCCESS;
 }

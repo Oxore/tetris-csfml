@@ -2,13 +2,11 @@
 #include "functions.h"
 
 /* Externs from main.c */
-
+extern Game game;
 extern Shape active, next;
 extern Field fld;
 
-extern sfVector2f textScore_pos;
 extern sfFont *fontScore;
-extern int gameIsStarted;
 
 extern uint8_t arrKeys;    // Arrow keys states byte container
 /* arrKeys = ...n|7|6|5|4|3|2|1|0| (just a bit of so called "bit fucking")
@@ -28,9 +26,6 @@ extern sfClock *repPushDown; // Clock for repeat latency when Down arrow long pu
 extern sfClock *repKeyLeft; // Clock for repeat latency when Left arrow long push
 extern sfClock *repKeyRight; // Clock for repeat latency when Left arrow long push
 
-extern int lvlLatency;
-extern int scoreCurrent;
-
 /* Shapes maps */
 extern uint8_t arrShapeL[4][4];
 extern uint8_t arrShapeRL[4][4];
@@ -47,7 +42,7 @@ void initFld()
     sfVector2f fldCPos[25][10];
     /* Create field */
     for (int j = 0; j < fld.size.y; j++) {
-        for(int i = 0; i < fld.size.x; i++) {
+        for (int i = 0; i < fld.size.x; i++) {
             fld.c[j][i].a = 0;    // Inactive = empty
             fldCPos[j][i].x = fld.pos.x + (i * (fld.cSize.x + 2 * fld.cOutThick));
             fldCPos[j][i].y = fld.pos.y - (j * (fld.cSize.y + 2 * fld.cOutThick));
@@ -56,21 +51,19 @@ void initFld()
             sfRectangleShape_setSize(fld.p[j][i], fld.cSize);
             sfRectangleShape_setPosition(fld.p[j][i], fldCPos[j][i]);
             sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor3);
-            sfRectangleShape_setOutlineThickness(fld.p[j][i],
-                fld.cOutThick);
+            sfRectangleShape_setOutlineThickness(fld.p[j][i], fld.cOutThick);
         }
     }
     /* Create next shape field */
     sfVector2f nsPos;
     for (int j = 0; j < 4; j++) {
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             nsPos.x = next.x+i*(next.cSize.x+2*fld.cOutThick);
             nsPos.y = next.y-j*(next.cSize.y+2*fld.cOutThick);
             next.p[j][i] = sfRectangleShape_create();
             sfRectangleShape_setSize(next.p[j][i], next.cSize);
             sfRectangleShape_setPosition(next.p[j][i], nsPos);
-            sfRectangleShape_setOutlineThickness(next.p[j][i],
-                                 fld.cOutThick);
+            sfRectangleShape_setOutlineThickness(next.p[j][i], fld.cOutThick);
         }
     }
     genNextShape();
@@ -103,10 +96,9 @@ int linesRmScore()
     int k = 0; // "Filled line" indicator
     int s = 0;
     for (int j = 0; j < 20; j++) {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
             if (fld.c[j][i].a != 0)
                 k++;
-        }
         if (k >= 10) {    // If line is full
             s++;    // Give scores for line
             for (int n = j; n < 20; n++) {    // Drop all lines down
@@ -145,10 +137,10 @@ void putShape()
                 if ((j+active.y >= 0) && (i+active.x >= 0))
                     fld.c[j+active.y][i+active.x].fColor = active.fColor;
             }
-    scoreCurrent += linesRmScore()*100; // Remove filled lines and get score;
+    game.scoreCurrent += linesRmScore()*100; // Remove filled lines and get score;
     for (int i = 0; i < 10; i++)
         if (fld.c[20][i].a) {
-            gameover();
+            gameover(&game);
             return;
         }
     resetActiveShape();
@@ -177,7 +169,7 @@ void resetActiveShape()
  */
 void tTick()
 {     // If tick exceeds current level tick latency
-    if (sfClock_getElapsedTime(gameTick).microseconds >= lvlLatency) {
+    if (sfClock_getElapsedTime(gameTick).microseconds >= basicLatency/game.level) {
         sfClock_restart(gameTick); // Restart gameTick
         /* if bottom not reached */
         if ((wallCollisionCheck(0b0010) == 0)
@@ -259,15 +251,15 @@ int cellRotCollisionCheck()
 int wallRotCollisionCheck()
 {
     if(active.y < 0) //If shape has crossed Bottom border
-        for(int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++)
             if (active.c[-1-active.y][i])
                 return 1;    // Collision happens
     if(active.x < 0) //If shape has crossed Left border
-        for(int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++)
             if (active.c[i][-1-active.x])
                 return 1;    // Collision happens
     if(active.x > 6) //If shape has crossed Right border
-        for(int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++)
             if (active.c[i][3-(active.x-7)])
                 return 1;    // Collision happens
     return 0; // If no conditions are met collision is absent
@@ -349,7 +341,7 @@ void tKeyCtrl()
                 active.y--;
                 // Avoid excess move down by gameTick
                 sfClock_restart(gameTick);
-                scoreCurrent++;
+                game.scoreCurrent++;
             }
             repPushDown = sfClock_create();
         } else {
@@ -406,15 +398,13 @@ void tKeyCtrl()
             repKeyRight = sfClock_create();
         } else {
             if (!(arrKeys & 0b10000)) {
-                if (sfClock_getElapsedTime(repKeyRight)
-                                .microseconds
+                if (sfClock_getElapsedTime(repKeyRight).microseconds
                 >=  moveRepeatLatency1) {
                     arrKeys = arrKeys | 0b10000;
                     arrKeys = arrKeys & ~0b0001;
                 }
             } else if (!sfKeyboard_isKeyPressed(sfKeyLeft)) {
-                if (sfClock_getElapsedTime(repKeyRight)
-                                .microseconds
+                if (sfClock_getElapsedTime(repKeyRight).microseconds
                 >=  moveRepeatLatency2) // Wait short time
                     arrKeys = arrKeys & ~0b0001;
             }
@@ -434,25 +424,15 @@ void tKeyCtrl()
  */
 void colorizeFld()
 {
-    for(int j = 0; j < fld.size.y-5; j++) {
-        for(int i = 0; i < fld.size.x; i++) {
+    for (int j = 0; j < fld.size.y-5; j++)
+        for (int i = 0; i < fld.size.x; i++)
             if (fld.c[j][i].a) {
-                sfRectangleShape_setFillColor(
-                    fld.p[j][i],
-                    fld.c[j][i].fColor);
-                sfRectangleShape_setOutlineColor(
-                    fld.p[j][i],
-                    uiColor3);
+                sfRectangleShape_setFillColor(fld.p[j][i], fld.c[j][i].fColor);
+                sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor3);
             } else {
-                sfRectangleShape_setFillColor(
-                    fld.p[j][i],
-                    uiColor1);
-                sfRectangleShape_setOutlineColor(
-                    fld.p[j][i],
-                    uiColor2);
+                sfRectangleShape_setFillColor(fld.p[j][i], uiColor1);
+                sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor2);
             }
-        }
-    }
 }
 
 /*
@@ -460,10 +440,10 @@ void colorizeFld()
  * active cells above background of fld)
  *
  */
-void colorizeActiSh()
+void colorizeActive()
 {
-    for(int j = 0; j < 4; j++) {
-        for(int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++)
+        for (int i = 0; i < 4; i++)
             if (active.c[j][i] && j+active.y < 20) {
                 sfRectangleShape_setFillColor(
                         fld.p[j+active.y][i+active.x],
@@ -472,8 +452,6 @@ void colorizeActiSh()
                         fld.p[j+active.y][i+active.x],
                         uiColor3);
             }
-        }
-    }
 }
 
 
@@ -483,71 +461,51 @@ void colorizeActiSh()
  */
 void drawFld(sfRenderWindow *window)
 {
-    for (int j = 0; j < fld.size.y; j++){
-        for(int i = 0; i < fld.size.x; i++){
-            sfRenderWindow_drawRectangleShape(window,
-                              fld.p[j][i],
-                              NULL);
-        }
-    }
+    for (int j = 0; j < fld.size.y; j++)
+        for (int i = 0; i < fld.size.x; i++)
+            sfRenderWindow_drawRectangleShape(window, fld.p[j][i], NULL);
 }
 
 
-void menuTick()
-{
-    if(sfClock_getElapsedTime(mTick).microseconds >= lvlLatency) {
-        sfClock_restart(mTick);
-        colorizeRandom();
-    }
-}
-
-
-void colorizeRandom()
+void colorizeRandom(Field *fld)
 {
     int a;
-    for (int j = 0; j < fld.size.y-5; j++) {
-        for (int i = 0; i < fld.size.x; i++) {
+    for (int j = 0; j < fld->size.y-5; j++) {
+        for (int i = 0; i < fld->size.x; i++) {
             a = rand()%7+1;
             switch (a) {
                 case 1 :
-                    sfRectangleShape_setFillColor(fld.p[j][i],
-                                tOrange);
+                    sfRectangleShape_setFillColor(fld->p[j][i], tOrange);
                     break;
                 case 2 :
-                    sfRectangleShape_setFillColor(fld.p[j][i],
-                                tBlue);
+                    sfRectangleShape_setFillColor(fld->p[j][i], tBlue);
                     break;
                 case 3 :
-                    sfRectangleShape_setFillColor(fld.p[j][i],
-                                tRed);
+                    sfRectangleShape_setFillColor(fld->p[j][i], tRed);
                     break;
                 case 4 :
-                    sfRectangleShape_setFillColor(fld.p[j][i],
-                                tGreen);
+                    sfRectangleShape_setFillColor(fld->p[j][i], tGreen);
                     break;
                 case 5 :
-                    sfRectangleShape_setFillColor(fld.p[j][i],
-                                tYellow);
+                    sfRectangleShape_setFillColor(fld->p[j][i], tYellow);
                     break;
                 case 6 :
-                    sfRectangleShape_setFillColor(fld.p[j][i],
-                                tCyan);
+                    sfRectangleShape_setFillColor(fld->p[j][i], tCyan);
                     break;
                 case 7 :
-                    sfRectangleShape_setFillColor(fld.p[j][i],
-                                tMagneta);
+                    sfRectangleShape_setFillColor(fld->p[j][i], tMagneta);
                     break;
             }
-            sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor3);
+            sfRectangleShape_setOutlineColor(fld->p[j][i], uiColor3);
         }
     }
 }
 
 
-void gameover()
+void gameover(Game *game)
 {
-    gameIsStarted = 0;
-    scoreCurrent = 0;
+    game->isStarted = 0;
+    game->scoreCurrent = 0;
 }
 
 
@@ -615,18 +573,19 @@ void copyShape(Shape *localSh)
 void drawNextShape(sfRenderWindow *window)
 {
     static sfText *textNextShape;
-    sfVector2f textNextShapePos;
-    textNextShapePos.x = 250+10+10;
-    textNextShapePos.y = 80;
-    if (!textNextShape)
+    if (!textNextShape) {
+        sfVector2f textNextShapePos;
+        textNextShapePos.x = 250+10+10;
+        textNextShapePos.y = 80;
         textNextShape = sfText_create();
-    sfText_setFont(textNextShape, fontScore);
-    sfText_setCharacterSize(textNextShape, 20);
-    sfText_setPosition(textNextShape, textNextShapePos);
-    sfText_setString(textNextShape, "Next Shape: ");
+        sfText_setString(textNextShape, "Next Shape: ");
+        sfText_setFont(textNextShape, fontScore);
+        sfText_setCharacterSize(textNextShape, 20);
+        sfText_setPosition(textNextShape, textNextShapePos);
+    }
     sfRenderWindow_drawText(window, textNextShape, NULL);
-    for(int j = 0; j < 4; j++)
-        for(int i = 0; i < 4; i++)
+    for (int j = 0; j < 4; j++)
+        for (int i = 0; i < 4; i++)
             if (next.c[j][i]) {
                 sfRectangleShape_setFillColor(next.p[j][i], next.fColor);
                 sfRectangleShape_setOutlineColor(next.p[j][i], uiColor3);
@@ -634,11 +593,11 @@ void drawNextShape(sfRenderWindow *window)
             }
 }
 
-void cleanupFld() {
+void freeFld() {
     for (int j = 0; j < fld.size.y; j++)
-        for(int i = 0; i < fld.size.x; i++)
+        for (int i = 0; i < fld.size.x; i++)
             sfRectangleShape_destroy(fld.p[j][i]);
     for (int j = 0; j < 4; j++)
-        for(int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++)
             sfRectangleShape_destroy(next.p[j][i]);
 }

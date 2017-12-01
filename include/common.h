@@ -55,6 +55,12 @@ typedef struct Window {
     sfEvent event;
 } Window;
 
+typedef struct Game {
+    int isStarted;
+    int scoreCurrent;
+    int level;
+} Game;
+
 typedef struct Text {
     sfFont *font;
     sfText *text;

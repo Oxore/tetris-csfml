@@ -13,6 +13,7 @@
                   // first repeat move when long push
 #define moveRepeatLatency2  30000 // microseconds, for Left, Right and Down
                   // arrows, the rest repeat move when long push
+#define basicLatency 500000
 
 
 /*
