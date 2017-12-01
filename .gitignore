@@ -2,3 +2,4 @@ tetris
 *.o
 *.swp
 build
+tags

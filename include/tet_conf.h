@@ -1,4 +1,4 @@
-#define windowName_conf "SFML" // Window name
+#define windowName_conf "Tetris CSFML" // Window name
 #define uiColor1 sfColor_fromRGB(0, 0, 0) // Field background
 #define uiColor2 sfColor_fromRGB(80, 80, 80) // Field inactive cell outline
 #define uiColor3 sfColor_fromRGB(0, 0, 0) // Field active cell outline

@@ -3,29 +3,16 @@
 
 /* --- Variables --- */
 int gameIsStarted = 0;
-sfVideoMode mode = {450, 520, 32};
-sfRenderWindow* window;
-sfEvent event;
+Window w = {.mode = {450, 520, 32}};
 
-sfText *textMenu1;
-sfVector2f textMenu1_pos;
-
+Text menu1;
+Text menu2;
+Text score;
 sfFont *fontScore;
-sfText *textScore;
-sfVector2f textScore_pos;
-char *scoreDisp;
-int scoreCurrent = 0;
+Shape active, next;
+Field fld;
 
-sfRectangleShape* ns[4][4];    // Array of next shape image rectangles
-sfRectangleShape* fld[25][10]; // Array of fld rectangles
-sfVector2f fldCPos[25][10];    // Array of absolute coordinates of fld
-                // rectangles
-sfRectangleShape* ns[4][4];   // Array of next shape image rectangles
-sfVector2f nsCSize; // Next shape rectangles size variable x/y
-int fldCOutThick = 1;     // Field rectangles outline thickness
-sfVector2f fldCSize;    // Field rectangles size variable x/y
-sfVector2i fldSize;
-sfVector2f fldPos;
+int scoreCurrent = 0;
 
 uint8_t arrKeys = 0b00000000; // Arrow keys states byte container
 
@@ -52,64 +39,72 @@ void prepare() {
      * Dimensions of every fld's cell
      * 23px - fill color 1px - for outline, 25 - at all
      */
-    fldCSize = (sfVector2f){.x = 23, .y = 23}; //Fld's cell size in pixels
-    fldPos = (sfVector2f){.x = 10, .y = 10+500-20}; // Fld bot left corner
-    fldSize = (sfVector2i){.x = 10, .y = 25}; // Field's size in blocks
+    fld.cSize = (sfVector2f){.x = 23, .y = 23}; //Fld's cell size in pixels
+    fld.cOutThick = 1;
+    fld.pos = (sfVector2i){.x = 10, .y = 10+500-24}; // Fld bot left corner
+    fld.size = (sfVector2i){.x = 10, .y = 25}; // Field's size in blocks
 
-    nsCSize = (sfVector2f){.x = 23, .y = 23};
-    nxtShape = (struct shapeSt){.x = 250+10+20, .y = 200};
+    next = (Shape){.x = 250+10+20, .y = 200,
+        .cSize = {.x = 23, .y = 23}};
 
     initFld();
 
-    textScore_pos = (sfVector2f){.x = 250+10+10, .y = 10};
-    textScore = sfText_create();
-    sfText_setFont(textScore, fontScore);
-    sfText_setCharacterSize(textScore, 20);
-    sfText_setPosition(textScore, textScore_pos);
+    score.pos = (sfVector2f){.x = 250+10+10, .y = 10};
+    score.text = sfText_create();
+    sfText_setFont(score.text, fontScore);
+    sfText_setCharacterSize(score.text, 20);
+    sfText_setPosition(score.text, score.pos);
 
     /*
      * Menu texts
      *
      */
-    textMenu1_pos.x = 10+250+30;
-    textMenu1_pos.y = 100;
-    textMenu1 = sfText_create();
-    sfText_setFont(textMenu1, fontScore);
-    sfText_setCharacterSize(textMenu1, 36);
-    sfText_setPosition(textMenu1, textMenu1_pos);
-    char b[7];
-    sprintf(b, "TETRIS");
-    sfText_setString(textMenu1, (char *)&b);
+    menu1.pos.x = 10+250+30;
+    menu1.pos.y = 100;
+    menu1.text = sfText_create();
+    sfText_setFont(menu1.text, fontScore);
+    sfText_setCharacterSize(menu1.text, 36);
+    sfText_setPosition(menu1.text, menu1.pos);
+    sfText_setString(menu1.text, "TETRIS");
 
-    window = sfRenderWindow_create(mode,
+    menu2.pos.x = 10+250+16;
+    menu2.pos.y = 200;
+    menu2.text = sfText_create();
+    sfText_setFont(menu2.text, fontScore);
+    sfText_setCharacterSize(menu2.text, 20);
+    sfText_setPosition(menu2.text, menu2.pos);
+    sfText_setString(menu2.text, "Press \"S\" to start");
+
+    w.window = sfRenderWindow_create(w.mode,
             windowName_conf,
             sfResize | sfClose,
             NULL);
-    if (!window)
+    if (!w.window)
         exit(EXIT_FAILURE);
 }
 
 void handleWindowEvents() {
-    while (sfRenderWindow_pollEvent(window, &event))
-        if (event.type == sfEvtClosed)
-            sfRenderWindow_close(window);
+    while (sfRenderWindow_pollEvent(w.window, &w.event))
+        if (w.event.type == sfEvtClosed)
+            sfRenderWindow_close(w.window);
 }
 
 void gameLoop() {
     tTick();
     tKeyCtrl();
-    scoreDisplay(scoreCurrent, textScore);
+    scoreDisplay(scoreCurrent, &score);
     colorizeFld();
     colorizeActiSh();
-    drawFld(window);
-    drawNextShape(window);
-    sfRenderWindow_drawText(window, textScore, NULL);
+    drawFld(w.window);
+    drawNextShape(w.window);
+    sfRenderWindow_drawText(w.window, score.text, NULL);
 }
 
 void menuLoop() {
     menuTick();
-    drawFld(window);
-    sfRenderWindow_drawText(window, textMenu1, NULL);
+    drawFld(w.window);
+    sfRenderWindow_drawText(w.window, menu1.text, NULL);
+    sfRenderWindow_drawText(w.window, menu2.text, NULL);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         gameIsStarted = 1;
         cleanupFld();
@@ -118,32 +113,29 @@ void menuLoop() {
 }
 
 void mainLoop() {
-    while (sfRenderWindow_isOpen(window)) {
+    while (sfRenderWindow_isOpen(w.window)) {
         handleWindowEvents();
-        sfRenderWindow_clear(window, sfBlack);
+        sfRenderWindow_clear(w.window, sfBlack);
         if (gameIsStarted) {
             gameLoop();
         } else {
             menuLoop();
         }
-        sfRenderWindow_display(window);
+        sfRenderWindow_display(w.window);
     }
 }
 
 int main()
 {
     prepare();
-
     colorizeRandom();
     mainLoop();
-
     /* Just senseless printf */
     printf("%d\n", scoreCurrent);
-
     cleanupFld();
-    sfRenderWindow_destroy(window);
-    sfText_destroy(textScore);
-    sfText_destroy(textMenu1);
+    sfRenderWindow_destroy(w.window);
+    sfText_destroy(score.text);
+    sfText_destroy(menu1.text);
 
     return EXIT_SUCCESS;
 }

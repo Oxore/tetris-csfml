@@ -3,17 +3,10 @@
 
 /* Externs from main.c */
 
-extern sfRectangleShape* ns[4][4];   // Array of next shape image rectangles
-extern sfVector2f nsCSize; // Next shape rectangles size variable x/y
-extern sfRectangleShape *fld[25][10]; // Array of field rectangles
-extern sfVector2f fldCPos[25][10]; // Array of abs coords of field rectangles
-extern sfVector2i fldSize;
-extern sfVector2f fldPos;
-extern sfVector2f fldCSize; // Field rectangles size variable x/y
-extern int fldCOutThick; // Field rectangles outline thickness
+extern Shape active, next;
+extern Field fld;
 
 extern sfVector2f textScore_pos;
-extern sfText *textScore;
 extern sfFont *fontScore;
 extern int gameIsStarted;
 
@@ -37,7 +30,7 @@ extern sfClock *repKeyRight; // Clock for repeat latency when Left arrow long pu
 
 extern int lvlLatency;
 extern int scoreCurrent;
-extern char *scoreDisp;
+
 /* Shapes maps */
 extern uint8_t arrShapeL[4][4];
 extern uint8_t arrShapeRL[4][4];
@@ -51,34 +44,33 @@ extern uint8_t arrShapeT[4][4];
 /* Field init routine */
 void initFld()
 {
+    sfVector2f fldCPos[25][10];
     /* Create field */
-    for (int j = 0; j < fldSize.y; j++) {
-        for(int i = 0; i < fldSize.x; i++) {
-            fldCAtt[j][i].a = 0;    // Inactive = empty
-            fldCPos[j][i].x = fldPos.x
-                + (i * (fldCSize.x + 2 * fldCOutThick));
-            fldCPos[j][i].y = fldPos.y -
-                (j * (fldCSize.y + 2 * fldCOutThick));
-            fld[j][i] = sfRectangleShape_create();
-            sfRectangleShape_setFillColor(fld[j][i], uiColor1);
-            sfRectangleShape_setSize(fld[j][i], fldCSize);
-            sfRectangleShape_setPosition(fld[j][i], fldCPos[j][i]);
-            sfRectangleShape_setOutlineColor(fld[j][i], uiColor3);
-            sfRectangleShape_setOutlineThickness(fld[j][i],
-                fldCOutThick);
+    for (int j = 0; j < fld.size.y; j++) {
+        for(int i = 0; i < fld.size.x; i++) {
+            fld.c[j][i].a = 0;    // Inactive = empty
+            fldCPos[j][i].x = fld.pos.x + (i * (fld.cSize.x + 2 * fld.cOutThick));
+            fldCPos[j][i].y = fld.pos.y - (j * (fld.cSize.y + 2 * fld.cOutThick));
+            fld.p[j][i] = sfRectangleShape_create();
+            sfRectangleShape_setFillColor(fld.p[j][i], uiColor1);
+            sfRectangleShape_setSize(fld.p[j][i], fld.cSize);
+            sfRectangleShape_setPosition(fld.p[j][i], fldCPos[j][i]);
+            sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor3);
+            sfRectangleShape_setOutlineThickness(fld.p[j][i],
+                fld.cOutThick);
         }
     }
     /* Create next shape field */
     sfVector2f nsPos;
     for (int j = 0; j < 4; j++) {
         for(int i = 0; i < 4; i++) {
-            nsPos.x = nxtShape.x+i*(nsCSize.x+2*fldCOutThick);
-            nsPos.y = nxtShape.y-j*(nsCSize.y+2*fldCOutThick);
-            ns[j][i] = sfRectangleShape_create();
-            sfRectangleShape_setSize(ns[j][i], nsCSize);
-            sfRectangleShape_setPosition(ns[j][i], nsPos);
-            sfRectangleShape_setOutlineThickness(ns[j][i],
-                                 fldCOutThick);
+            nsPos.x = next.x+i*(next.cSize.x+2*fld.cOutThick);
+            nsPos.y = next.y-j*(next.cSize.y+2*fld.cOutThick);
+            next.p[j][i] = sfRectangleShape_create();
+            sfRectangleShape_setSize(next.p[j][i], next.cSize);
+            sfRectangleShape_setPosition(next.p[j][i], nsPos);
+            sfRectangleShape_setOutlineThickness(next.p[j][i],
+                                 fld.cOutThick);
         }
     }
     genNextShape();
@@ -89,17 +81,17 @@ void initFld()
  * Refreshes score
  *
  */
-void scoreDisplay(int score, sfText *textScore)
+void scoreDisplay(int s, Text *textScore)
 {
     char a[64];
     char b[8];
     sprintf(b, "Score: ");
-    sprintf(a, "%d", score);
+    sprintf(a, "%d", s);
     for (int i = 63; i >= 7; i--)
         a[i] = a[i-7];
     for (int i = 0; i < 7; i++)
         a[i] = b[i];
-    sfText_setString(textScore, (char *)&a);
+    sfText_setString(textScore->text, (char *)&a);
 }
 
 /*
@@ -112,7 +104,7 @@ int linesRmScore()
     int s = 0;
     for (int j = 0; j < 20; j++) {
         for (int i = 0; i < 10; i++) {
-            if (fldCAtt[j][i].a != 0)
+            if (fld.c[j][i].a != 0)
                 k++;
         }
         if (k >= 10) {    // If line is full
@@ -120,15 +112,15 @@ int linesRmScore()
             for (int n = j; n < 20; n++) {    // Drop all lines down
                 if (n == 19) {
                     for (int m = 0; m < 10; m++) {
-                        fldCAtt[n][m].a = 0;
-                        fldCAtt[n][m].fColor = uiColor1;
+                        fld.c[n][m].a = 0;
+                        fld.c[n][m].fColor = uiColor1;
                     }
                     break;
                 }
                 for (int m = 0; m < 10; m++) {
-                    fldCAtt[n][m].a = fldCAtt[n+1][m].a;
-                    fldCAtt[n][m].fColor
-                        = fldCAtt[n+1][m].fColor;
+                    fld.c[n][m].a = fld.c[n+1][m].a;
+                    fld.c[n][m].fColor
+                        = fld.c[n+1][m].fColor;
                 }
             }
             j--;     // Do not let loop to go to next line because
@@ -146,23 +138,16 @@ int linesRmScore()
  */
 void putShape()
 {
-    for (int j = 0; j < 4; j++) {
-        for (int i = 0; i < 4; i++) {
-            if (actiSh.c[j][i]) {
-                fldCAtt[j+actiSh.y][i+actiSh.x].a
-                    = actiSh.c[j][i];
-                if ((j+actiSh.y >= 0)
-                && (i+actiSh.x >= 0)) {
-                    fldCAtt[j+actiSh.y][i+actiSh.x].fColor
-                        = actiSh.fColor;
-                }
+    for (int j = 0; j < 4; j++)
+        for (int i = 0; i < 4; i++)
+            if (active.c[j][i]) {
+                fld.c[j+active.y][i+active.x].a = active.c[j][i];
+                if ((j+active.y >= 0) && (i+active.x >= 0))
+                    fld.c[j+active.y][i+active.x].fColor = active.fColor;
             }
-        }
-    }
-    scoreCurrent += linesRmScore()*100;     // Remove filled lines and
-                        // get score;
+    scoreCurrent += linesRmScore()*100; // Remove filled lines and get score;
     for (int i = 0; i < 10; i++)
-        if (fldCAtt[20][i].a) {
+        if (fld.c[20][i].a) {
             gameover();
             return;
         }
@@ -172,15 +157,15 @@ void putShape()
 void resetActiveShape()
 {
     genNextShape();
-    copyShape(&actiSh);
-    actiSh.x = 3;
-    if (actiSh.t == 6)
-        actiSh.y = 17;
+    copyShape(&active);
+    active.x = 3;
+    if (active.t == 6)
+        active.y = 17;
     else
-        actiSh.y = 16;
+        active.y = 16;
     for (;;) {
         if (cellCollisionCheck(0b0010))
-            actiSh.y++;
+            active.y++;
         else
             break;
     }
@@ -197,7 +182,7 @@ void tTick()
         /* if bottom not reached */
         if ((wallCollisionCheck(0b0010) == 0)
         && (cellCollisionCheck(0b0010) == 0))
-            actiSh.y--; // Move
+            active.y--; // Move
         else
             putShape(); // Just put the shape
     }
@@ -211,18 +196,18 @@ void tTick()
 void rotateLeft()
 {
     uint8_t arr[4][4];
-    memcpy(&arr[0][0], &actiSh.c[0][0], sizeof(uint8_t)*4*4);
-    if (actiSh.t == 5)
+    memcpy(&arr[0][0], &active.c[0][0], sizeof(uint8_t)*4*4);
+    if (active.t == 5)
         return;
-    if (actiSh.t == 6) {
+    if (active.t == 6) {
         for (int j = 3; j >= 0; j--)
             for (int i = 0; i < 4; i++)
-                actiSh.c[j][i] = arr[3-i][3-j];
+                active.c[j][i] = arr[3-i][3-j];
         return;
     }
     for (int j = 3; j > 0; j--)
         for (int i = 0; i < 3; i++)
-            actiSh.c[j][i] = arr[3-i][j-1];
+            active.c[j][i] = arr[3-i][j-1];
 }
 
 
@@ -233,18 +218,18 @@ void rotateLeft()
 void rotateRight()
 {
     uint8_t arr[4][4];
-    memcpy(&arr[0][0], &actiSh.c[0][0], sizeof(uint8_t)*4*4);
-    if (actiSh.t == 5)
+    memcpy(&arr[0][0], &active.c[0][0], sizeof(uint8_t)*4*4);
+    if (active.t == 5)
         return;
-    if (actiSh.t == 6) {
+    if (active.t == 6) {
         for (int j = 3; j >= 0; j--)
             for (int i = 0; i < 4; i++)
-                actiSh.c[j][i] = arr[3-i][3-j];
+                active.c[j][i] = arr[3-i][3-j];
         return;
     }
     for (int j = 3; j > 0; j--)
         for (int i = 0; i < 3; i++)
-            actiSh.c[j][i] = arr[i+1][3-j];
+            active.c[j][i] = arr[i+1][3-j];
 }
 
 
@@ -264,8 +249,8 @@ int cellRotCollisionCheck()
 {
     for (int j = 0; j < 4; j++)
         for (int i = 0; i < 4; i++)
-            if (actiSh.c[j][i]
-            && fldCAtt[j+actiSh.y][i+actiSh.x].a)
+            if (active.c[j][i]
+            && fld.c[j+active.y][i+active.x].a)
                 return 1; // Collision happens
     return 0; // Else it do not
 }
@@ -273,17 +258,17 @@ int cellRotCollisionCheck()
 
 int wallRotCollisionCheck()
 {
-    if(actiSh.y < 0) //If shape has crossed Bottom border
+    if(active.y < 0) //If shape has crossed Bottom border
         for(int i = 0; i < 4; i++)
-            if (actiSh.c[-1-actiSh.y][i])
+            if (active.c[-1-active.y][i])
                 return 1;    // Collision happens
-    if(actiSh.x < 0) //If shape has crossed Left border
+    if(active.x < 0) //If shape has crossed Left border
         for(int i = 0; i < 4; i++)
-            if (actiSh.c[i][-1-actiSh.x])
+            if (active.c[i][-1-active.x])
                 return 1;    // Collision happens
-    if(actiSh.x > 6) //If shape has crossed Right border
+    if(active.x > 6) //If shape has crossed Right border
         for(int i = 0; i < 4; i++)
-            if (actiSh.c[i][3-(actiSh.x-7)])
+            if (active.c[i][3-(active.x-7)])
                 return 1;    // Collision happens
     return 0; // If no conditions are met collision is absent
 }
@@ -294,22 +279,22 @@ int cellCollisionCheck(int dir)
     for (int j = 0; j < 4; j++) {
         for (int i = 0; i < 4; i++) {
             if ((dir & 0b0001) // Check Right
-            && (j+actiSh.y >= 0) // Avoiding nonexisting fld cells
-            && (i+actiSh.x+1 >= 0) // ---
-            && actiSh.c[j][i] // Check activity
-            && fldCAtt[j+actiSh.y][i+actiSh.x+1].a)
+            && (j+active.y >= 0) // Avoiding nonexisting fld cells
+            && (i+active.x+1 >= 0) // ---
+            && active.c[j][i] // Check activity
+            && fld.c[j+active.y][i+active.x+1].a)
                 return 1; // Collision happens
             if ((dir & 0b1000) // Check Left
-            && (j+actiSh.y >= 0) // Avoiding nonexisting fld cells
-            && (i+actiSh.x-1 >= 0) // ---
-            && actiSh.c[j][i] // Check activity
-            && fldCAtt[j+actiSh.y][i+actiSh.x-1].a)
+            && (j+active.y >= 0) // Avoiding nonexisting fld cells
+            && (i+active.x-1 >= 0) // ---
+            && active.c[j][i] // Check activity
+            && fld.c[j+active.y][i+active.x-1].a)
                 return 1; // Collision happens
             if ((dir & 0b0010) // Check Bottom
-            && (j+actiSh.y-1 >= 0) // Avoiding nonexisting fld cells
-            && (i+actiSh.x >= 0) // ---
-            && actiSh.c[j][i] // Check activity
-            && fldCAtt[j+actiSh.y-1][i+actiSh.x].a)
+            && (j+active.y-1 >= 0) // Avoiding nonexisting fld cells
+            && (i+active.x >= 0) // ---
+            && active.c[j][i] // Check activity
+            && fld.c[j+active.y-1][i+active.x].a)
                 return 1; // Collision happens
         }
     }
@@ -319,19 +304,19 @@ int cellCollisionCheck(int dir)
 int wallCollisionCheck(int dir)
 {
     if (dir & 0b0001) { // Right collision request
-        if (actiSh.x >= 6) // If shape has reached Right boreder
+        if (active.x >= 6) // If shape has reached Right boreder
             for (int i = 0 ; i < 4; i++)
-                if (actiSh.c[i][3-(actiSh.x-6)])
+                if (active.c[i][3-(active.x-6)])
                     return 1; // Collision happens
     } else if (dir & 0b0010) { // Bottom collision request
-        if (actiSh.y <= 0) //If shape has reached Bottom border
+        if (active.y <= 0) //If shape has reached Bottom border
             for (int i = 0; i < 4; i++)
-                if (actiSh.c[-actiSh.y][i])
+                if (active.c[-active.y][i])
                     return 1; // Collision happens
     } else if (dir & 0b1000) // Left collision request
-        if (actiSh.x <= 0) // If shape has reached Left border
+        if (active.x <= 0) // If shape has reached Left border
             for (int i = 0; i < 4; i++)
-                if (actiSh.c[i][-actiSh.x])
+                if (active.c[i][-active.x])
                     return 1; // Collision happens
     return 0;
 }
@@ -361,7 +346,7 @@ void tKeyCtrl()
             arrKeys = arrKeys | 0b0010;
             if (!wallCollisionCheck(0b0010)
             && !cellCollisionCheck(0b0010)) {
-                actiSh.y--;
+                active.y--;
                 // Avoid excess move down by gameTick
                 sfClock_restart(gameTick);
                 scoreCurrent++;
@@ -386,7 +371,7 @@ void tKeyCtrl()
             arrKeys = arrKeys | 0b1000;
             if (!wallCollisionCheck(0b1000)
             && !cellCollisionCheck(0b1000))
-                actiSh.x--;
+                active.x--;
             repKeyLeft = sfClock_create();
         } else {
             if (!(arrKeys & 0b10000000)) {
@@ -417,7 +402,7 @@ void tKeyCtrl()
             arrKeys = arrKeys | 0b0001;
             if (!wallCollisionCheck(0b0001)
             && !cellCollisionCheck(0b0001))
-                actiSh.x++;
+                active.x++;
             repKeyRight = sfClock_create();
         } else {
             if (!(arrKeys & 0b10000)) {
@@ -449,27 +434,26 @@ void tKeyCtrl()
  */
 void colorizeFld()
 {
-    for(int j = 0; j < fldSize.y-5; j++) {
-        for(int i = 0; i < fldSize.x; i++) {
-            if (fldCAtt[j][i].a) {
+    for(int j = 0; j < fld.size.y-5; j++) {
+        for(int i = 0; i < fld.size.x; i++) {
+            if (fld.c[j][i].a) {
                 sfRectangleShape_setFillColor(
-                    fld[j][i],
-                    fldCAtt[j][i].fColor);
+                    fld.p[j][i],
+                    fld.c[j][i].fColor);
                 sfRectangleShape_setOutlineColor(
-                    fld[j][i],
+                    fld.p[j][i],
                     uiColor3);
             } else {
                 sfRectangleShape_setFillColor(
-                    fld[j][i],
+                    fld.p[j][i],
                     uiColor1);
                 sfRectangleShape_setOutlineColor(
-                    fld[j][i],
+                    fld.p[j][i],
                     uiColor2);
             }
         }
     }
 }
-
 
 /*
  * Colorize active cells of active shape (overlay only
@@ -480,12 +464,12 @@ void colorizeActiSh()
 {
     for(int j = 0; j < 4; j++) {
         for(int i = 0; i < 4; i++) {
-            if (actiSh.c[j][i] && j+actiSh.y < 20) {
+            if (active.c[j][i] && j+active.y < 20) {
                 sfRectangleShape_setFillColor(
-                        fld[j+actiSh.y][i+actiSh.x],
-                        actiSh.fColor);
+                        fld.p[j+active.y][i+active.x],
+                        active.fColor);
                 sfRectangleShape_setOutlineColor(
-                        fld[j+actiSh.y][i+actiSh.x],
+                        fld.p[j+active.y][i+active.x],
                         uiColor3);
             }
         }
@@ -499,10 +483,10 @@ void colorizeActiSh()
  */
 void drawFld(sfRenderWindow *window)
 {
-    for (int j = 0; j < fldSize.y; j++){
-        for(int i = 0; i < fldSize.x; i++){
+    for (int j = 0; j < fld.size.y; j++){
+        for(int i = 0; i < fld.size.x; i++){
             sfRenderWindow_drawRectangleShape(window,
-                              fld[j][i],
+                              fld.p[j][i],
                               NULL);
         }
     }
@@ -521,40 +505,40 @@ void menuTick()
 void colorizeRandom()
 {
     int a;
-    for (int j = 0; j < fldSize.y-5; j++) {
-        for (int i = 0; i < fldSize.x; i++) {
+    for (int j = 0; j < fld.size.y-5; j++) {
+        for (int i = 0; i < fld.size.x; i++) {
             a = rand()%7+1;
             switch (a) {
                 case 1 :
-                    sfRectangleShape_setFillColor(fld[j][i],
+                    sfRectangleShape_setFillColor(fld.p[j][i],
                                 tOrange);
                     break;
                 case 2 :
-                    sfRectangleShape_setFillColor(fld[j][i],
+                    sfRectangleShape_setFillColor(fld.p[j][i],
                                 tBlue);
                     break;
                 case 3 :
-                    sfRectangleShape_setFillColor(fld[j][i],
+                    sfRectangleShape_setFillColor(fld.p[j][i],
                                 tRed);
                     break;
                 case 4 :
-                    sfRectangleShape_setFillColor(fld[j][i],
+                    sfRectangleShape_setFillColor(fld.p[j][i],
                                 tGreen);
                     break;
                 case 5 :
-                    sfRectangleShape_setFillColor(fld[j][i],
+                    sfRectangleShape_setFillColor(fld.p[j][i],
                                 tYellow);
                     break;
                 case 6 :
-                    sfRectangleShape_setFillColor(fld[j][i],
+                    sfRectangleShape_setFillColor(fld.p[j][i],
                                 tCyan);
                     break;
                 case 7 :
-                    sfRectangleShape_setFillColor(fld[j][i],
+                    sfRectangleShape_setFillColor(fld.p[j][i],
                                 tMagneta);
                     break;
             }
-            sfRectangleShape_setOutlineColor(fld[j][i], uiColor3);
+            sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor3);
         }
     }
 }
@@ -569,17 +553,17 @@ void gameover()
 
 void genNextShape()
 {
-    actiSh.t = nxtShape.t;
-    nxtShape.t = (rand()%7)+1; // Insert new random shape of 7 variants
-    copyShape(&nxtShape);
-    if (nxtShape.t == 5)
+    active.t = next.t;
+    next.t = (rand()%7)+1; // Insert new random shape of 7 variants
+    copyShape(&next);
+    if (next.t == 5)
         for (int j = 0; j < 3; j++)
             for (int i = 0; i < 4; i++)
-                nxtShape.c[i][j] = nxtShape.c[i][j+1];
+                next.c[i][j] = next.c[i][j+1];
 }
 
 
-void copyShape(struct shapeSt *localSh)
+void copyShape(Shape *localSh)
 {
     switch (localSh->t) { // Copy cell active/inactive state
         case 1 :
@@ -639,28 +623,22 @@ void drawNextShape(sfRenderWindow *window)
     sfText_setFont(textNextShape, fontScore);
     sfText_setCharacterSize(textNextShape, 20);
     sfText_setPosition(textNextShape, textNextShapePos);
-    char a[13];
-    sprintf(a, "Next Shape: ");
-    sfText_setString(textNextShape, (char *)&a);
+    sfText_setString(textNextShape, "Next Shape: ");
     sfRenderWindow_drawText(window, textNextShape, NULL);
     for(int j = 0; j < 4; j++)
         for(int i = 0; i < 4; i++)
-            if (nxtShape.c[j][i]) {
-                sfRectangleShape_setFillColor(ns[j][i],
-                                  nxtShape.fColor);
-                sfRectangleShape_setOutlineColor(ns[j][i],
-                                 uiColor3);
-                sfRenderWindow_drawRectangleShape(window,
-                                  ns[j][i],
-                                  NULL);
+            if (next.c[j][i]) {
+                sfRectangleShape_setFillColor(next.p[j][i], next.fColor);
+                sfRectangleShape_setOutlineColor(next.p[j][i], uiColor3);
+                sfRenderWindow_drawRectangleShape(window, next.p[j][i], NULL);
             }
 }
 
 void cleanupFld() {
-    for (int j = 0; j < fldSize.y; j++)
-        for(int i = 0; i < fldSize.x; i++)
-            sfRectangleShape_destroy(fld[j][i]);
+    for (int j = 0; j < fld.size.y; j++)
+        for(int i = 0; i < fld.size.x; i++)
+            sfRectangleShape_destroy(fld.p[j][i]);
     for (int j = 0; j < 4; j++)
         for(int i = 0; i < 4; i++)
-            sfRectangleShape_destroy(ns[j][i]);
+            sfRectangleShape_destroy(next.p[j][i]);
 }
