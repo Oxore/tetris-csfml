@@ -38,7 +38,6 @@ typedef struct Shape {
     sfRectangleShape *p[4][4]; // array of physical shape cells
     sfVector2f cSize; // shape rectangles size variable x/y
 } Shape; 
-Shape active, next;
 
 typedef struct Field {
     sfVector2i pos;
