@@ -44,7 +44,7 @@ void prepare() {
         .cSize = {.x = 23, .y = 23}};
 
     initFld();
-    texts = ListOfText_getFromListOfKeyMapOfString(ListOfKeyMapOfString_getFromYaml("dat/ya.yaml"));
+    texts = ListOfText_getFromListOfKeyMapOfString(ListOfKeyMapOfString_getFromYaml("dat/texts.yaml"));
     w.window = sfRenderWindow_create(w.mode,
             windowName_conf,
             sfResize | sfClose,
