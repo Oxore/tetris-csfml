@@ -1,9 +1,12 @@
-#include <yaml.h>
-#include <SFML/Graphics.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <SFML/Graphics/Font.h>
+#include <SFML/Graphics/Text.h>
+#include <SFML/Graphics.h>
+#include <yaml.h>
 
+#include "common.h"
 #include "text.h"
 
 extern sfFont *fontScore;

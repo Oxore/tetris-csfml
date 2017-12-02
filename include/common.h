@@ -1,19 +1,10 @@
-#ifndef TCOMMON_H
-#define TCOMMON_H
-
-#include <SFML/Audio.h>
-#include <SFML/Graphics.h>
-#include <SFML/System.h>
-#include <SFML/Window/Keyboard.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <time.h>
-#include "tet_conf.h"
+/*
+ *  Types
+ *
+ * */
 
 typedef struct Cell {
-    uint8_t a; // active/empty state of cell
+    char a; // active/empty state of cell
     sfColor fColor; // fill color
 } Cell;
 
@@ -34,7 +25,7 @@ typedef struct Shape {
     int y; // y coord of shape's bottom
     int t; // shape type
     sfColor fColor; // shape color
-    uint8_t c[4][4]; // array of logic shape cells
+    char c[4][4]; // array of logic shape cells
     sfRectangleShape *p[4][4]; // array of physical shape cells
     sfVector2f cSize; // shape rectangles size variable x/y
 } Shape; 
@@ -87,5 +78,3 @@ typedef struct Text {
     char *text;
     void *sfText;
 } Text;
-
-#endif

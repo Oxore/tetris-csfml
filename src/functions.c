@@ -1,4 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <SFML/System/Clock.h>
+#include <SFML/Graphics/RenderWindow.h>
+#include <SFML/Graphics/Text.h>
+#include <SFML/Graphics/RectangleShape.h>
+
 #include "common.h"
+#include "tet_conf.h"
 #include "functions.h"
 
 /* Externs from main.c */
@@ -8,7 +17,7 @@ extern Field fld;
 
 extern sfFont *fontScore;
 
-extern uint8_t arrKeys;    // Arrow keys states byte container
+extern char arrKeys;    // Arrow keys states byte container
 /* arrKeys = ...n|7|6|5|4|3|2|1|0| (just a bit of so called "bit fucking")
  * 0 - Right arrow pushed and held
  * 1 - Down arrow pushed and held
@@ -28,13 +37,13 @@ extern sfClock *repKeyLeft; // Clock for repeat latency when Left arrow long pus
 extern sfClock *repKeyRight; // Clock for repeat latency when Left arrow long push
 
 /* Shapes maps */
-extern uint8_t arrShapeL[4][4];
-extern uint8_t arrShapeRL[4][4];
-extern uint8_t arrShapeZ[4][4];
-extern uint8_t arrShapeS[4][4];
-extern uint8_t arrShapeB[4][4];
-extern uint8_t arrShapeI[4][4];
-extern uint8_t arrShapeT[4][4];
+extern char arrShapeL[4][4];
+extern char arrShapeRL[4][4];
+extern char arrShapeZ[4][4];
+extern char arrShapeS[4][4];
+extern char arrShapeB[4][4];
+extern char arrShapeI[4][4];
+extern char arrShapeT[4][4];
 
 
 /* Field init routine */
@@ -209,8 +218,8 @@ void tTick()
  */
 void rotateLeft()
 {
-    uint8_t arr[4][4];
-    memcpy(&arr[0][0], &active.c[0][0], sizeof(uint8_t)*4*4);
+    char arr[4][4];
+    memcpy(&arr[0][0], &active.c[0][0], sizeof(char)*4*4);
     if (active.t == 5)
         return;
     if (active.t == 6) {
@@ -231,8 +240,8 @@ void rotateLeft()
  */
 void rotateRight()
 {
-    uint8_t arr[4][4];
-    memcpy(&arr[0][0], &active.c[0][0], sizeof(uint8_t)*4*4);
+    char arr[4][4];
+    memcpy(&arr[0][0], &active.c[0][0], sizeof(char)*4*4);
     if (active.t == 5)
         return;
     if (active.t == 6) {
@@ -553,31 +562,31 @@ void copyShape(Shape *localSh)
 {
     switch (localSh->t) { // Copy cell active/inactive state
         case 1 :
-            memcpy(&localSh->c[0][0], &arrShapeL[0][0], sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeL[0][0], sizeof(char)*4*4);
             localSh->fColor = tOrange;
             break;
         case 2 :
-            memcpy(&localSh->c[0][0], &arrShapeRL[0][0], sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeRL[0][0], sizeof(char)*4*4);
             localSh->fColor = tBlue;
             break;
         case 3 :
-            memcpy(&localSh->c[0][0], &arrShapeZ[0][0], sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeZ[0][0], sizeof(char)*4*4);
             localSh->fColor = tRed;
             break;
         case 4 :
-            memcpy(&localSh->c[0][0], &arrShapeS[0][0], sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeS[0][0], sizeof(char)*4*4);
             localSh->fColor = tGreen;
             break;
         case 5 :
-            memcpy(&localSh->c[0][0], &arrShapeB[0][0], sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeB[0][0], sizeof(char)*4*4);
             localSh->fColor = tYellow;
             break;
         case 6 :
-            memcpy(&localSh->c[0][0], &arrShapeI[0][0], sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeI[0][0], sizeof(char)*4*4);
             localSh->fColor = tCyan;
             break;
         case 7 :
-            memcpy(&localSh->c[0][0], &arrShapeT[0][0], sizeof(uint8_t)*4*4);
+            memcpy(&localSh->c[0][0], &arrShapeT[0][0], sizeof(char)*4*4);
             localSh->fColor = tMagneta;
             break;
     }

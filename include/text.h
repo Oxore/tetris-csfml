@@ -1,6 +1,3 @@
-#include <SFML/Graphics.h>
-#include "common.h"
-
 FILE *openFile(char *filename);
 void checkArgs(int argc, char **argv);
 KeyMap *KeyMap_getLast(KeyMap **keyMap);

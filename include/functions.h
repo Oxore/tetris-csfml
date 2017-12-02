@@ -1,7 +1,3 @@
-#ifndef TFUNCTIONS_H
-#define TFUNCTIONS_H
-
-/* Prototypes of functions*/
 void tKeyCtrl();
 void initFld();
 void tTick();
@@ -26,5 +22,3 @@ void genNextShape();
 void copyShape(Shape *localSh);
 void drawNextShape();
 void freeFld();
-
-#endif

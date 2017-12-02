@@ -1,6 +1,16 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <SFML/System/Clock.h>
+#include <SFML/Window/Keyboard.h>
+#include <SFML/Graphics/RenderWindow.h>
+#include <SFML/Graphics/Font.h>
+
 #include "common.h"
 #include "functions.h"
 #include "text.h"
+#include "tet_conf.h"
 
 /* --- Variables --- */
 Window w = {.mode = {450, 520, 32}};
@@ -10,7 +20,7 @@ sfFont *fontScore;
 Shape active, next;
 Field fld;
 
-uint8_t arrKeys = 0b00000000; // Arrow keys states byte container
+char arrKeys = 0b00000000; // Arrow keys states byte container
 /* --- Variables End --- */
 
 sfClock *gameTick;
