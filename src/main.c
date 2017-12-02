@@ -1,9 +1,11 @@
 #include "common.h"
 #include "functions.h"
+#include "text.h"
 
 /* --- Variables --- */
 Window w = {.mode = {450, 520, 32}};
 Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1};
+List *texts;
 Text menu1;
 Text menu2;
 Text score;
@@ -45,37 +47,32 @@ void prepare() {
 
     initFld();
 
-    score.pos = (sfVector2f){.x = 250+10+10, .y = 10};
-    score.text = sfText_create();
-    sfText_setFont(score.text, fontScore);
-    sfText_setCharacterSize(score.text, 20);
-    sfText_setPosition(score.text, score.pos);
+    texts = ListOfText_getFromListOfKeyMapOfString(ListOfKeyMapOfString_getFromYaml("dat/ya.yaml"));
+    score.sfText = sfText_create();
+    sfText_setFont(score.sfText, fontScore);
+    sfText_setCharacterSize(score.sfText, 20);
+    sfText_setPosition(score.sfText, (sfVector2f){.x = 250+10+10, .y = 10});
 
-    level.pos = (sfVector2f){.x = 250+10+10, .y = 44};
-    level.text = sfText_create();
-    sfText_setFont(level.text, fontScore);
-    sfText_setCharacterSize(level.text, 20);
-    sfText_setPosition(level.text, level.pos);
+    level.sfText = sfText_create();
+    sfText_setFont(level.sfText, fontScore);
+    sfText_setCharacterSize(level.sfText, 20);
+    sfText_setPosition(level.sfText, (sfVector2f){.x = 250+10+10, .y = 44});
 
     /*
      * Menu texts
      *
      */
-    menu1.pos.x = 10+250+30;
-    menu1.pos.y = 100;
-    menu1.text = sfText_create();
-    sfText_setFont(menu1.text, fontScore);
-    sfText_setCharacterSize(menu1.text, 36);
-    sfText_setPosition(menu1.text, menu1.pos);
-    sfText_setString(menu1.text, "TETRIS");
+    menu1.sfText = sfText_create();
+    sfText_setFont(menu1.sfText, fontScore);
+    sfText_setCharacterSize(menu1.sfText, 36);
+    sfText_setPosition(menu1.sfText, (sfVector2f){.x = 250+10+30, .y = 100});
+    sfText_setString(menu1.sfText, "TETRIS");
 
-    menu2.pos.x = 10+250+16;
-    menu2.pos.y = 200;
-    menu2.text = sfText_create();
-    sfText_setFont(menu2.text, fontScore);
-    sfText_setCharacterSize(menu2.text, 20);
-    sfText_setPosition(menu2.text, menu2.pos);
-    sfText_setString(menu2.text, "Press \"S\" to start");
+    menu2.sfText = sfText_create();
+    sfText_setFont(menu2.sfText, fontScore);
+    sfText_setCharacterSize(menu2.sfText, 20);
+    sfText_setPosition(menu2.sfText, (sfVector2f){.x = 250+10+16, .y = 200});
+    sfText_setString(menu2.sfText, "Press \"S\" to start");
 
     w.window = sfRenderWindow_create(w.mode,
             windowName_conf,
@@ -100,8 +97,8 @@ void gameLoop() {
     colorizeActive();
     drawFld(w.window);
     drawNextShape(w.window);
-    sfRenderWindow_drawText(w.window, score.text, NULL);
-    sfRenderWindow_drawText(w.window, level.text, NULL);
+    sfRenderWindow_drawText(w.window, score.sfText, NULL);
+    sfRenderWindow_drawText(w.window, level.sfText, NULL);
 }
 
 void menuTick()
@@ -115,8 +112,8 @@ void menuTick()
 void menuLoop() {
     menuTick();
     drawFld(w.window);
-    sfRenderWindow_drawText(w.window, menu1.text, NULL);
-    sfRenderWindow_drawText(w.window, menu2.text, NULL);
+    sfRenderWindow_drawText(w.window, menu1.sfText, NULL);
+    sfRenderWindow_drawText(w.window, menu2.sfText, NULL);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         game.isStarted = 1;
         freeFld();
@@ -146,9 +143,9 @@ int main()
     printf("%d\n", game.scoreCurrent);
     freeFld();
     sfRenderWindow_destroy(w.window);
-    sfText_destroy(score.text);
-    sfText_destroy(menu1.text);
-    sfText_destroy(menu2.text);
+    sfText_destroy(score.sfText);
+    sfText_destroy(menu1.sfText);
+    sfText_destroy(menu2.sfText);
 
     return EXIT_SUCCESS;
 }

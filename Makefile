@@ -6,6 +6,7 @@ CFLAGS+=-I$(INCLUDE)
 LIBS+=-lcsfml-graphics
 LIBS+=-lcsfml-window
 LIBS+=-lcsfml-system
+LIBS+=-lyaml
 
 BUILD:=build
 SRC:=src

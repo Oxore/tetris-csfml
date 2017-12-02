@@ -61,10 +61,31 @@ typedef struct Game {
     int level;
 } Game;
 
+/* ======== text.[c|h] types =========== */
+
+typedef struct List {
+    void *obj;
+    void *next;
+    void *prev;
+} List;
+
+typedef struct Pair {
+    void *k;
+    void *v;
+} Pair;
+
+typedef struct KeyMap {
+    Pair *pair;
+    void *next;
+    void *prev;
+} KeyMap;
+
 typedef struct Text {
-    sfFont *font;
-    sfText *text;
-    sfVector2f pos;
+    char *font;
+    char *type;
+    char *scene;
+    char *text;
+    void *sfText;
 } Text;
 
 #endif

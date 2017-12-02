@@ -75,7 +75,7 @@ void scoreDisplay(int s, Text *textScore)
 {
     char a[64];
     sprintf(a, "Score: %d", s);
-    sfText_setString(textScore->text, (char *)&a);
+    sfText_setString(textScore->sfText, (char *)&a);
 }
 
 
@@ -83,7 +83,7 @@ void levelDisplay(int s, Text *textLevel)
 {
     char a[64];
     sprintf(a, "Level: %d", s);
-    sfText_setString(textLevel->text, (char *)&a);
+    sfText_setString(textLevel->sfText, (char *)&a);
 }
 
 
