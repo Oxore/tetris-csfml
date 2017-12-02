@@ -5,11 +5,13 @@
 This is unfinished tetris project written in pure C with CSFML library. It is under development.
 
 __Dependencies__
+
 `SFML`
 `CSFML`
 `libyaml`
 
 __Compilation and use__
+
 Compilation:
 ```
 make all
