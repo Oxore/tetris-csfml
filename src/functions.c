@@ -149,8 +149,9 @@ void putShape()
 
 void checkLevelUp(Game *game)
 {
-    if (game->scoreCurrent >= game->level * 100)
-        game->level++;
+    if (game->level <= 15)
+        if (game->scoreCurrent >= game->level * 100)
+            game->level++;
 }
 
 void resetActiveShape()
