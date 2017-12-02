@@ -210,7 +210,7 @@ void _loadText_initSfText(Text *objo, void *obji)
     int size = _loadText_getInt(obji, "size");
     char *text = _loadText_getString(obji, "text");
     objo->sfText = sfText_create();
-    //sfText_setFont(objo->sfText, fontScore);
+    sfText_setFont(objo->sfText, fontScore);
     sfText_setCharacterSize(objo->sfText, size);
     sfText_setPosition(objo->sfText, pos);
     sfText_setString(objo->sfText, text);
@@ -242,7 +242,7 @@ void Text_free(Text *obj)
     free(obj->scene);
     free(obj->text);
     free(obj->font);
-    //sfText_destroy(obj->sfText);
+    sfText_destroy(obj->sfText);
     free(obj);
 }
 

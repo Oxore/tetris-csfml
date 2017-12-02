@@ -31,6 +31,6 @@
   scene: "menu"
   text: "Press \"S\" to start"
   font: "Arial"
-  size: 36
-  x: 266
+  size: 20
+  x: 276
   y: 200

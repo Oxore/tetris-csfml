@@ -6,8 +6,6 @@
 Window w = {.mode = {450, 520, 32}};
 Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1};
 List *texts;
-Text menu1;
-Text menu2;
 Text score;
 Text level;
 sfFont *fontScore;
@@ -58,22 +56,6 @@ void prepare() {
     sfText_setCharacterSize(level.sfText, 20);
     sfText_setPosition(level.sfText, (sfVector2f){.x = 250+10+10, .y = 44});
 
-    /*
-     * Menu texts
-     *
-     */
-    menu1.sfText = sfText_create();
-    sfText_setFont(menu1.sfText, fontScore);
-    sfText_setCharacterSize(menu1.sfText, 36);
-    sfText_setPosition(menu1.sfText, (sfVector2f){.x = 250+10+30, .y = 100});
-    sfText_setString(menu1.sfText, "TETRIS");
-
-    menu2.sfText = sfText_create();
-    sfText_setFont(menu2.sfText, fontScore);
-    sfText_setCharacterSize(menu2.sfText, 20);
-    sfText_setPosition(menu2.sfText, (sfVector2f){.x = 250+10+16, .y = 200});
-    sfText_setString(menu2.sfText, "Press \"S\" to start");
-
     w.window = sfRenderWindow_create(w.mode,
             windowName_conf,
             sfResize | sfClose,
@@ -109,11 +91,19 @@ void menuTick()
     }
 }
 
+void drawTextsAtScene(List *texts, char *scene, sfRenderWindow *window) {
+    List *t = texts;
+    while (t) {
+        if (!strcmp(((Text *)t->obj)->scene, scene))
+            sfRenderWindow_drawText(window, ((Text *)t->obj)->sfText, NULL);
+        t = t->next;
+    }
+}
+
 void menuLoop() {
     menuTick();
     drawFld(w.window);
-    sfRenderWindow_drawText(w.window, menu1.sfText, NULL);
-    sfRenderWindow_drawText(w.window, menu2.sfText, NULL);
+    drawTextsAtScene(texts, "menu", w.window);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         game.isStarted = 1;
         freeFld();
@@ -144,8 +134,7 @@ int main()
     freeFld();
     sfRenderWindow_destroy(w.window);
     sfText_destroy(score.sfText);
-    sfText_destroy(menu1.sfText);
-    sfText_destroy(menu2.sfText);
+    ListOfText_free(&texts);
 
     return EXIT_SUCCESS;
 }
