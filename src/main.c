@@ -6,8 +6,6 @@
 Window w = {.mode = {450, 520, 32}};
 Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1};
 List *texts;
-Text score;
-Text level;
 sfFont *fontScore;
 Shape active, next;
 Field fld;
@@ -44,18 +42,7 @@ void prepare() {
         .cSize = {.x = 23, .y = 23}};
 
     initFld();
-
     texts = ListOfText_getFromListOfKeyMapOfString(ListOfKeyMapOfString_getFromYaml("dat/ya.yaml"));
-    score.sfText = sfText_create();
-    sfText_setFont(score.sfText, fontScore);
-    sfText_setCharacterSize(score.sfText, 20);
-    sfText_setPosition(score.sfText, (sfVector2f){.x = 250+10+10, .y = 10});
-
-    level.sfText = sfText_create();
-    sfText_setFont(level.sfText, fontScore);
-    sfText_setCharacterSize(level.sfText, 20);
-    sfText_setPosition(level.sfText, (sfVector2f){.x = 250+10+10, .y = 44});
-
     w.window = sfRenderWindow_create(w.mode,
             windowName_conf,
             sfResize | sfClose,
@@ -70,17 +57,25 @@ void handleWindowEvents() {
             sfRenderWindow_close(w.window);
 }
 
+void drawTextsAtScene(List *texts, char *scene, sfRenderWindow *window) {
+    List *t = texts;
+    while (t) {
+        if (!strcmp(((Text *)t->obj)->scene, scene))
+            sfRenderWindow_drawText(window, ((Text *)t->obj)->sfText, NULL);
+        t = t->next;
+    }
+}
+
 void gameLoop() {
     tTick();
     tKeyCtrl();
-    scoreDisplay(game.scoreCurrent, &score);
-    levelDisplay(game.level, &level);
+    valueAfterTextDisplay(game.scoreCurrent, texts, "score");
+    valueAfterTextDisplay(game.level, texts, "level");
     colorizeFld();
     colorizeActive();
     drawFld(w.window);
     drawNextShape(w.window);
-    sfRenderWindow_drawText(w.window, score.sfText, NULL);
-    sfRenderWindow_drawText(w.window, level.sfText, NULL);
+    drawTextsAtScene(texts, "game", w.window);
 }
 
 void menuTick()
@@ -88,15 +83,6 @@ void menuTick()
     if(sfClock_getElapsedTime(mTick).microseconds >= basicLatency/game.level) {
         sfClock_restart(mTick);
         colorizeRandom(&fld);
-    }
-}
-
-void drawTextsAtScene(List *texts, char *scene, sfRenderWindow *window) {
-    List *t = texts;
-    while (t) {
-        if (!strcmp(((Text *)t->obj)->scene, scene))
-            sfRenderWindow_drawText(window, ((Text *)t->obj)->sfText, NULL);
-        t = t->next;
     }
 }
 
@@ -133,7 +119,6 @@ int main()
     printf("%d\n", game.scoreCurrent);
     freeFld();
     sfRenderWindow_destroy(w.window);
-    sfText_destroy(score.sfText);
     ListOfText_free(&texts);
 
     return EXIT_SUCCESS;

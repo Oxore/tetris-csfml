@@ -71,21 +71,27 @@ void initFld()
 }
 
 
-void scoreDisplay(int s, Text *textScore)
+void valueAfterTextDisplay(int value, List *texts, char *type)
 {
-    char a[64];
-    sprintf(a, "Score: %d", s);
-    sfText_setString(textScore->sfText, (char *)&a);
+    List *l = texts;
+    while (l) {
+        Text *text = (Text *)l->obj;
+        if (text->type)
+            if (!strcmp(text->type, type)) {
+                char a[64];
+                if (text->text) {
+                    if (strlen(text->text) > 52) {
+                        memset(text->text+52, '\0', 1);
+                        strcpy(a, text->text);
+                    }
+                    sprintf(a, "%s%d", text->text, value);
+                    sfText_setString(text->sfText, (char *)&a);
+                    break;
+                }
+            }
+        l = l->next;
+    }
 }
-
-
-void levelDisplay(int s, Text *textLevel)
-{
-    char a[64];
-    sprintf(a, "Level: %d", s);
-    sfText_setString(textLevel->sfText, (char *)&a);
-}
-
 
 /*
  * Removes line when cells all are in row in it
