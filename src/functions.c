@@ -21,6 +21,7 @@ extern uint8_t arrKeys;    // Arrow keys states byte container
  */
 
 extern sfClock *gameTick;
+extern sfClock *putTick;
 extern sfClock *mTick;
 extern sfClock *repPushDown; // Clock for repeat latency when Down arrow long push
 extern sfClock *repKeyLeft; // Clock for repeat latency when Left arrow long push
@@ -143,7 +144,7 @@ void putShape()
                 if ((j+active.y >= 0) && (i+active.x >= 0))
                     fld.c[j+active.y][i+active.x].fColor = active.fColor;
             }
-    game.scoreCurrent += linesRmScore()*100; // Remove filled lines and get score;
+    game.scoreCurrent += linesRmScore()*RM_LINE_SCORE; // Remove filled lines and get score;
     for (int i = 0; i < 10; i++)
         if (fld.c[20][i].a) {
             gameover(&game);
@@ -155,8 +156,8 @@ void putShape()
 
 void checkLevelUp(Game *game)
 {
-    if (game->level <= 15)
-        if (game->scoreCurrent >= game->level * 100)
+    if (game->level < 15)
+        if (game->scoreCurrent >= game->level * LEVELUP_SCORE)
             game->level++;
 }
 
@@ -186,13 +187,18 @@ void tTick()
     if (sfClock_getElapsedTime(gameTick).microseconds
             >= moveRepeatLatency2*(16-game.level)
             && game.level <= 15) {
-        sfClock_restart(gameTick); // Restart gameTick
+        sfClock_restart(gameTick);
         /* if bottom not reached */
         if ((wallCollisionCheck(0b0010) == 0)
-        && (cellCollisionCheck(0b0010) == 0))
+        && (cellCollisionCheck(0b0010) == 0)) {
             active.y--; // Move
-        else
-            putShape(); // Just put the shape
+            sfClock_restart(putTick);
+        } else {
+            if (sfClock_getElapsedTime(putTick).microseconds >= PUT_LATENCY) {
+                putShape(); // Just put the shape
+                sfClock_restart(putTick);
+            }
+        }
     }
 }
 
@@ -356,6 +362,7 @@ void tKeyCtrl()
             && !cellCollisionCheck(0b0010)) {
                 active.y--;
                 // Avoid excess move down by gameTick
+                sfClock_restart(putTick);
                 sfClock_restart(gameTick);
                 game.scoreCurrent++;
             }
@@ -378,8 +385,10 @@ void tKeyCtrl()
         if (!(arrKeys & 0b1000)) {
             arrKeys = arrKeys | 0b1000;
             if (!wallCollisionCheck(0b1000)
-            && !cellCollisionCheck(0b1000))
+            && !cellCollisionCheck(0b1000)) {
                 active.x--;
+                sfClock_restart(putTick);
+            }
             repKeyLeft = sfClock_create();
         } else {
             if (!(arrKeys & 0b10000000)) {
@@ -409,8 +418,10 @@ void tKeyCtrl()
         if (!(arrKeys & 0b0001)){
             arrKeys = arrKeys | 0b0001;
             if (!wallCollisionCheck(0b0001)
-            && !cellCollisionCheck(0b0001))
+            && !cellCollisionCheck(0b0001)) {
                 active.x++;
+                sfClock_restart(putTick);
+            }
             repKeyRight = sfClock_create();
         } else {
             if (!(arrKeys & 0b10000)) {

@@ -14,6 +14,9 @@
 #define moveRepeatLatency2  30000 // microseconds, for Left, Right and Down
                   // arrows, the rest repeat move when long push
 #define basicLatency 500000
+#define PUT_LATENCY 300000
+#define RM_LINE_SCORE 100
+#define LEVELUP_SCORE 100
 
 
 /*

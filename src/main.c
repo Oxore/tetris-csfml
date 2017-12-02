@@ -14,6 +14,7 @@ uint8_t arrKeys = 0b00000000; // Arrow keys states byte container
 /* --- Variables End --- */
 
 sfClock *gameTick;
+sfClock *putTick;
 sfClock *mTick;
 sfClock *repPushDown;    // Clock for repeat latency when Down arrow long push
 sfClock *repKeyLeft;    // Clock for repeat latency when Left arrow long push
@@ -22,6 +23,7 @@ sfClock *repKeyRight;    // Clock for repeat latency when Left arrow long push
 void prepare() {
     srand( time(NULL) );
     gameTick = sfClock_create();
+    putTick = sfClock_create();
     mTick = sfClock_create();
     fontScore = sfFont_createFromFile("dat/arial.ttf");
     if (!fontScore) {
