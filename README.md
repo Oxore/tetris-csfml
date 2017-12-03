@@ -25,9 +25,15 @@ make clean
 
 __TODO:__
 
+- Add screenshots and gameplay gif
 - Levels speed and scores calibration
-- Scores system
+- Scoring system as in Tetris for NES which is described on [this page](https://tetris.wiki/Scoring)
+- [Wall kick](https://tetris.wiki/Wall_kick)
 - Table of records
+- Settings menu with external `config.yml` file which allows
+  - Change key bindings
+  - Change colorscheme and define new
+  - Number of levels
 - Three next shapes
 - Main menu with beauties
 - Look with sprites
