@@ -112,7 +112,7 @@ void menuLoop() {
 void mainLoop() {
     while (sfRenderWindow_isOpen(w.window)) {
         handleWindowEvents();
-        sfRenderWindow_clear(w.window, sfBlack);
+        sfRenderWindow_clear(w.window, UIBGCOLOR);
         if (game.isStarted) {
             gameLoop();
         } else {

@@ -57,10 +57,10 @@ void initFld()
             fldCPos[j][i].x = fld.pos.x + (i * (fld.cSize.x + 2 * fld.cOutThick));
             fldCPos[j][i].y = fld.pos.y - (j * (fld.cSize.y + 2 * fld.cOutThick));
             fld.p[j][i] = sfRectangleShape_create();
-            sfRectangleShape_setFillColor(fld.p[j][i], uiColor1);
+            sfRectangleShape_setFillColor(fld.p[j][i], UIBGCOLOR);
             sfRectangleShape_setSize(fld.p[j][i], fld.cSize);
             sfRectangleShape_setPosition(fld.p[j][i], fldCPos[j][i]);
-            sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor3);
+            sfRectangleShape_setOutlineColor(fld.p[j][i], UIFGACTIVECOLOR);
             sfRectangleShape_setOutlineThickness(fld.p[j][i], fld.cOutThick);
         }
     }
@@ -121,7 +121,7 @@ int linesRmScore()
                 if (n == 19) {
                     for (int m = 0; m < 10; m++) {
                         fld.c[n][m].a = 0;
-                        fld.c[n][m].fColor = uiColor1;
+                        fld.c[n][m].fColor = UIBGCOLOR;
                     }
                     break;
                 }
@@ -464,10 +464,10 @@ void colorizeFld()
         for (int i = 0; i < fld.size.x; i++)
             if (fld.c[j][i].a) {
                 sfRectangleShape_setFillColor(fld.p[j][i], fld.c[j][i].fColor);
-                sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor3);
+                sfRectangleShape_setOutlineColor(fld.p[j][i], UIFGACTIVECOLOR);
             } else {
-                sfRectangleShape_setFillColor(fld.p[j][i], uiColor1);
-                sfRectangleShape_setOutlineColor(fld.p[j][i], uiColor2);
+                sfRectangleShape_setFillColor(fld.p[j][i], UIBGCOLOR);
+                sfRectangleShape_setOutlineColor(fld.p[j][i], UIFGINACTIVECOLOR);
             }
 }
 
@@ -486,7 +486,7 @@ void colorizeActive()
                         active.fColor);
                 sfRectangleShape_setOutlineColor(
                         fld.p[j+active.y][i+active.x],
-                        uiColor3);
+                        UIFGACTIVECOLOR);
             }
 }
 
@@ -511,28 +511,28 @@ void colorizeRandom(Field *fld)
             a = rand()%7+1;
             switch (a) {
                 case 1 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], tOrange);
+                    sfRectangleShape_setFillColor(fld->p[j][i], LCOLOR);
                     break;
                 case 2 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], tBlue);
+                    sfRectangleShape_setFillColor(fld->p[j][i], RLCOLOR);
                     break;
                 case 3 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], tRed);
+                    sfRectangleShape_setFillColor(fld->p[j][i], ZCOLOR);
                     break;
                 case 4 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], tGreen);
+                    sfRectangleShape_setFillColor(fld->p[j][i], SCOLOR);
                     break;
                 case 5 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], tYellow);
+                    sfRectangleShape_setFillColor(fld->p[j][i], BCOLOR);
                     break;
                 case 6 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], tCyan);
+                    sfRectangleShape_setFillColor(fld->p[j][i], ICOLOR);
                     break;
                 case 7 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], tMagneta);
+                    sfRectangleShape_setFillColor(fld->p[j][i], TCOLOR);
                     break;
             }
-            sfRectangleShape_setOutlineColor(fld->p[j][i], uiColor3);
+            sfRectangleShape_setOutlineColor(fld->p[j][i], UIFGACTIVECOLOR);
         }
     }
 }
@@ -563,31 +563,31 @@ void copyShape(Shape *localSh)
     switch (localSh->t) { // Copy cell active/inactive state
         case 1 :
             memcpy(&localSh->c[0][0], &arrShapeL[0][0], sizeof(char)*4*4);
-            localSh->fColor = tOrange;
+            localSh->fColor = LCOLOR;
             break;
         case 2 :
             memcpy(&localSh->c[0][0], &arrShapeRL[0][0], sizeof(char)*4*4);
-            localSh->fColor = tBlue;
+            localSh->fColor = RLCOLOR;
             break;
         case 3 :
             memcpy(&localSh->c[0][0], &arrShapeZ[0][0], sizeof(char)*4*4);
-            localSh->fColor = tRed;
+            localSh->fColor = ZCOLOR;
             break;
         case 4 :
             memcpy(&localSh->c[0][0], &arrShapeS[0][0], sizeof(char)*4*4);
-            localSh->fColor = tGreen;
+            localSh->fColor = SCOLOR;
             break;
         case 5 :
             memcpy(&localSh->c[0][0], &arrShapeB[0][0], sizeof(char)*4*4);
-            localSh->fColor = tYellow;
+            localSh->fColor = BCOLOR;
             break;
         case 6 :
             memcpy(&localSh->c[0][0], &arrShapeI[0][0], sizeof(char)*4*4);
-            localSh->fColor = tCyan;
+            localSh->fColor = ICOLOR;
             break;
         case 7 :
             memcpy(&localSh->c[0][0], &arrShapeT[0][0], sizeof(char)*4*4);
-            localSh->fColor = tMagneta;
+            localSh->fColor = TCOLOR;
             break;
     }
 }
@@ -595,23 +595,11 @@ void copyShape(Shape *localSh)
 
 void drawNextShape(sfRenderWindow *window)
 {
-    static sfText *textNextShape;
-    if (!textNextShape) {
-        sfVector2f textNextShapePos;
-        textNextShapePos.x = 250+10+10;
-        textNextShapePos.y = 80;
-        textNextShape = sfText_create();
-        sfText_setString(textNextShape, "Next Shape: ");
-        sfText_setFont(textNextShape, fontScore);
-        sfText_setCharacterSize(textNextShape, 20);
-        sfText_setPosition(textNextShape, textNextShapePos);
-    }
-    sfRenderWindow_drawText(window, textNextShape, NULL);
     for (int j = 0; j < 4; j++)
         for (int i = 0; i < 4; i++)
             if (next.c[j][i]) {
                 sfRectangleShape_setFillColor(next.p[j][i], next.fColor);
-                sfRectangleShape_setOutlineColor(next.p[j][i], uiColor3);
+                sfRectangleShape_setOutlineColor(next.p[j][i], UIFGACTIVECOLOR);
                 sfRenderWindow_drawRectangleShape(window, next.p[j][i], NULL);
             }
 }

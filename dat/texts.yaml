@@ -18,6 +18,15 @@
   y: 44
 
 -
+  type: ""
+  scene: "game"
+  text: "Next Shape: "
+  font: "Arial"
+  size: 20
+  x: 270
+  y: 80
+
+-
   type:
   scene: "menu"
   text: "TETRIS"

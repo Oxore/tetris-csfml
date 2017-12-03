@@ -1,14 +1,14 @@
 #define windowName_conf "Tetris CSFML" // Window name
-#define uiColor1 sfColor_fromRGB(0, 0, 0) // Field background
-#define uiColor2 sfColor_fromRGB(80, 80, 80) // Field inactive cell outline
-#define uiColor3 sfColor_fromRGB(0, 0, 0) // Field active cell outline
-#define tOrange sfColor_fromRGB(255, 130, 0) // Orange color of L shape
-#define tBlue sfColor_fromRGB(0, 0, 255)
-#define tGreen sfColor_fromRGB(0, 255, 0)
-#define tRed sfColor_fromRGB(255, 0, 0)
-#define tYellow sfColor_fromRGB(255, 255, 0)
-#define tCyan sfColor_fromRGB(0, 255, 255)
-#define tMagneta sfColor_fromRGB(192, 0, 255)
+#define UIBGCOLOR sfColor_fromRGB(26, 26, 26) // Field background
+#define UIFGINACTIVECOLOR sfColor_fromRGB(55, 59, 65) // Field inactive cell outline
+#define UIFGACTIVECOLOR sfColor_fromRGB(40, 42, 46) // Field active cell outline
+#define LCOLOR sfColor_fromRGB(222, 147, 95) // Orange color of L shape
+#define RLCOLOR sfColor_fromRGB(95, 129, 157)
+#define SCOLOR sfColor_fromRGB(140, 148, 64)
+#define ZCOLOR sfColor_fromRGB(165, 66, 66)
+#define BCOLOR sfColor_fromRGB(197, 200, 198)
+#define ICOLOR sfColor_fromRGB(94, 141, 135)
+#define TCOLOR sfColor_fromRGB(133, 103, 143)
 #define moveRepeatLatency1 150000 // microseconds, only for left-right arrows,
                   // first repeat move when long push
 #define moveRepeatLatency2  30000 // microseconds, for Left, Right and Down
