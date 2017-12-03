@@ -4,9 +4,9 @@
 
 This is unfinished tetris project written in pure C with CSFML library. It is under development.
 
-[Main menu](https://i.imgur.com/kOKz2Qk.png "Main menu")
+![Main menu](https://i.imgur.com/kOKz2Qk.png "Main menu")
 
-[In game](https://i.imgur.com/14aWf49.png "In game")
+![In game](https://i.imgur.com/14aWf49.png "In game")
 
 __Dependencies__
 
