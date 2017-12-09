@@ -18,23 +18,13 @@ extern Field fld;
 extern sfFont *fontScore;
 
 extern char arrKeys;    // Arrow keys states byte container
-/* arrKeys = ...n|7|6|5|4|3|2|1|0| (just a bit of so called "bit fucking")
- * 0 - Right arrow pushed and held
- * 1 - Down arrow pushed and held
- * 2 - N/A
- * 3 - Left arrow pushed and held
- * 4 - Right arrow short repeat activated (after once long repeat)
- * 5 - N/A
- * 6 - N/A
- * 7 - Right arrow short repeat activated (after once long repeat)
- */
 
 extern sfClock *gameTick;
 extern sfClock *putTick;
 extern sfClock *mTick;
-extern sfClock *repPushDown; // Clock for repeat latency when Down arrow long push
-extern sfClock *repKeyLeft; // Clock for repeat latency when Left arrow long push
-extern sfClock *repKeyRight; // Clock for repeat latency when Left arrow long push
+extern sfClock *repPushDown; // Clock for repeat latency when Down key held
+extern sfClock *repKeyLeft; // Clock for repeat latency when Left key held
+extern sfClock *repKeyRight; // Clock for repeat latency when Left key held
 
 /* Shapes maps */
 extern char arrShapeL[4][4];
@@ -54,8 +44,10 @@ void initFld()
     for (int j = 0; j < fld.size.y; j++) {
         for (int i = 0; i < fld.size.x; i++) {
             fld.c[j][i].a = 0;    // Inactive = empty
-            fldCPos[j][i].x = fld.pos.x + (i * (fld.cSize.x + 2 * fld.cOutThick));
-            fldCPos[j][i].y = fld.pos.y - (j * (fld.cSize.y + 2 * fld.cOutThick));
+            fldCPos[j][i].x 
+                = fld.pos.x + (i * (fld.cSize.x + 2 * fld.cOutThick));
+            fldCPos[j][i].y 
+                = fld.pos.y - (j * (fld.cSize.y + 2 * fld.cOutThick));
             fld.p[j][i] = sfRectangleShape_create();
             sfRectangleShape_setFillColor(fld.p[j][i], UIBGCOLOR);
             sfRectangleShape_setSize(fld.p[j][i], fld.cSize);
@@ -180,7 +172,7 @@ void resetActiveShape()
     else
         active.y = 16;
     for (;;) {
-        if (cellCollisionCheck(0b0010))
+        if (cellCollisionCheck(DOWN))
             active.y++;
         else
             break;
@@ -198,8 +190,8 @@ void tTick()
             && game.level <= 15) {
         sfClock_restart(gameTick);
         /* if bottom not reached */
-        if ((wallCollisionCheck(0b0010) == 0)
-        && (cellCollisionCheck(0b0010) == 0)) {
+        if ((wallCollisionCheck(DOWN) == 0)
+        && (cellCollisionCheck(DOWN) == 0)) {
             active.y--; // Move
             sfClock_restart(putTick);
         } else {
@@ -262,10 +254,10 @@ void rotateRight()
  */
 void rotateShape()
 {
-    rotateRight(); // Make rotate
-    if ((wallRotCollisionCheck() == 1)
-    || (cellRotCollisionCheck() == 1))
-        rotateLeft(); // Just rotate back =)
+    rotateRight(); // Try rotate
+    if ((wallRotCollisionCheck())
+    || (cellRotCollisionCheck()))
+        rotateLeft();
 }
 
 int cellRotCollisionCheck()
@@ -281,39 +273,38 @@ int cellRotCollisionCheck()
 
 int wallRotCollisionCheck()
 {
-    if(active.y < 0) //If shape has crossed Bottom border
+    if (active.y < 0) //If shape has crossed Bottom border
         for (int i = 0; i < 4; i++)
             if (active.c[-1-active.y][i])
                 return 1;    // Collision happens
-    if(active.x < 0) //If shape has crossed Left border
+    if (active.x < 0) //If shape has crossed Left border
         for (int i = 0; i < 4; i++)
             if (active.c[i][-1-active.x])
                 return 1;    // Collision happens
-    if(active.x > 6) //If shape has crossed Right border
+    if (active.x > 6) //If shape has crossed Right border
         for (int i = 0; i < 4; i++)
             if (active.c[i][3-(active.x-7)])
                 return 1;    // Collision happens
     return 0; // If no conditions are met collision is absent
 }
 
-
 int cellCollisionCheck(int dir)
 {
     for (int j = 0; j < 4; j++) {
         for (int i = 0; i < 4; i++) {
-            if ((dir & 0b0001) // Check Right
+            if ((dir & RIGHT) // Check Right
             && (j+active.y >= 0) // Avoiding nonexisting fld cells
             && (i+active.x+1 >= 0) // ---
             && active.c[j][i] // Check activity
             && fld.c[j+active.y][i+active.x+1].a)
                 return 1; // Collision happens
-            if ((dir & 0b1000) // Check Left
+            if ((dir & LEFT) // Check Left
             && (j+active.y >= 0) // Avoiding nonexisting fld cells
             && (i+active.x-1 >= 0) // ---
             && active.c[j][i] // Check activity
             && fld.c[j+active.y][i+active.x-1].a)
                 return 1; // Collision happens
-            if ((dir & 0b0010) // Check Bottom
+            if ((dir & DOWN) // Check Bottom
             && (j+active.y-1 >= 0) // Avoiding nonexisting fld cells
             && (i+active.x >= 0) // ---
             && active.c[j][i] // Check activity
@@ -326,17 +317,17 @@ int cellCollisionCheck(int dir)
 
 int wallCollisionCheck(int dir)
 {
-    if (dir & 0b0001) { // Right collision request
+    if (dir & RIGHT) { // Right collision request
         if (active.x >= 6) // If shape has reached Right boreder
             for (int i = 0 ; i < 4; i++)
                 if (active.c[i][3-(active.x-6)])
                     return 1; // Collision happens
-    } else if (dir & 0b0010) { // Bottom collision request
+    } else if (dir & DOWN) { // Bottom collision request
         if (active.y <= 0) //If shape has reached Bottom border
             for (int i = 0; i < 4; i++)
                 if (active.c[-active.y][i])
                     return 1; // Collision happens
-    } else if (dir & 0b1000) // Left collision request
+    } else if (dir & LEFT) // Left collision request
         if (active.x <= 0) // If shape has reached Left border
             for (int i = 0; i < 4; i++)
                 if (active.c[i][-active.x])
@@ -353,22 +344,22 @@ void tKeyCtrl()
 {
     /* Up arrow key 'hold' handler */
     if (sfKeyboard_isKeyPressed(sfKeyUp)) {
-        if (!(arrKeys & 0b0100)) {
-            arrKeys = arrKeys | 0b0100;
+        if (!(arrKeys & UP)) {
+            arrKeys = arrKeys | UP;
             rotateShape();
         }
     } else {
-        if ((arrKeys & 0b0100)) {
-            arrKeys = arrKeys & ~0b0100;
+        if ((arrKeys & UP)) {
+            arrKeys = arrKeys & ~UP;
         }
     }
 
     /* Down Arrow Key 'hold' handler */
     if (sfKeyboard_isKeyPressed(sfKeyDown)) {
-        if (!(arrKeys & 0b0010)) {
-            arrKeys = arrKeys | 0b0010;
-            if (!wallCollisionCheck(0b0010)
-            && !cellCollisionCheck(0b0010)) {
+        if (!(arrKeys & DOWN)) {
+            arrKeys = arrKeys | DOWN;
+            if (!wallCollisionCheck(DOWN)
+            && !cellCollisionCheck(DOWN)) {
                 active.y--;
                 // Avoid excess move down by gameTick
                 sfClock_restart(putTick);
@@ -379,76 +370,75 @@ void tKeyCtrl()
         } else {
             if (sfClock_getElapsedTime(repPushDown).microseconds
             >= moveRepeatLatency2)
-                arrKeys = arrKeys & ~0b0010;
+                arrKeys = arrKeys & ~DOWN;
         }
     } else {
-        if ((arrKeys & 0b0010)) {
-            arrKeys = arrKeys & ~0b0010;
-            arrKeys = arrKeys & ~0b100000;
+        if ((arrKeys & DOWN)) {
+            arrKeys = arrKeys & ~DOWN;
         }
     }
 
     /* Left Arrow Key 'hold' handler */
     if (sfKeyboard_isKeyPressed(sfKeyLeft)
     && !sfKeyboard_isKeyPressed(sfKeyRight)) {
-        if (!(arrKeys & 0b1000)) {
-            arrKeys = arrKeys | 0b1000;
-            if (!wallCollisionCheck(0b1000)
-            && !cellCollisionCheck(0b1000)) {
+        if (!(arrKeys & LEFT)) {
+            arrKeys = arrKeys | LEFT;
+            if (!wallCollisionCheck(LEFT)
+            && !cellCollisionCheck(LEFT)) {
                 active.x--;
                 sfClock_restart(putTick);
             }
             repKeyLeft = sfClock_create();
         } else {
-            if (!(arrKeys & 0b10000000)) {
+            if (!(arrKeys & LEFTHOLD)) {
                 if (sfClock_getElapsedTime(repKeyLeft)
                                 .microseconds
                 >=  moveRepeatLatency1) {
-                    arrKeys = arrKeys | 0b10000000;
-                    arrKeys = arrKeys & ~0b1000;
+                    arrKeys = arrKeys | LEFTHOLD;
+                    arrKeys = arrKeys & ~LEFT;
                 }
             } else {
                 if (sfClock_getElapsedTime(repKeyLeft)
                                 .microseconds
                 >=  moveRepeatLatency2)
-                    arrKeys = arrKeys & ~0b1000;
+                    arrKeys = arrKeys & ~LEFT;
             }
         }
     } else if (!sfKeyboard_isKeyPressed(sfKeyLeft)) {
-        if ((arrKeys & 0b1000)){
-            arrKeys = arrKeys & ~0b1000;
-            arrKeys = arrKeys & ~0b10000000;
+        if ((arrKeys & LEFT)) {
+            arrKeys = arrKeys & ~LEFT;
+            arrKeys = arrKeys & ~LEFTHOLD;
         }
     }
 
     /* Right Arrow Key 'hold' handler */
     if (sfKeyboard_isKeyPressed(sfKeyRight)
     && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
-        if (!(arrKeys & 0b0001)){
-            arrKeys = arrKeys | 0b0001;
-            if (!wallCollisionCheck(0b0001)
-            && !cellCollisionCheck(0b0001)) {
+        if (!(arrKeys & RIGHT)) {
+            arrKeys = arrKeys | RIGHT;
+            if (!wallCollisionCheck(RIGHT)
+            && !cellCollisionCheck(RIGHT)) {
                 active.x++;
                 sfClock_restart(putTick);
             }
             repKeyRight = sfClock_create();
         } else {
-            if (!(arrKeys & 0b10000)) {
+            if (!(arrKeys & RIGHTHOLD)) {
                 if (sfClock_getElapsedTime(repKeyRight).microseconds
                 >=  moveRepeatLatency1) {
-                    arrKeys = arrKeys | 0b10000;
-                    arrKeys = arrKeys & ~0b0001;
+                    arrKeys = arrKeys | RIGHTHOLD;
+                    arrKeys = arrKeys & ~RIGHT;
                 }
             } else if (!sfKeyboard_isKeyPressed(sfKeyLeft)) {
                 if (sfClock_getElapsedTime(repKeyRight).microseconds
                 >=  moveRepeatLatency2) // Wait short time
-                    arrKeys = arrKeys & ~0b0001;
+                    arrKeys = arrKeys & ~RIGHT;
             }
         }
     } else {
-        if ((arrKeys & 0b0001)) {
-            arrKeys = arrKeys & ~0b0001;
-            arrKeys = arrKeys & ~0b10000;
+        if ((arrKeys & RIGHT)) {
+            arrKeys = arrKeys & ~RIGHT;
+            arrKeys = arrKeys & ~RIGHTHOLD;
         }
     }
 }

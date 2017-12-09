@@ -1,3 +1,10 @@
+#define RIGHT     0b0001
+#define DOWN      0b0010
+#define UP        0b0100
+#define LEFT      0b1000
+#define RIGHTHOLD 0b10000
+#define LEFTHOLD  0b10000000
+
 void tKeyCtrl();
 void initFld();
 void tTick();
