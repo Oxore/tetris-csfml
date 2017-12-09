@@ -150,7 +150,20 @@ void putShape()
             }
     int removedLines = rmLines();
     game.lines += removedLines;
-    game.scoreCurrent += removedLines*RM_LINE_SCORE;
+    switch (removedLines) {
+    case 1:
+        game.scoreCurrent += RM_1LINES_SCORE * game.level;
+        break;
+    case 2:
+        game.scoreCurrent += RM_2LINES_SCORE * game.level;
+        break;
+    case 3:
+        game.scoreCurrent += RM_3LINES_SCORE * game.level;
+        break;
+    case 4:
+        game.scoreCurrent += RM_4LINES_SCORE * game.level;
+        break;
+    }
     resetActiveShape(&active);
     checkLevelUp(&game);
 }
@@ -170,11 +183,46 @@ int outOfFieldCheck(Field *fld, Shape *active)
 
 void checkLevelUp(Game *game)
 {
-    if (game->level < 15)
-        while (game->lines >= LEVELUP_LINES) {
-            game->level++;
-            game->lines -= LEVELUP_LINES;
-        }
+    while (game->lines >= LEVELUP_LINES) {
+        game->level++;
+        game->lines -= LEVELUP_LINES;
+        game->moveLatency = getMoveLatencyOfLevel(game->level);
+    }
+}
+
+int getMoveLatencyOfLevel(int level)
+{
+    if (level >= 29)
+        return L29LATENCY;
+    else if (level >= 19)
+        return L19LATENCY;
+    else if (level >= 16)
+        return L16LATENCY;
+    else if (level >= 13)
+        return L13LATENCY;
+    else if (level >= 10)
+        return L10LATENCY;
+    else if (level == 9)
+        return L09LATENCY;
+    else if (level == 8)
+        return L08LATENCY;
+    else if (level == 7)
+        return L07LATENCY;
+    else if (level == 6)
+        return L06LATENCY;
+    else if (level == 5)
+        return L05LATENCY;
+    else if (level == 4)
+        return L04LATENCY;
+    else if (level == 3)
+        return L03LATENCY;
+    else if (level == 2)
+        return L02LATENCY;
+    else if (level == 1)
+        return L01LATENCY;
+    else if (level == 0)
+        return L00LATENCY;
+    return L00LATENCY;
 }
 
 void resetActiveShape(Shape *active)
@@ -201,8 +249,7 @@ void resetActiveShape(Shape *active)
 void tTick()
 {     // If tick exceeds current level tick latency
     if (sfClock_getElapsedTime(gameTick).microseconds
-            >= moveRepeatLatency2*(16-game.level)
-            && game.level <= 15) {
+            >= game.moveLatency) {
         sfClock_restart(gameTick);
         /* if bottom not reached */
         if ((wallCollisionCheck(DOWN) == 0)
@@ -557,7 +604,8 @@ void gameover(Game *game)
 {
     game->isStarted = 0;
     game->scoreCurrent = 0;
-    game->level = 1;
+    game->level = 0;
+    game->moveLatency = L00LATENCY;
     game->lines = 0;
 }
 

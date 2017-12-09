@@ -13,7 +13,13 @@
 #include "tet_conf.h"
 
 Window w = {.mode = {450, 570, 32}};
-Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1, .lines = 0};
+Game game = {
+    .isStarted = 0,
+    .scoreCurrent = 0,
+    .level = 0,
+    .moveLatency = L00LATENCY,
+    .lines = 0
+};
 List *texts;
 sfFont *fontScore;
 Shape active, next;
@@ -90,7 +96,7 @@ void gameLoop() {
 
 void menuTick()
 {
-    if(sfClock_getElapsedTime(mTick).microseconds >= basicLatency/game.level) {
+    if(sfClock_getElapsedTime(mTick).microseconds >= basicLatency) {
         sfClock_restart(mTick);
         colorizeRandom(&fld);
     }

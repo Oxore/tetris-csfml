@@ -50,6 +50,7 @@ typedef struct Game {
     int isStarted;
     int scoreCurrent;
     int level;
+    int moveLatency;
     int lines;
 } Game;
 

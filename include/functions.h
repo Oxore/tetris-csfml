@@ -12,6 +12,7 @@ void resetActiveShape(Shape *active);
 void putShape();
 int outOfFieldCheck(Field *fld, Shape *active);
 void checkLevelUp(Game *game);
+int getMoveLatencyOfLevel(int level);
 int cellCollisionCheckHere(Field *fld, Shape *active);
 int cellCollisionCheck(int dir);
 int wallCollisionCheck();
