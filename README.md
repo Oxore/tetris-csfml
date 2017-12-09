@@ -33,6 +33,8 @@ __TODO:__
 - [x] Levels speed and scores calibration
 - [x] Scoring system as in Tetris for NES which is described on [this page](https://tetris.wiki/Scoring)
 - [Wall kick](https://tetris.wiki/Wall_kick)
+- Hard drop
+- Phantom shape
 - Table of records
 - Settings menu with external `config.yml` file which allows
   - Change key bindings
