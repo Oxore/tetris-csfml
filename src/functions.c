@@ -39,14 +39,14 @@ extern char arrShapeT[4][4];
 /* Field init routine */
 void initFld()
 {
-    sfVector2f fldCPos[25][10];
+    sfVector2f fldCPos[22][10];
     /* Create field */
     for (int j = 0; j < fld.size.y; j++) {
         for (int i = 0; i < fld.size.x; i++) {
             fld.c[j][i].a = 0;    // Inactive = empty
-            fldCPos[j][i].x 
+            fldCPos[j][i].x
                 = fld.pos.x + (i * (fld.cSize.x + 2 * fld.cOutThick));
-            fldCPos[j][i].y 
+            fldCPos[j][i].y
                 = fld.pos.y - (j * (fld.cSize.y + 2 * fld.cOutThick));
             fld.p[j][i] = sfRectangleShape_create();
             sfRectangleShape_setFillColor(fld.p[j][i], UIBGCOLOR);
@@ -69,7 +69,7 @@ void initFld()
         }
     }
     genNextShape();
-    resetActiveShape();
+    resetActiveShape(&active);
 }
 
 
@@ -103,14 +103,14 @@ int linesRmScore()
 {
     int k = 0; // "Filled line" indicator
     int s = 0;
-    for (int j = 0; j < 20; j++) {
+    for (int j = 0; j < 22; j++) {
         for (int i = 0; i < 10; i++)
             if (fld.c[j][i].a != 0)
                 k++;
         if (k >= 10) {    // If line is full
             s++;    // Give scores for line
-            for (int n = j; n < 20; n++) {    // Drop all lines down
-                if (n == 19) {
+            for (int n = j; n < 22; n++) {    // Drop all lines down
+                if (n == 21) {
                     for (int m = 0; m < 10; m++) {
                         fld.c[n][m].a = 0;
                         fld.c[n][m].fColor = UIBGCOLOR;
@@ -119,8 +119,7 @@ int linesRmScore()
                 }
                 for (int m = 0; m < 10; m++) {
                     fld.c[n][m].a = fld.c[n+1][m].a;
-                    fld.c[n][m].fColor
-                        = fld.c[n+1][m].fColor;
+                    fld.c[n][m].fColor = fld.c[n+1][m].fColor;
                 }
             }
             j--;     // Do not let loop to go to next line because
@@ -138,6 +137,10 @@ int linesRmScore()
  */
 void putShape()
 {
+    if (outOfFieldCheck(&fld, &active)) {
+        gameover(&game);
+        return;
+    }
     for (int j = 0; j < 4; j++)
         for (int i = 0; i < 4; i++)
             if (active.c[j][i]) {
@@ -146,13 +149,21 @@ void putShape()
                     fld.c[j+active.y][i+active.x].fColor = active.fColor;
             }
     game.scoreCurrent += linesRmScore()*RM_LINE_SCORE; // Remove filled lines and get score;
-    for (int i = 0; i < 10; i++)
-        if (fld.c[20][i].a) {
-            gameover(&game);
-            return;
-        }
-    resetActiveShape();
+    resetActiveShape(&active);
     checkLevelUp(&game);
+}
+
+int outOfFieldCheck(Field *fld, Shape *active)
+{
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (active->c[i][j] && active->y+i >= fld->size.y) {
+                gameover(&game);
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 void checkLevelUp(Game *game)
@@ -162,18 +173,18 @@ void checkLevelUp(Game *game)
             game->level++;
 }
 
-void resetActiveShape()
+void resetActiveShape(Shape *active)
 {
     genNextShape();
-    copyShape(&active);
-    active.x = 3;
-    if (active.t == 6)
-        active.y = 17;
+    copyShape(active);
+    active->x = 3;
+    if (active->t == 6)
+        active->y = 19;
     else
-        active.y = 16;
+        active->y = 18;
     for (;;) {
-        if (cellCollisionCheck(DOWN))
-            active.y++;
+        if (cellCollisionCheckHere(&fld, active))
+            active->y++;
         else
             break;
     }
@@ -286,6 +297,16 @@ int wallRotCollisionCheck()
             if (active.c[i][3-(active.x-7)])
                 return 1;    // Collision happens
     return 0; // If no conditions are met collision is absent
+}
+
+int cellCollisionCheckHere(Field *fld, Shape *active)
+{
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            if (active->y + i < fld->size.y)
+                if (active->c[i][j] && fld->c[i+active->y][j+active->x].a)
+                    return 1;
+    return 0;
 }
 
 int cellCollisionCheck(int dir)
@@ -450,7 +471,7 @@ void tKeyCtrl()
  */
 void colorizeFld()
 {
-    for (int j = 0; j < fld.size.y-5; j++)
+    for (int j = 0; j < fld.size.y; j++)
         for (int i = 0; i < fld.size.x; i++)
             if (fld.c[j][i].a) {
                 sfRectangleShape_setFillColor(fld.p[j][i], fld.c[j][i].fColor);
@@ -470,7 +491,7 @@ void colorizeActive()
 {
     for (int j = 0; j < 4; j++)
         for (int i = 0; i < 4; i++)
-            if (active.c[j][i] && j+active.y < 20) {
+            if (active.c[j][i] && j+active.y < 22) {
                 sfRectangleShape_setFillColor(
                         fld.p[j+active.y][i+active.x],
                         active.fColor);
@@ -496,7 +517,7 @@ void drawFld(sfRenderWindow *window)
 void colorizeRandom(Field *fld)
 {
     int a;
-    for (int j = 0; j < fld->size.y-5; j++) {
+    for (int j = 0; j < fld->size.y; j++) {
         for (int i = 0; i < fld->size.x; i++) {
             a = rand()%7+1;
             switch (a) {

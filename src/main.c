@@ -12,8 +12,7 @@
 #include "text.h"
 #include "tet_conf.h"
 
-/* --- Variables --- */
-Window w = {.mode = {450, 520, 32}};
+Window w = {.mode = {450, 570, 32}};
 Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1};
 List *texts;
 sfFont *fontScore;
@@ -21,7 +20,6 @@ Shape active, next;
 Field fld;
 
 char arrKeys = 0b00000000; // Arrow keys states byte container
-/* --- Variables End --- */
 
 sfClock *gameTick;
 sfClock *putTick;
@@ -47,8 +45,8 @@ void prepare() {
      */
     fld.cSize = (sfVector2f){.x = 23, .y = 23}; //Fld's cell size in pixels
     fld.cOutThick = 1;
-    fld.pos = (sfVector2i){.x = 10, .y = 10+500-24}; // Fld bot left corner
-    fld.size = (sfVector2i){.x = 10, .y = 25}; // Field's size in blocks
+    fld.pos = (sfVector2i){.x = 10, .y = 10+550-24}; // Fld bot left corner
+    fld.size = (sfVector2i){.x = 10, .y = 22}; // Field's size in blocks
 
     next = (Shape){.x = 250+10+20, .y = 200,
         .cSize = {.x = 23, .y = 23}};
@@ -106,6 +104,7 @@ void menuLoop() {
         game.isStarted = 1;
         freeFld();
         initFld();
+        sfClock_restart(gameTick);
     }
 }
 
@@ -113,11 +112,10 @@ void mainLoop() {
     while (sfRenderWindow_isOpen(w.window)) {
         handleWindowEvents();
         sfRenderWindow_clear(w.window, UIBGCOLOR);
-        if (game.isStarted) {
+        if (game.isStarted)
             gameLoop();
-        } else {
+        else
             menuLoop();
-        }
         sfRenderWindow_display(w.window);
     }
 }
@@ -127,11 +125,8 @@ int main()
     prepare();
     colorizeRandom(&fld);
     mainLoop();
-    /* Just senseless printf */
-    printf("%d\n", game.scoreCurrent);
     freeFld();
     sfRenderWindow_destroy(w.window);
     ListOfText_free(&texts);
-
     return EXIT_SUCCESS;
 }

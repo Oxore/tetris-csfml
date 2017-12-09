@@ -28,7 +28,7 @@ typedef struct Shape {
     char c[4][4]; // array of logic shape cells
     sfRectangleShape *p[4][4]; // array of physical shape cells
     sfVector2f cSize; // shape rectangles size variable x/y
-} Shape; 
+} Shape;
 
 typedef struct Field {
     sfVector2i pos;
@@ -38,7 +38,7 @@ typedef struct Field {
     int cOutThick; // Field rectangles outline thickness
     sfVector2f cSize; // shape rectangles size variable x/y
     sfVector2i size;
-} Field; 
+} Field;
 
 typedef struct Window {
     sfVideoMode mode;
