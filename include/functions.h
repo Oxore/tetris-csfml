@@ -20,7 +20,7 @@ int wallRotCollisionCheck();
 void rotateLeft();
 void rotateRight();
 void rotateShape();
-int linesRmScore();
+int rmLines();
 void valueAfterTextDisplay(int value, List *texts, char *type);
 void colorizeFld();
 void colorizeActive();

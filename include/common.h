@@ -50,6 +50,7 @@ typedef struct Game {
     int isStarted;
     int scoreCurrent;
     int level;
+    int lines;
 } Game;
 
 /* ======== text.[c|h] types =========== */

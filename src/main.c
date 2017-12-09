@@ -13,7 +13,7 @@
 #include "tet_conf.h"
 
 Window w = {.mode = {450, 570, 32}};
-Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1};
+Game game = {.isStarted = 0, .scoreCurrent = 0, .level = 1, .lines = 0};
 List *texts;
 sfFont *fontScore;
 Shape active, next;

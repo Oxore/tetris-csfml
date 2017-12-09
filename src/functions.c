@@ -99,7 +99,7 @@ void valueAfterTextDisplay(int value, List *texts, char *type)
  * Removes line when cells all are in row in it
  *
  */
-int linesRmScore()
+int rmLines()
 {
     int k = 0; // "Filled line" indicator
     int s = 0;
@@ -148,7 +148,9 @@ void putShape()
                 if ((j+active.y >= 0) && (i+active.x >= 0))
                     fld.c[j+active.y][i+active.x].fColor = active.fColor;
             }
-    game.scoreCurrent += linesRmScore()*RM_LINE_SCORE; // Remove filled lines and get score;
+    int removedLines = rmLines();
+    game.lines += removedLines;
+    game.scoreCurrent += removedLines*RM_LINE_SCORE;
     resetActiveShape(&active);
     checkLevelUp(&game);
 }
@@ -169,8 +171,10 @@ int outOfFieldCheck(Field *fld, Shape *active)
 void checkLevelUp(Game *game)
 {
     if (game->level < 15)
-        if (game->scoreCurrent >= game->level * LEVELUP_SCORE)
+        while (game->lines >= LEVELUP_LINES) {
             game->level++;
+            game->lines -= LEVELUP_LINES;
+        }
 }
 
 void resetActiveShape(Shape *active)
@@ -554,6 +558,7 @@ void gameover(Game *game)
     game->isStarted = 0;
     game->scoreCurrent = 0;
     game->level = 1;
+    game->lines = 0;
 }
 
 

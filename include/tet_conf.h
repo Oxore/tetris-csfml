@@ -16,7 +16,7 @@
 #define basicLatency 500000
 #define PUT_LATENCY 300000
 #define RM_LINE_SCORE 100
-#define LEVELUP_SCORE 100
+#define LEVELUP_LINES 10
 
 
 /*
