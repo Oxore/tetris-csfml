@@ -27,6 +27,10 @@ Cleaning:
 make clean
 ```
 
+__Windows__
+
+Hey look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)! Now I have some windows binaries there!
+
 __TODO:__
 
 - Add screenshots and gameplay gif
