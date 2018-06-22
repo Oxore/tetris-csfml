@@ -1,40 +1,45 @@
-CC=gcc
-CFLAGS+=-Wall
-CFLAGS+=-std=c11
-CFLAGS+=-O0
-CFLAGS+=-I$(INCLUDE)
-LIBS+=-lcsfml-graphics
-LIBS+=-lcsfml-window
-LIBS+=-lcsfml-system
-LIBS+=-lyaml
+Q=@
+QQ=@
+
+TARGET:=tetris
 
 BUILD:=build
 SRC:=src
-INCLUDE:=include
 SOURCES:=$(wildcard $(SRC)/*.c)
-OBJECTS:=$(patsubst $(SRC)/%.c,$(BUILD)/%.o,$(SOURCES))
+OBJECTS:=$(patsubst $(SRC)/%.c,$(BUILD)/%.c.o,$(SOURCES))
 
-TARGET:=tetris
+INCLUDE+=include
+INCLUDE:=$(patsubst %,-I%,$(INCLUDE))
+
+CFLAGS+=$(INCLUDE)
+CFLAGS+=-Wall
+CFLAGS+=-std=c11
+CFLAGS+=-g3
+CFLAGS+=-O0
+
+LDFLAGS+=-lcsfml-graphics
+LDFLAGS+=-lcsfml-window
+LDFLAGS+=-lcsfml-system
+LDFLAGS+=-lyaml
 
 #======================================================================
 
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	@echo "Compiling: $@"
-	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-	@echo "Build successfull"
+	$(QQ) echo "  LD      $@"
+	$(Q) $(CC) -o $@ $^ $(LDFLAGS)
 
 $(OBJECTS): | $(BUILD)
 
 $(BUILD):
-	@mkdir -p $(BUILD)
+	$(Q) mkdir -p $(BUILD)
 
-$(BUILD)/%.o: $(SRC)/%.c
-	@echo "Compiling: $@"
-	@$(CC) -c $(CFLAGS) $(LIBS) -o $@ $<
+$(BUILD)/%.c.o: $(SRC)/%.c
+	$(QQ) echo "  CC      $@"
+	$(Q) $(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
-	@rm -rfv $(TARGET) $(BUILD)
+	$(Q) $(RM) -rfv $(TARGET) $(BUILD)
 
 .PHONY: all clean
