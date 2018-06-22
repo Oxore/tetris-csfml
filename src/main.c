@@ -65,6 +65,7 @@ void prepare() {
             NULL);
     if (!w.window)
         exit(EXIT_FAILURE);
+    sfRenderWindow_setFramerateLimit(w.window, 60);
 }
 
 void handleWindowEvents() {
