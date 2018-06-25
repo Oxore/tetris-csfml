@@ -11,12 +11,20 @@ OBJECTS:=$(patsubst $(SRC)/%.c,$(BUILD)/%.c.o,$(SOURCES))
 INCLUDE+=include
 INCLUDE:=$(patsubst %,-I%,$(INCLUDE))
 
+#COMMON+=-fsanitize=leak
+
+CFLAGS+=$(COMMON)
 CFLAGS+=$(INCLUDE)
 CFLAGS+=-Wall
+CFLAGS+=-Wextra
+CFLAGS+=-Wpedantic
+CFLAGS+=-Wduplicated-branches
+CFLAGS+=-Wduplicated-cond
 CFLAGS+=-std=c11
 CFLAGS+=-g3
 CFLAGS+=-O0
 
+LDFLAGS+=$(COMMON)
 LDFLAGS+=-lcsfml-graphics
 LDFLAGS+=-lcsfml-window
 LDFLAGS+=-lcsfml-system

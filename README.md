@@ -29,9 +29,9 @@ make clean
 
 __Windows__
 
-Hey look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)! Now I have some windows binaries there!
+Look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)! Now I have some windows binaries there!
 
-__TODO:__
+### TODO:
 
 - Add screenshots and gameplay gif
 - [x] Levels speed and scores calibration

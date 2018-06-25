@@ -8,24 +8,25 @@
 #include <SFML/Graphics/Font.h>
 
 #include "common.h"
-#include "functions.h"
 #include "text.h"
+#include "field.h"
+#include "engine.h"
 #include "tet_conf.h"
 
-Window w = {.mode = {450, 570, 32}};
-Game game = {
+List         *texts;
+sfFont       *fontScore;
+struct shape  active, next;
+struct field  fld;
+struct window w = {.mode = {450, 570, 32}};
+struct game   game = {
     .isStarted = 0,
     .scoreCurrent = 0,
     .level = 0,
     .moveLatency = L00LATENCY,
     .lines = 0
 };
-List *texts;
-sfFont *fontScore;
-Shape active, next;
-Field fld;
 
-char arrKeys = 0b00000000; // Arrow keys states byte container
+char arrKeys = 0; // Arrow keys states byte container
 
 sfClock *gameTick;
 sfClock *putTick;
@@ -35,10 +36,13 @@ sfClock *repKeyLeft;    // Clock for repeat latency when Left arrow long push
 sfClock *repKeyRight;    // Clock for repeat latency when Left arrow long push
 
 void prepare() {
-    srand( time(NULL) );
+    srand(time(NULL));
     gameTick = sfClock_create();
     putTick = sfClock_create();
     mTick = sfClock_create();
+    repPushDown = sfClock_create();
+    repKeyLeft = sfClock_create();
+    repKeyRight = sfClock_create();
     fontScore = sfFont_createFromFile("dat/arial.ttf");
     if (!fontScore) {
         printf("dat/arial.ttf font load failed");
@@ -52,17 +56,27 @@ void prepare() {
     fld.cSize = (sfVector2f){.x = 23, .y = 23}; //Fld's cell size in pixels
     fld.cOutThick = 1;
     fld.pos = (sfVector2i){.x = 10, .y = 10+550-24}; // Fld bot left corner
-    fld.size = (sfVector2i){.x = 10, .y = 22}; // Field's size in blocks
+    fld.size = (sfVector2i){.x = FLD_SIZE_X, .y = FLD_SIZE_Y}; // Field's size in blocks
+    fld.bound = (sfVector2i){.x = FLD_BOUND_X, .y = FLD_BOUND_Y}; // Field's bound in blocks
 
-    next = (Shape){.x = 250+10+20, .y = 200,
-        .cSize = {.x = 23, .y = 23}};
+    next = (struct shape){
+        .x = 250 + 10 + 20,
+        .y = 200,
+        .cOutThick = 1,
+        .cSize = {.x = 23, .y = 23}
+    };
 
-    initFld();
-    texts = ListOfText_getFromListOfKeyMapOfString(ListOfKeyMapOfString_getFromYaml("dat/texts.yaml"));
-    w.window = sfRenderWindow_create(w.mode,
-            windowName_conf,
-            sfResize | sfClose,
-            NULL);
+    init_field(&fld);
+    init_next_shape_field(&next);
+    genNextShape();
+    active.t = next.t;
+    resetActiveShape(&fld, &active);
+    genNextShape();
+    List *tmp = ListOfKeyMapOfString_getFromYaml("dat/texts.yaml");
+    texts = ListOfText_getFromListOfKeyMapOfString(tmp);
+    ListOfKeyMapOfString_free(&tmp);
+    w.window = sfRenderWindow_create(w.mode, windowName_conf,
+                   sfResize | sfClose, NULL);
     if (!w.window)
         exit(EXIT_FAILURE);
     sfRenderWindow_setFramerateLimit(w.window, 60);
@@ -88,7 +102,7 @@ void gameLoop() {
     tKeyCtrl();
     valueAfterTextDisplay(game.scoreCurrent, texts, "score");
     valueAfterTextDisplay(game.level, texts, "level");
-    colorizeFld();
+    colorize_field(&fld);
     colorizeActive();
     drawFld(w.window);
     drawNextShape(w.window);
@@ -97,9 +111,9 @@ void gameLoop() {
 
 void menuTick()
 {
-    if(sfClock_getElapsedTime(mTick).microseconds >= basicLatency) {
+    if (sfClock_getElapsedTime(mTick).microseconds >= basicLatency) {
         sfClock_restart(mTick);
-        colorizeRandom(&fld);
+        colorize_field_random(&fld);
     }
 }
 
@@ -110,7 +124,8 @@ void menuLoop() {
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         game.isStarted = 1;
         freeFld();
-        initFld();
+        init_field(&fld);
+        init_next_shape_field(&next);
         sfClock_restart(gameTick);
     }
 }
@@ -130,7 +145,7 @@ void mainLoop() {
 int main()
 {
     prepare();
-    colorizeRandom(&fld);
+    colorize_field_random(&fld);
     mainLoop();
     freeFld();
     sfRenderWindow_destroy(w.window);

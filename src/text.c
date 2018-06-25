@@ -77,7 +77,6 @@ KeyMap *KeyMap_put(KeyMap **keyMap, const void *key, const void *value)
     KeyMap *keyMapLocal = KeyMap_get(keyMap, key);
     if (!keyMapLocal) {
         keyMapLocal = KeyMap_new(keyMap);
-        keyMapLocal->pair = malloc(sizeof(Pair));
         keyMapLocal->pair->k = malloc(strlen(key)+1);
         strcpy(keyMapLocal->pair->k, key);
     }
@@ -180,7 +179,7 @@ void ListOfKeyMapOfString_free(List **list)
     *list = 0;
 }
 
-int _loadText_getInt(void *obj, char *key)
+static int _loadText_getInt(void *obj, char *key)
 {
     int v = 0;
     KeyMap *keyMap = KeyMap_get((KeyMap **)&obj, key);
@@ -191,7 +190,7 @@ int _loadText_getInt(void *obj, char *key)
     return v;
 }
 
-char *_loadText_getString(void *obj, char *key)
+static char *_loadText_getString(void *obj, char *key)
 {
     char *v = 0;
     KeyMap *keyMap = KeyMap_get((KeyMap **)&obj, key);
@@ -204,10 +203,10 @@ char *_loadText_getString(void *obj, char *key)
     return v;
 }
 
-void _loadText_initSfText(Text *objo, void *obji)
+static void _loadText_initSfText(Text *objo, void *obji)
 {
     sfVector2f pos = {
-        .x = _loadText_getInt(obji, "x"), 
+        .x = _loadText_getInt(obji, "x"),
         .y = _loadText_getInt(obji, "y")
     };
     int size = _loadText_getInt(obji, "size");
