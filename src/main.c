@@ -21,7 +21,7 @@ struct window w = {.mode = {450, 570, 32}};
 struct game   game = {
     .isStarted = 0,
     .scoreCurrent = 0,
-    .level = 0,
+    .level = 1,
     .moveLatency = L00LATENCY,
     .lines = 0
 };
@@ -67,11 +67,11 @@ void prepare() {
     };
 
     init_field(&fld);
-    init_next_shape_field(&next);
-    genNextShape();
+    init_next_shape(&next);
+    gen_shape(&next);
     active.t = next.t;
     resetActiveShape(&fld, &active);
-    genNextShape();
+    gen_shape(&next);
     List *tmp = ListOfKeyMapOfString_getFromYaml("dat/texts.yaml");
     texts = ListOfText_getFromListOfKeyMapOfString(tmp);
     ListOfKeyMapOfString_free(&tmp);
@@ -103,7 +103,7 @@ void gameLoop() {
     valueAfterTextDisplay(game.scoreCurrent, texts, "score");
     valueAfterTextDisplay(game.level, texts, "level");
     colorize_field(&fld);
-    colorizeActive();
+    colorize_active_shape(&fld, &active);
     drawFld(w.window);
     drawNextShape(w.window);
     drawTextsAtScene(texts, "game", w.window);
@@ -123,9 +123,10 @@ void menuLoop() {
     drawTextsAtScene(texts, "menu", w.window);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         game.isStarted = 1;
-        freeFld();
+        free_field(&fld);
+        free_shape(&next);
         init_field(&fld);
-        init_next_shape_field(&next);
+        init_next_shape(&next);
         sfClock_restart(gameTick);
     }
 }
@@ -147,7 +148,8 @@ int main()
     prepare();
     colorize_field_random(&fld);
     mainLoop();
-    freeFld();
+    free_field(&fld);
+    free_shape(&next);
     sfRenderWindow_destroy(w.window);
     ListOfText_free(&texts);
     return EXIT_SUCCESS;

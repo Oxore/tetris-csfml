@@ -2,10 +2,6 @@
 #define FLD_SIZE_X   10
 #define FLD_BOUND_Y FLD_SIZE_Y + 3
 #define FLD_BOUND_X FLD_SIZE_X
-/*
- *  Types
- *
- * */
 
 struct cell {
     char a; // active/empty state of cell
@@ -14,13 +10,19 @@ struct cell {
 
 
 /*
- * shape coords
+ * field + shape coord system
  * y
- * ^. . . .
- * |. . . .
- * |. . . .
- * |. . . .
- * 0------->x
+ * ^. . . . . . .
+ * |. . . . . . .
+ * |. . . . . . .
+ * |. . y . . . .
+ * |. . ^ . . . .
+ * |. . | . . . .
+ * |. . | . . . .
+ * |. . 0------>x
+ * |. . . . . . .
+ * |. . . . . . .
+ * 0------------->x
  *
  */
 
@@ -49,10 +51,15 @@ struct field {
 void init_field(struct field *fld);
 void colorize_field(struct field *fld);
 void colorize_field_random(struct field *fld);
-void init_next_shape_field(struct shape *next);
+void colorize_active_shape(struct field *fld, struct shape *shape);
+void init_next_shape(struct shape *next);
 void putShape(struct field *fld, struct shape *active);
-int out_of_field(struct field *fld, struct shape *active);
+int  out_of_field(struct field *fld, struct shape *active);
 void load_shape(struct shape *shape);
 void rotate_shape(struct field *fld, struct shape *shape);
-int collide(struct field *fld, struct shape *active);
+int  collide(struct field *fld, struct shape *active);
 void resetActiveShape(struct field *fld, struct shape *active);
+void gen_shape(struct shape *shape);
+int  rm_lines(struct field *fld);
+void free_field(struct field *fld);
+void free_shape(struct shape *shape);

@@ -85,7 +85,19 @@ void colorize_field_random(struct field *fld)
     }
 }
 
-void init_next_shape_field(struct shape *next)
+void colorize_active_shape(struct field *fld, struct shape *shape)
+{
+    for (int j = 0; j < 4; j++)
+        for (int i = 0; i < 4; i++)
+            if (shape->c[j][i] && j + shape->y < FLD_SIZE_Y) {
+                sfRectangleShape_setFillColor(
+                        fld->p[j + shape->y][i + shape->x], shape->fColor);
+                sfRectangleShape_setOutlineColor(
+                        fld->p[j + shape->y][i + shape->x], UIFGACTIVECOLOR);
+            }
+}
+
+void init_next_shape(struct shape *next)
 {
     sfVector2f nsPos;
     for (int j = 0; j < 4; j++) {
@@ -171,6 +183,16 @@ void resetActiveShape(struct field *fld, struct shape *active)
     }
 }
 
+void gen_shape(struct shape *shape)
+{
+    shape->t = (rand() % 7) + 1; // Insert new random shape of 7 variants
+    load_shape(shape);
+    if (shape->t == 5)
+        for (int j = 0; j < 3; j++)
+            for (int i = 0; i < 4; i++)
+                shape->c[i][j] = shape->c[i][j+1];
+}
+
 int collide(struct field *fld, struct shape *active)
 {
     if (out_of_bounds(fld, active))
@@ -232,4 +254,37 @@ void rotate_shape(struct field *fld, struct shape *shape)
     rotate_shape_right(shape);
     if (collide(fld, shape))
         rotate_shape_left(shape);
+}
+
+int rm_lines(struct field *fld)
+{
+    int lines = 0;
+    for (int j = 0; j < FLD_SIZE_Y; j++) {
+        int cells = 0;
+        for (int i = 0; i < FLD_SIZE_X; i++)
+            if (fld->c[j][i].a)
+                ++cells;
+        if (cells == FLD_SIZE_X) {
+            ++lines;
+            for (int n = j; n < FLD_SIZE_Y; n++)
+                for (int m = 0; m < 10; m++) {
+                    fld->c[n][m].a = fld->c[n+1][m].a;
+                    fld->c[n][m].fColor = fld->c[n+1][m].fColor;
+                }
+            --j;
+        }
+    }
+    return lines;
+}
+
+void free_field(struct field *fld) {
+    for (int j = 0; j < fld->size.y; j++)
+        for (int i = 0; i < fld->size.x; i++)
+            sfRectangleShape_destroy(fld->p[j][i]);
+}
+
+void free_shape(struct shape *shape) {
+    for (int j = 0; j < 4; j++)
+        for (int i = 0; i < 4; i++)
+            sfRectangleShape_destroy(shape->p[j][i]);
 }
