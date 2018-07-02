@@ -1,11 +1,15 @@
-#define FLD_SIZE_Y   22
-#define FLD_SIZE_X   10
+#define FLD_SIZE_Y  22
+#define FLD_SIZE_X  10
 #define FLD_BOUND_Y FLD_SIZE_Y + 3
 #define FLD_BOUND_X FLD_SIZE_X
+#define FLD_POS     (sfVector2i){.x = 10, .y = 10+550-24}
+#define FLD_SIZE    (sfVector2f){.x = FLD_SIZE_X, .y = FLD_SIZE_Y}
+#define CELL_SIZE   (sfVector2f){.x = 23, .y = 23}
 
 struct cell {
     char a; // active/empty state of cell
     sfColor fColor; // fill color
+    unsigned int color;
 };
 
 
@@ -39,13 +43,13 @@ struct shape {
 
 struct field {
     sfVector2i pos;
-    sfColor fColor; // shape color
     struct cell c[FLD_BOUND_Y][FLD_SIZE_X]; // array of logic shape cells
-    sfRectangleShape *p[FLD_BOUND_Y][FLD_SIZE_X]; // array of physical shape cells
+    sfRectangleShape *p[FLD_SIZE_Y][FLD_SIZE_X]; // array of physical shape cells
     int cOutThick; // Field rectangles outline thickness
     sfVector2f cSize; // shape rectangles size variable x/y
     sfVector2i size;
     sfVector2i bound;
+    unsigned int id;
 };
 
 void init_field(struct field *fld);

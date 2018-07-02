@@ -53,36 +53,9 @@ void colorize_field(struct field *fld)
 
 void colorize_field_random(struct field *fld)
 {
-    int a;
-    for (int j = 0; j < fld->size.y; j++) {
-        for (int i = 0; i < fld->size.x; i++) {
-            a = rand() % 7 + 1;
-            switch (a) {
-                case 1 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], LCOLOR);
-                    break;
-                case 2 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], RLCOLOR);
-                    break;
-                case 3 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], ZCOLOR);
-                    break;
-                case 4 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], SCOLOR);
-                    break;
-                case 5 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], BCOLOR);
-                    break;
-                case 6 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], ICOLOR);
-                    break;
-                case 7 :
-                    sfRectangleShape_setFillColor(fld->p[j][i], TCOLOR);
-                    break;
-            }
-            sfRectangleShape_setOutlineColor(fld->p[j][i], UIFGACTIVECOLOR);
-        }
-    }
+    for (int j = 0; j < fld->size.y; j++)
+        for (int i = 0; i < fld->size.x; i++)
+            fld->c[j][i].color = rand() % 7 + 1;
 }
 
 void colorize_active_shape(struct field *fld, struct shape *shape)

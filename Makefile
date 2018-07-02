@@ -11,7 +11,7 @@ OBJECTS:=$(patsubst $(SRC)/%.c,$(BUILD)/%.c.o,$(SOURCES))
 INCLUDE+=include
 INCLUDE:=$(patsubst %,-I%,$(INCLUDE))
 
-#COMMON+=-fsanitize=leak
+#COMMON+=-fsanitize=address
 
 CFLAGS+=$(COMMON)
 CFLAGS+=$(INCLUDE)

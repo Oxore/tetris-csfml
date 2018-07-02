@@ -10,6 +10,6 @@ void tTick();
 void checkLevelUp(struct game *game);
 int getMoveLatencyOfLevel(int level);
 void valueAfterTextDisplay(int value, List *texts, char *type);
-void drawFld(sfRenderWindow *window);
+void drawFld(sfRenderWindow *window, struct field *fld);
 void gameover(struct game *game);
 void drawNextShape(sfRenderWindow *window);

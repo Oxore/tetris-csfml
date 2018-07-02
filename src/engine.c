@@ -101,14 +101,14 @@ int getMoveLatencyOfLevel(int level)
  */
 void tTick()
 {     // If tick exceeds current level tick latency
-    if (sfClock_getElapsedTime(gameTick).microseconds >= game.moveLatency) {
-        sfClock_restart(gameTick);
+    if (sfClock_getElapsedTime(game.gameTick).microseconds >= game.moveLatency) {
+        sfClock_restart(game.gameTick);
         active.y--; // try
         if (collide(&fld, &active))
             active.y++; // fallback
         else
-            sfClock_restart(putTick);
-        if (sfClock_getElapsedTime(putTick).microseconds >= PUT_LATENCY) {
+            sfClock_restart(game.putTick);
+        if (sfClock_getElapsedTime(game.putTick).microseconds >= PUT_LATENCY) {
             if (out_of_field(&fld, &active)) {
                 gameover(&game);
                 return;
@@ -135,7 +135,7 @@ void tTick()
                 gen_shape(&next);
                 checkLevelUp(&game);
             }
-            sfClock_restart(putTick);
+            sfClock_restart(game.putTick);
         }
     }
 }
@@ -167,13 +167,13 @@ void tKeyCtrl()
                 active.y++;
             else {
                 // Avoid excess move down by gameTick
-                sfClock_restart(putTick);
-                sfClock_restart(gameTick);
+                sfClock_restart(game.putTick);
+                sfClock_restart(game.gameTick);
                 game.scoreCurrent++;
             }
-            sfClock_restart(repPushDown);
+            sfClock_restart(game.repPushDown);
         } else {
-            if (sfClock_getElapsedTime(repPushDown).microseconds
+            if (sfClock_getElapsedTime(game.repPushDown).microseconds
                 >= moveRepeatLatency2)
                 arrKeys = arrKeys & ~DOWN;
         }
@@ -192,17 +192,17 @@ void tKeyCtrl()
             if (collide(&fld, &active))
                 active.x++;
             else
-                sfClock_restart(putTick);
-            sfClock_restart(repKeyLeft);
+                sfClock_restart(game.putTick);
+            sfClock_restart(game.repKeyLeft);
         } else {
             if (!(arrKeys & LEFTHOLD)) {
-                if (sfClock_getElapsedTime(repKeyLeft).microseconds
+                if (sfClock_getElapsedTime(game.repKeyLeft).microseconds
                     >=  moveRepeatLatency1) {
                     arrKeys = arrKeys | LEFTHOLD;
                     arrKeys = arrKeys & ~LEFT;
                 }
             } else {
-                if (sfClock_getElapsedTime(repKeyLeft).microseconds
+                if (sfClock_getElapsedTime(game.repKeyLeft).microseconds
                     >=  moveRepeatLatency2)
                     arrKeys = arrKeys & ~LEFT;
             }
@@ -223,17 +223,17 @@ void tKeyCtrl()
             if (collide(&fld, &active))
                 active.x--;
             else
-                sfClock_restart(putTick);
-            sfClock_restart(repKeyRight);
+                sfClock_restart(game.putTick);
+            sfClock_restart(game.repKeyRight);
         } else {
             if (!(arrKeys & RIGHTHOLD)) {
-                if (sfClock_getElapsedTime(repKeyRight).microseconds
+                if (sfClock_getElapsedTime(game.repKeyRight).microseconds
                 >=  moveRepeatLatency1) {
                     arrKeys = arrKeys | RIGHTHOLD;
                     arrKeys = arrKeys & ~RIGHT;
                 }
             } else if (!sfKeyboard_isKeyPressed(sfKeyLeft)) {
-                if (sfClock_getElapsedTime(repKeyRight).microseconds
+                if (sfClock_getElapsedTime(game.repKeyRight).microseconds
                 >=  moveRepeatLatency2) // Wait short time
                     arrKeys = arrKeys & ~RIGHT;
             }
@@ -250,11 +250,11 @@ void tKeyCtrl()
  * Draw all fld cells
  *
  */
-void drawFld(sfRenderWindow *window)
+void drawFld(sfRenderWindow *window, struct field *fld)
 {
-    for (int j = 0; j < fld.size.y; j++)
-        for (int i = 0; i < fld.size.x; i++)
-            sfRenderWindow_drawRectangleShape(window, fld.p[j][i], NULL);
+    for (int j = 0; j < fld->size.y; j++)
+        for (int i = 0; i < fld->size.x; i++)
+            sfRenderWindow_drawRectangleShape(window, fld->p[j][i], NULL);
 }
 
 void gameover(struct game *game)

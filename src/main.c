@@ -10,14 +10,16 @@
 #include "common.h"
 #include "text.h"
 #include "field.h"
+#include "draw.h"
 #include "engine.h"
 #include "tet_conf.h"
+
+extern struct window w;
 
 List         *texts;
 sfFont       *fontScore;
 struct shape  active, next;
 struct field  fld;
-struct window w = {.mode = {450, 570, 32}};
 struct game   game = {
     .isStarted = 0,
     .scoreCurrent = 0,
@@ -28,34 +30,16 @@ struct game   game = {
 
 char arrKeys = 0; // Arrow keys states byte container
 
-sfClock *gameTick;
-sfClock *putTick;
-sfClock *mTick;
-sfClock *repPushDown;    // Clock for repeat latency when Down arrow long push
-sfClock *repKeyLeft;    // Clock for repeat latency when Left arrow long push
-sfClock *repKeyRight;    // Clock for repeat latency when Left arrow long push
-
 void prepare() {
-    srand(time(NULL));
-    gameTick = sfClock_create();
-    putTick = sfClock_create();
-    mTick = sfClock_create();
-    repPushDown = sfClock_create();
-    repKeyLeft = sfClock_create();
-    repKeyRight = sfClock_create();
-    fontScore = sfFont_createFromFile("dat/arial.ttf");
-    if (!fontScore) {
-        printf("dat/arial.ttf font load failed");
-        exit(-1);
-    }
+    sfRenderWindow_setFramerateLimit(w.window, 60);
 
     /*
      * Dimensions of every fld's cell
      * 23px - fill color 1px - for outline, 25 - at all
      */
-    fld.cSize = (sfVector2f){.x = 23, .y = 23}; //Fld's cell size in pixels
+    fld.cSize = CELL_SIZE; //Fld's cell size in pixels
     fld.cOutThick = 1;
-    fld.pos = (sfVector2i){.x = 10, .y = 10+550-24}; // Fld bot left corner
+    fld.pos = FLD_POS; // Fld bot left corner
     fld.size = (sfVector2i){.x = FLD_SIZE_X, .y = FLD_SIZE_Y}; // Field's size in blocks
     fld.bound = (sfVector2i){.x = FLD_BOUND_X, .y = FLD_BOUND_Y}; // Field's bound in blocks
 
@@ -72,14 +56,6 @@ void prepare() {
     active.t = next.t;
     resetActiveShape(&fld, &active);
     gen_shape(&next);
-    List *tmp = ListOfKeyMapOfString_getFromYaml("dat/texts.yaml");
-    texts = ListOfText_getFromListOfKeyMapOfString(tmp);
-    ListOfKeyMapOfString_free(&tmp);
-    w.window = sfRenderWindow_create(w.mode, windowName_conf,
-                   sfResize | sfClose, NULL);
-    if (!w.window)
-        exit(EXIT_FAILURE);
-    sfRenderWindow_setFramerateLimit(w.window, 60);
 }
 
 void handleWindowEvents() {
@@ -104,22 +80,22 @@ void gameLoop() {
     valueAfterTextDisplay(game.level, texts, "level");
     colorize_field(&fld);
     colorize_active_shape(&fld, &active);
-    drawFld(w.window);
+    drawFld(w.window, &fld);
     drawNextShape(w.window);
     drawTextsAtScene(texts, "game", w.window);
 }
 
 void menuTick()
 {
-    if (sfClock_getElapsedTime(mTick).microseconds >= basicLatency) {
-        sfClock_restart(mTick);
+    if (sfClock_getElapsedTime(game.mTick).microseconds >= basicLatency) {
+        sfClock_restart(game.mTick);
         colorize_field_random(&fld);
+        painter_update_field(fld.id, &fld);
     }
 }
 
 void menuLoop() {
     menuTick();
-    drawFld(w.window);
     drawTextsAtScene(texts, "menu", w.window);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         game.isStarted = 1;
@@ -127,8 +103,9 @@ void menuLoop() {
         free_shape(&next);
         init_field(&fld);
         init_next_shape(&next);
-        sfClock_restart(gameTick);
+        sfClock_restart(game.gameTick);
     }
+    painter_draw();
 }
 
 void mainLoop() {
@@ -145,12 +122,39 @@ void mainLoop() {
 
 int main()
 {
+    srand(time(NULL));
+    game.gameTick = sfClock_create();
+    game.putTick = sfClock_create();
+    game.mTick = sfClock_create();
+    game.repPushDown = sfClock_create();
+    game.repKeyLeft = sfClock_create();
+    game.repKeyRight = sfClock_create();
+    fontScore = sfFont_createFromFile("dat/arial.ttf");
+    if (!fontScore) {
+        printf("dat/arial.ttf font load failed");
+        exit(-1);
+    }
+    painter_init_window();
+    List *tmp = ListOfKeyMapOfString_getFromYaml("dat/texts.yaml");
+    texts = ListOfText_getFromListOfKeyMapOfString(tmp);
+    ListOfKeyMapOfString_free(&tmp);
+
     prepare();
     colorize_field_random(&fld);
+    fld.id = painter_register_field();
+    painter_update_field(fld.id, &fld);
     mainLoop();
     free_field(&fld);
     free_shape(&next);
-    sfRenderWindow_destroy(w.window);
+
+    painter_destroy_window();
+    sfFont_destroy(fontScore);
+    sfClock_destroy(game.gameTick);
+    sfClock_destroy(game.putTick);
+    sfClock_destroy(game.mTick);
+    sfClock_destroy(game.repPushDown);
+    sfClock_destroy(game.repKeyLeft);
+    sfClock_destroy(game.repKeyRight);
     ListOfText_free(&texts);
     return EXIT_SUCCESS;
 }
