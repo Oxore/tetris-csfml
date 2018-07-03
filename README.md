@@ -2,11 +2,11 @@
 [![Build Status](https://travis-ci.org/Oxore/tetris-csfml.svg?branch=master)](https://travis-ci.org/Oxore/tetris-csfml)
 ![WTFPL](http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl-badge-2.png "WTFPL")
 
-This is unfinished tetris project written in pure C with CSFML library. It is under development.
+This is unfinished tetris project written in pure C with CSFML library. It is under development. Basically I am learning some techniques and patterns for C and trying to use them here.
 
 ![Main menu](https://i.imgur.com/kOKz2Qk.png "Main menu")
 
-![In game](https://i.imgur.com/14aWf49.png "In game")
+![In game](https://i.imgur.com/UmZGEOD.png "In game")
 
 __Dependencies__
 
@@ -44,7 +44,6 @@ Look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)! Now
   - Change key bindings
   - Change colorscheme and define new
   - Number of levels
-- Three next shapes
-- Main menu with beauties
-- Look with sprites
+- [x] Three next shapes
+- Look with sprites and shaders
 - Interprocess communication interface for control from other process (I want to connect machine learning algorithm and make it play and learn)
