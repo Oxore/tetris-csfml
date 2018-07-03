@@ -18,8 +18,7 @@ extern struct window w;
 
 List         *texts;
 sfFont       *fontScore;
-struct shape  active, next;
-struct field  fld;
+struct field  fld, nxt;
 struct game   game = {
     .isStarted = 0,
     .scoreCurrent = 0,
@@ -31,31 +30,6 @@ struct game   game = {
 char arrKeys = 0; // Arrow keys states byte container
 
 void prepare() {
-    sfRenderWindow_setFramerateLimit(w.window, 60);
-
-    /*
-     * Dimensions of every fld's cell
-     * 23px - fill color 1px - for outline, 25 - at all
-     */
-    fld.cSize = CELL_SIZE; //Fld's cell size in pixels
-    fld.cOutThick = 1;
-    fld.pos = FLD_POS; // Fld bot left corner
-    fld.size = (sfVector2i){.x = FLD_SIZE_X, .y = FLD_SIZE_Y}; // Field's size in blocks
-    fld.bound = (sfVector2i){.x = FLD_BOUND_X, .y = FLD_BOUND_Y}; // Field's bound in blocks
-
-    next = (struct shape){
-        .x = 250 + 10 + 20,
-        .y = 200,
-        .cOutThick = 1,
-        .cSize = {.x = 23, .y = 23}
-    };
-
-    init_field(&fld);
-    init_next_shape(&next);
-    gen_shape(&next);
-    active.t = next.t;
-    resetActiveShape(&fld, &active);
-    gen_shape(&next);
 }
 
 void handleWindowEvents() {
@@ -78,18 +52,17 @@ void gameLoop() {
     tKeyCtrl();
     valueAfterTextDisplay(game.scoreCurrent, texts, "score");
     valueAfterTextDisplay(game.level, texts, "level");
-    colorize_field(&fld);
-    colorize_active_shape(&fld, &active);
-    drawFld(w.window, &fld);
-    drawNextShape(w.window);
+    painter_update_field(fld.id, &fld);
+    painter_update_field(nxt.id, &nxt);
     drawTextsAtScene(texts, "game", w.window);
+    painter_draw();
 }
 
 void menuTick()
 {
     if (sfClock_getElapsedTime(game.mTick).microseconds >= basicLatency) {
         sfClock_restart(game.mTick);
-        colorize_field_random(&fld);
+        field_fill_random(&fld);
         painter_update_field(fld.id, &fld);
     }
 }
@@ -99,10 +72,12 @@ void menuLoop() {
     drawTextsAtScene(texts, "menu", w.window);
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
         game.isStarted = 1;
-        free_field(&fld);
-        free_shape(&next);
-        init_field(&fld);
-        init_next_shape(&next);
+        field_clear(&fld);
+        shape_gen_random(&fld.shape[0]);
+        field_reset_walking_shape(&fld, 0);
+        for (unsigned int i = 0; i < nxt.shape_cnt; ++i)
+            shape_gen_random(&nxt.shape[i]);
+        nxt.attr &= ~FLD_ATTR_INVISIBLE;
         sfClock_restart(game.gameTick);
     }
     painter_draw();
@@ -111,7 +86,7 @@ void menuLoop() {
 void mainLoop() {
     while (sfRenderWindow_isOpen(w.window)) {
         handleWindowEvents();
-        sfRenderWindow_clear(w.window, UIBGCOLOR);
+        sfRenderWindow_clear(w.window, (sfColor)UIBGCOLOR);
         if (game.isStarted)
             gameLoop();
         else
@@ -139,13 +114,32 @@ int main()
     texts = ListOfText_getFromListOfKeyMapOfString(tmp);
     ListOfKeyMapOfString_free(&tmp);
 
-    prepare();
-    colorize_field_random(&fld);
-    fld.id = painter_register_field();
+    fld.pos = FLD_POS;
+    fld.size = (struct vector2ui){.x = FLD_SIZE_X, .y = FLD_SIZE_Y};
+    fld.bound = (struct vector2ui){.x = FLD_BOUND_X, .y = FLD_BOUND_Y};
+    fld.shape_cnt = 1;
+    field_init(&fld);
+
+    nxt.pos = NXT_POS;
+    nxt.size = NXT_SIZE;
+    nxt.bound = NXT_SIZE;
+    nxt.shape_cnt = 3;
+    nxt.attr |= FLD_ATTR_TRANSPARENT | FLD_ATTR_INVISIBLE;
+    field_init(&nxt);
+    nxt.shape[0].y = 4;
+    nxt.shape[1].y = 1;
+    nxt.shape[2].y = -2;
+
+    fld.id = painter_register_field(&fld);
+    nxt.id = painter_register_field(&nxt);
+    field_fill_random(&fld);
     painter_update_field(fld.id, &fld);
+    painter_update_field(nxt.id, &nxt);
+
     mainLoop();
-    free_field(&fld);
-    free_shape(&next);
+    painter_destroy_drawables();
+    field_deinit(&fld);
+    field_deinit(&nxt);
 
     painter_destroy_window();
     sfFont_destroy(fontScore);

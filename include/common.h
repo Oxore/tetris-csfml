@@ -1,13 +1,13 @@
 struct game {
-    int      isStarted;
-    int      scoreCurrent;
-    int      level;
-    int      moveLatency;
-    int      lines;
-    sfClock *gameTick;
-    sfClock *putTick;
-    sfClock *mTick;
-    sfClock *repPushDown;    // Clock for repeat latency when Down arrow long push
-    sfClock *repKeyLeft;    // Clock for repeat latency when Left arrow long push
-    sfClock *repKeyRight;    // Clock for repeat latency when Left arrow long push
+    unsigned int level;
+    int          isStarted;
+    int          scoreCurrent;
+    int          moveLatency;
+    int          lines;
+    sfClock     *gameTick;
+    sfClock     *putTick;
+    sfClock     *mTick;
+    sfClock     *repPushDown;  // repeat latency when hold Down arrow
+    sfClock     *repKeyLeft;   // repeat latency when hold Left arrow
+    sfClock     *repKeyRight;  // repeat latency when hold Left arrow
 };

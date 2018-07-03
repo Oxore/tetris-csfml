@@ -6,53 +6,30 @@
 #include "field.h"
 #include "draw.h"
 
+#include "idlist.h"
+
+static sfColor shape_color_map[] = {
+    UIBGCOLOR,
+    LCOLOR,
+    RLCOLOR,
+    ZCOLOR,
+    SCOLOR,
+    BCOLOR,
+    ICOLOR,
+    TCOLOR,
+};
+
+
 struct field_drawable {
-    sfRectangleShape *p[FLD_BOUND_Y][FLD_SIZE_X];
+    sfRectangleShape ***p;
+    struct vector2ui size;
+    unsigned int attr;
 };
 
-struct idlist {
-    unsigned long id;
-    void        *obj;
-    struct idlist *next;
-};
-
-static struct idlist *list_new()
-{
-    struct idlist *list = calloc(1, sizeof(struct idlist));
-    list->id = 1;
-    return list;
-}
-
-static struct idlist *list_append(struct idlist *list)
-{
-    unsigned long id = list->id + 1;
-    struct idlist *last = list;
-    while (last->next)
-        last = last->next;
-    last->next = calloc(1, sizeof(struct idlist));
-    last = last->next;
-    last->id = id;
-    return last;
-}
-
-static struct idlist *list_get(const struct idlist *list, unsigned long id)
-{
-    const struct idlist *sought = list;
-    if (sought) {
-        if (sought->id == id)
-            return (struct idlist *)sought;
-        while (sought->next) {
-            sought = sought->next;
-            if (sought->id == id)
-                return (struct idlist *)sought;
-        }
-    }
-    return NULL;
-}
-
-#define BUFSIZE 100
-
-/* Must be static in future */
+/*
+ * TODO: Must be static in future
+ *
+ * */
 struct window w;
 
 static struct idlist *fields_list = NULL;
@@ -64,29 +41,42 @@ void painter_init_window()
                    sfResize | sfClose, NULL);
     if (!w.window)
         exit(EXIT_FAILURE);
+    sfRenderWindow_setFramerateLimit(w.window, 60);
 }
 
-unsigned long painter_register_field()
+void painter_destroy_window()
+{
+    if (w.window) {
+        sfRenderWindow_destroy(w.window);
+        w.window = 0;
+    }
+}
+
+unsigned long painter_register_field(struct field *fld)
 {
     struct idlist *last;
-    if (!fields_list) {
+    if (!fields_list)
         last = fields_list = list_new();
-    } else
+    else
         last = list_append(fields_list);
 
     struct field_drawable *f = calloc(1, sizeof(struct field_drawable));
-    for (int j = 0; j < FLD_SIZE_Y; j++)
-        for (int i = 0; i < FLD_SIZE_X; i++) {
+    f->size = fld->size;
+    f->p = calloc(f->size.y, sizeof(sfRectangleShape **));
+    for (unsigned int j = 0; j < f->size.y; j++) {
+        f->p[j] = calloc(f->size.x, sizeof(sfRectangleShape *));
+        for (unsigned int i = 0; i < f->size.x; i++) {
             f->p[j][i] = sfRectangleShape_create();
             sfVector2f cell_pos;
-            cell_pos.x = FLD_POS.x + (i * (CELL_SIZE.x + 2 * OUT_THICK));
-            cell_pos.y = FLD_POS.y - (j * (CELL_SIZE.y + 2 * OUT_THICK));
-            sfRectangleShape_setFillColor(f->p[j][i], UIBGCOLOR);
-            sfRectangleShape_setSize(f->p[j][i], CELL_SIZE);
+            cell_pos.x = fld->pos.x + (i * (CELL_SIZE.x + 2 * OUT_THICK));
+            cell_pos.y = fld->pos.y - (j * (CELL_SIZE.y + 2 * OUT_THICK));
             sfRectangleShape_setPosition(f->p[j][i], cell_pos);
-            sfRectangleShape_setOutlineColor(f->p[j][i], UIFGACTIVECOLOR);
+            sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UIBGCOLOR);
+            sfRectangleShape_setSize(f->p[j][i], CELL_SIZE);
+            sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UIFGACTIVECOLOR);
             sfRectangleShape_setOutlineThickness(f->p[j][i], OUT_THICK);
         }
+    }
 
     last->obj = f;
     return last->id;
@@ -98,56 +88,74 @@ void painter_update_field(unsigned long id, struct field *fld)
     if (!node)
         return;
     struct field_drawable *f = node->obj;
-    for (int j = 0; j < fld->size.y; j++) {
-        for (int i = 0; i < fld->size.x; i++) {
-            switch (fld->c[j][i].color) {
-                case 1 :
-                    sfRectangleShape_setFillColor(f->p[j][i], LCOLOR);
-                    break;
-                case 2 :
-                    sfRectangleShape_setFillColor(f->p[j][i], RLCOLOR);
-                    break;
-                case 3 :
-                    sfRectangleShape_setFillColor(f->p[j][i], ZCOLOR);
-                    break;
-                case 4 :
-                    sfRectangleShape_setFillColor(f->p[j][i], SCOLOR);
-                    break;
-                case 5 :
-                    sfRectangleShape_setFillColor(f->p[j][i], BCOLOR);
-                    break;
-                case 6 :
-                    sfRectangleShape_setFillColor(f->p[j][i], ICOLOR);
-                    break;
-                case 7 :
-                    sfRectangleShape_setFillColor(f->p[j][i], TCOLOR);
-                    break;
+    f->attr = fld->attr;
+    for (unsigned int j = 0; j < fld->size.y; j++) {
+        for (unsigned int i = 0; i < fld->size.x; i++) {
+            sfVector2f cell_pos;
+            cell_pos.x = fld->pos.x + (i * (CELL_SIZE.x + 2 * OUT_THICK));
+            cell_pos.y = fld->pos.y - (j * (CELL_SIZE.y + 2 * OUT_THICK));
+            sfRectangleShape_setPosition(f->p[j][i], cell_pos);
+            if (fld->c[j][i].a) {
+                sfRectangleShape_setFillColor(f->p[j][i], shape_color_map[fld->c[j][i].color]);
+                sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UIFGACTIVECOLOR);
+            } else if (f->attr & FLD_ATTR_TRANSPARENT) {
+                sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UITRANSPARENT);
+                sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UITRANSPARENT);
+            } else {
+                sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UIBGCOLOR);
+                sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UIFGINACTIVECOLOR);
             }
-            sfRectangleShape_setOutlineColor(f->p[j][i], UIFGACTIVECOLOR);
         }
     }
+    for (unsigned int s = 0; s < fld->shape_cnt; ++s)
+        for (int j = 0; j < 4; j++)
+            for (int i = 0; i < 4; i++)
+                if (fld->shape[s].c[j][i] && j + fld->shape[s].y < (int)fld->size.y) {
+                    sfRectangleShape_setFillColor(
+                            f->p[j + fld->shape[s].y][i + fld->shape[s].x],
+                            shape_color_map[fld->shape[s].color]);
+                    sfRectangleShape_setOutlineColor(
+                            f->p[j + fld->shape[s].y][i + fld->shape[s].x],
+                            (sfColor)UIFGACTIVECOLOR);
+                }
 }
 
-static void draw_field(struct field_drawable *f)
+static void draw_field(void *field)
 {
-    for (unsigned int j = 0; j < FLD_SIZE_Y; j++)
-        for (unsigned int i = 0; i < FLD_SIZE_X; i++)
-            sfRenderWindow_drawRectangleShape(w.window, f->p[j][i], NULL);
+    struct field_drawable *f = field;
+    if (!(f->attr & FLD_ATTR_INVISIBLE))
+        for (unsigned int j = 0; j < f->size.y; j++)
+            for (unsigned int i = 0; i < f->size.x; i++)
+                sfRenderWindow_drawRectangleShape(w.window, f->p[j][i], NULL);
 }
 
 static void draw_fields()
 {
-    struct idlist *node = fields_list;
-    if (node) {
-        if (node->obj)
-            draw_field(node->obj);
-        while (node->next) {
-            node = node->next;
-            if (node)
-                if (node->obj)
-                    draw_field(node->obj);
-        }
+    list_foreach(fields_list, draw_field);
+}
+
+static void destroy_field(void *field)
+{
+    struct field_drawable *f = field;
+    for (unsigned int j = 0; j < f->size.y; j++) {
+        for (unsigned int i = 0; i < f->size.x; i++)
+             sfRectangleShape_destroy(f->p[j][i]);
+        free(f->p[j]);
     }
+    free(f->p);
+    free(f);
+}
+
+void painter_destroy_field(unsigned long id)
+{
+    struct idlist *node = list_get(fields_list, id);
+    destroy_field(node->obj);
+    list_rm_node(node);
+}
+
+void painter_destroy_fields()
+{
+    list_foreach(fields_list, destroy_field);
 }
 
 void painter_draw()
@@ -155,7 +163,13 @@ void painter_draw()
     draw_fields();
 }
 
-void painter_destroy_window()
+void painter_destroy_drawables()
 {
-    sfRenderWindow_destroy(w.window);
+    painter_destroy_fields();
+}
+
+void painter_destroy_all()
+{
+    painter_destroy_drawables();
+    painter_destroy_window();
 }

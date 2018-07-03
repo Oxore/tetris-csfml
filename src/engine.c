@@ -2,31 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SFML/System/Clock.h>
+#include <SFML/Window/Keyboard.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <SFML/Graphics/Text.h>
-#include <SFML/Graphics/RectangleShape.h>
 
 #include "common.h"
 #include "tet_conf.h"
 #include "text.h"
 #include "field.h"
+#include "draw.h"
 #include "engine.h"
 
 /* Externs from main.c */
 extern struct game game;
-extern struct shape active, next;
-extern struct field fld;
-
-extern sfFont *fontScore;
+extern struct field fld, nxt;
 
 extern char arrKeys;    // Arrow keys states byte container
-
-extern sfClock *gameTick;
-extern sfClock *putTick;
-extern sfClock *mTick;
-extern sfClock *repPushDown; // Clock for repeat latency when Down key held
-extern sfClock *repKeyLeft; // Clock for repeat latency when Left key held
-extern sfClock *repKeyRight; // Clock for repeat latency when Left key held
 
 void valueAfterTextDisplay(int value, List *texts, char *type)
 {
@@ -59,7 +50,7 @@ void checkLevelUp(struct game *game)
     }
 }
 
-int getMoveLatencyOfLevel(int level)
+int getMoveLatencyOfLevel(unsigned int level)
 {
     if (level >= 29)
         return L29LATENCY;
@@ -103,18 +94,22 @@ void tTick()
 {     // If tick exceeds current level tick latency
     if (sfClock_getElapsedTime(game.gameTick).microseconds >= game.moveLatency) {
         sfClock_restart(game.gameTick);
-        active.y--; // try
-        if (collide(&fld, &active))
-            active.y++; // fallback
+        fld.shape[0].y--; // try
+        if (field_shape_collision(&fld, &fld.shape[0]))
+            fld.shape[0].y++; // fallback
         else
             sfClock_restart(game.putTick);
         if (sfClock_getElapsedTime(game.putTick).microseconds >= PUT_LATENCY) {
-            if (out_of_field(&fld, &active)) {
+            if (field_shape_out_of_bounds(&fld, &fld.shape[0])) {
                 gameover(&game);
+                fld.shape[0].y = fld.size.y;
+                field_fill_random(&fld);
+                nxt.attr |= FLD_ATTR_INVISIBLE;
+                painter_update_field(nxt.id, &nxt);
                 return;
             } else {
-                putShape(&fld, &active);
-                int removedLines = rm_lines(&fld);
+                field_put_shape(&fld, &fld.shape[0]);
+                int removedLines = field_rm_lines(&fld);
                 game.lines += removedLines;
                 switch (removedLines) {
                 case 1:
@@ -130,9 +125,13 @@ void tTick()
                     game.scoreCurrent += RM_4LINES_SCORE * game.level;
                     break;
                 }
-                active.t = next.t;
-                resetActiveShape(&fld, &active);
-                gen_shape(&next);
+                fld.shape[0].t = nxt.shape[0].t;
+                field_reset_walking_shape(&fld, 0);
+                for (unsigned int s = 0; s < nxt.shape_cnt - 1; ++s) {
+                    nxt.shape[s] = nxt.shape[s + 1];
+                    nxt.shape[s].y = 4 - s * 3; 
+                }
+                shape_gen_random(&nxt.shape[nxt.shape_cnt - 1]);
                 checkLevelUp(&game);
             }
             sfClock_restart(game.putTick);
@@ -150,7 +149,7 @@ void tKeyCtrl()
     if (sfKeyboard_isKeyPressed(sfKeyUp)) {
         if (!(arrKeys & UP)) {
             arrKeys = arrKeys | UP;
-            rotate_shape(&fld, &active);
+            field_rotate_shape(&fld, 0);
         }
     } else {
         if ((arrKeys & UP)) {
@@ -162,9 +161,9 @@ void tKeyCtrl()
     if (sfKeyboard_isKeyPressed(sfKeyDown)) {
         if (!(arrKeys & DOWN)) {
             arrKeys = arrKeys | DOWN;
-            active.y--;
-            if (collide(&fld, &active))
-                active.y++;
+            fld.shape[0].y--;
+            if (field_shape_collision(&fld, &fld.shape[0]))
+                fld.shape[0].y++;
             else {
                 // Avoid excess move down by gameTick
                 sfClock_restart(game.putTick);
@@ -188,9 +187,9 @@ void tKeyCtrl()
     && !sfKeyboard_isKeyPressed(sfKeyRight)) {
         if (!(arrKeys & LEFT)) {
             arrKeys = arrKeys | LEFT;
-            active.x--;
-            if (collide(&fld, &active))
-                active.x++;
+            fld.shape[0].x--;
+            if (field_shape_collision(&fld, &fld.shape[0]))
+                fld.shape[0].x++;
             else
                 sfClock_restart(game.putTick);
             sfClock_restart(game.repKeyLeft);
@@ -219,9 +218,9 @@ void tKeyCtrl()
     && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
         if (!(arrKeys & RIGHT)) {
             arrKeys = arrKeys | RIGHT;
-            active.x++;
-            if (collide(&fld, &active))
-                active.x--;
+            fld.shape[0].x++;
+            if (field_shape_collision(&fld, &fld.shape[0]))
+                fld.shape[0].x--;
             else
                 sfClock_restart(game.putTick);
             sfClock_restart(game.repKeyRight);
@@ -246,17 +245,6 @@ void tKeyCtrl()
     }
 }
 
-/*
- * Draw all fld cells
- *
- */
-void drawFld(sfRenderWindow *window, struct field *fld)
-{
-    for (int j = 0; j < fld->size.y; j++)
-        for (int i = 0; i < fld->size.x; i++)
-            sfRenderWindow_drawRectangleShape(window, fld->p[j][i], NULL);
-}
-
 void gameover(struct game *game)
 {
     game->isStarted = 0;
@@ -265,15 +253,3 @@ void gameover(struct game *game)
     game->moveLatency = L00LATENCY;
     game->lines = 0;
 }
-
-void drawNextShape(sfRenderWindow *window)
-{
-    for (int j = 0; j < 4; j++)
-        for (int i = 0; i < 4; i++)
-            if (next.c[j][i]) {
-                sfRectangleShape_setFillColor(next.p[j][i], next.fColor);
-                sfRectangleShape_setOutlineColor(next.p[j][i], UIFGACTIVECOLOR);
-                sfRenderWindow_drawRectangleShape(window, next.p[j][i], NULL);
-            }
-}
-
