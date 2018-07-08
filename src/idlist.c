@@ -53,3 +53,14 @@ void list_foreach(struct idlist *list, void (*job)(void *))
             job(list->obj);
     }
 }
+
+void list_destroy(struct idlist *list)
+{
+    if (list) {
+        while (list->next) {
+            list = list->next;
+            free(list->prev);
+        }
+        free(list);
+    }
+}

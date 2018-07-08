@@ -2,6 +2,7 @@
 #include <string.h>
 #include <SFML/Graphics/RectangleShape.h>
 
+#include "vector.h"
 #include "field.h"
 #include "tet_conf.h"
 

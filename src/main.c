@@ -8,15 +8,17 @@
 #include <SFML/Graphics/Font.h>
 
 #include "common.h"
+#include "idlist.h"
+#include "vector.h"
 #include "text.h"
 #include "field.h"
-#include "draw.h"
+#include "painter.h"
 #include "engine.h"
 #include "tet_conf.h"
 
-extern struct window w;
+sfRenderWindow *window;
+struct idlist *texts;
 
-List         *texts;
 sfFont       *fontScore;
 struct field  fld, nxt;
 struct game   game = {
@@ -27,72 +29,19 @@ struct game   game = {
     .lines = 0
 };
 
-char arrKeys = 0; // Arrow keys states byte container
+char arrKeys = 0;
 
-void prepare() {
+static void handleWindowEvents() {
+    sfEvent event;
+    while (sfRenderWindow_pollEvent(window, &event))
+        if (event.type == sfEvtClosed)
+            sfRenderWindow_close(window);
 }
 
-void handleWindowEvents() {
-    while (sfRenderWindow_pollEvent(w.window, &w.event))
-        if (w.event.type == sfEvtClosed)
-            sfRenderWindow_close(w.window);
-}
-
-void drawTextsAtScene(List *texts, char *scene, sfRenderWindow *window) {
-    List *t = texts;
-    while (t) {
-        if (!strcmp(((Text *)t->obj)->scene, scene))
-            sfRenderWindow_drawText(window, ((Text *)t->obj)->sfText, NULL);
-        t = t->next;
-    }
-}
-
-void gameLoop() {
-    tTick();
-    tKeyCtrl();
-    valueAfterTextDisplay(game.scoreCurrent, texts, "score");
-    valueAfterTextDisplay(game.level, texts, "level");
-    painter_update_field(fld.id, &fld);
-    painter_update_field(nxt.id, &nxt);
-    drawTextsAtScene(texts, "game", w.window);
-    painter_draw();
-}
-
-void menuTick()
+static void register_text(void *obj)
 {
-    if (sfClock_getElapsedTime(game.mTick).microseconds >= basicLatency) {
-        sfClock_restart(game.mTick);
-        field_fill_random(&fld);
-        painter_update_field(fld.id, &fld);
-    }
-}
-
-void menuLoop() {
-    menuTick();
-    drawTextsAtScene(texts, "menu", w.window);
-    if (sfKeyboard_isKeyPressed(sfKeyS) == 1) {
-        game.isStarted = 1;
-        field_clear(&fld);
-        shape_gen_random(&fld.shape[0]);
-        field_reset_walking_shape(&fld, 0);
-        for (unsigned int i = 0; i < nxt.shape_cnt; ++i)
-            shape_gen_random(&nxt.shape[i]);
-        nxt.attr &= ~FLD_ATTR_INVISIBLE;
-        sfClock_restart(game.gameTick);
-    }
-    painter_draw();
-}
-
-void mainLoop() {
-    while (sfRenderWindow_isOpen(w.window)) {
-        handleWindowEvents();
-        sfRenderWindow_clear(w.window, (sfColor)UIBGCOLOR);
-        if (game.isStarted)
-            gameLoop();
-        else
-            menuLoop();
-        sfRenderWindow_display(w.window);
-    }
+    struct text *text = obj;
+    text->id = painter_register_text(text);
 }
 
 int main()
@@ -104,15 +53,19 @@ int main()
     game.repPushDown = sfClock_create();
     game.repKeyLeft = sfClock_create();
     game.repKeyRight = sfClock_create();
+    painter_load_font("dat/arial.ttf");
     fontScore = sfFont_createFromFile("dat/arial.ttf");
     if (!fontScore) {
-        printf("dat/arial.ttf font load failed");
-        exit(-1);
+        printf("%s font load failed", "dat/arial.ttf");
+        exit(EXIT_FAILURE);
     }
-    painter_init_window();
-    List *tmp = ListOfKeyMapOfString_getFromYaml("dat/texts.yaml");
-    texts = ListOfText_getFromListOfKeyMapOfString(tmp);
-    ListOfKeyMapOfString_free(&tmp);
+
+    sfVideoMode mode = (sfVideoMode){450, 570, 32};
+    window = sfRenderWindow_create(mode, windowName_conf, sfResize | sfClose, NULL);
+    if (!window)
+        exit(EXIT_FAILURE);
+    sfRenderWindow_setFramerateLimit(window, 60);
+    painter_set_window(window);
 
     fld.pos = FLD_POS;
     fld.size = (struct vector2ui){.x = FLD_SIZE_X, .y = FLD_SIZE_Y};
@@ -136,19 +89,34 @@ int main()
     painter_update_field(fld.id, &fld);
     painter_update_field(nxt.id, &nxt);
 
-    mainLoop();
+    texts = load_texts("dat/texts.yaml");
+
+    list_foreach(texts, register_text);
+
+    transition_init();
+    while (sfRenderWindow_isOpen(window)) {
+        handleWindowEvents();
+        main_loop();
+    }
+
+    list_foreach(texts, text_destroy);
+    list_destroy(texts);
+
     painter_destroy_drawables();
     field_deinit(&fld);
     field_deinit(&nxt);
 
-    painter_destroy_window();
+    if (window) {
+        sfRenderWindow_destroy(window);
+        window = 0;
+    }
     sfFont_destroy(fontScore);
+    painter_destroy_font();
     sfClock_destroy(game.gameTick);
     sfClock_destroy(game.putTick);
     sfClock_destroy(game.mTick);
     sfClock_destroy(game.repPushDown);
     sfClock_destroy(game.repKeyLeft);
     sfClock_destroy(game.repKeyRight);
-    ListOfText_free(&texts);
     return EXIT_SUCCESS;
 }

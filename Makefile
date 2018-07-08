@@ -6,23 +6,24 @@ TARGET:=tetris
 BUILD:=build
 SRC:=src
 SOURCES:=$(wildcard $(SRC)/*.c)
-OBJECTS:=$(patsubst $(SRC)/%.c,$(BUILD)/%.c.o,$(SOURCES))
+OBJECTS:=$(SOURCES:$(SRC)/%.c=$(BUILD)/%.c.o)
+DEPENDS:=$(OBJECTS:.o=.d)
 
 INCLUDE+=include
-INCLUDE:=$(patsubst %,-I%,$(INCLUDE))
+INCLUDE:=$(INCLUDE:%=-I%)
 
-#COMMON+=-fsanitize=address
+COMMON+=-fsanitize=address
 
 CFLAGS+=$(COMMON)
 CFLAGS+=$(INCLUDE)
 CFLAGS+=-Wall
 CFLAGS+=-Wextra
 CFLAGS+=-Wpedantic
-CFLAGS+=-Wduplicated-branches
-CFLAGS+=-Wduplicated-cond
 CFLAGS+=-std=c11
+CFLAGS+=-fms-extensions
 CFLAGS+=-g3
 CFLAGS+=-O0
+CFLAGS+=-MMD -MP
 
 LDFLAGS+=$(COMMON)
 LDFLAGS+=-lcsfml-graphics
@@ -32,12 +33,14 @@ LDFLAGS+=-lyaml
 
 #======================================================================
 
+all:
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(QQ) echo "  LD      $@"
 	$(Q) $(CC) -o $@ $^ $(LDFLAGS)
 
+$(DEPENDS): | $(BUILD)
 $(OBJECTS): | $(BUILD)
 
 $(BUILD):
@@ -46,6 +49,8 @@ $(BUILD):
 $(BUILD)/%.c.o: $(SRC)/%.c
 	$(QQ) echo "  CC      $@"
 	$(Q) $(CC) -c $(CFLAGS) -o $@ $<
+
+-include $(DEPENDS)
 
 clean:
 	$(Q) $(RM) -rfv $(TARGET) $(BUILD)

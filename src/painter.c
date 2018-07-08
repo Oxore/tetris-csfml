@@ -1,10 +1,15 @@
 #include <SFML/Graphics/RenderWindow.h>
 #include <SFML/Graphics/RectangleShape.h>
+#include <SFML/Graphics/Font.h>
+#include <SFML/Graphics/Text.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "tet_conf.h"
+#include "vector.h"
+#include "text.h"
 #include "field.h"
-#include "draw.h"
+#include "painter.h"
 
 #include "idlist.h"
 
@@ -19,48 +24,65 @@ static sfColor shape_color_map[] = {
     TCOLOR,
 };
 
-
-struct field_drawable {
-    sfRectangleShape ***p;
-    struct vector2ui size;
-    unsigned int attr;
+enum t {
+    TYPE_U,
+    TYPE_FIELD,
+    TYPE_TEXT
 };
 
-/*
- * TODO: Must be static in future
- *
- * */
-struct window w;
+struct drawable {
+    enum t t;
+};
 
-static struct idlist *fields_list = NULL;
+struct field_drawable {
+    struct drawable;
 
-void painter_init_window()
+    sfRectangleShape ***p;
+    struct vector2ui    size;
+    unsigned int        attr;
+};
+
+struct text_drawable {
+    struct drawable;
+
+    sfText *text;
+    unsigned long attr;
+};
+
+static sfRenderWindow *window;
+static sfFont *font;
+
+static struct idlist *drawables = NULL;
+
+void painter_set_window(sfRenderWindow *w)
 {
-    w = (struct window){.mode = {450, 570, 32}};
-    w.window = sfRenderWindow_create(w.mode, windowName_conf,
-                   sfResize | sfClose, NULL);
-    if (!w.window)
-        exit(EXIT_FAILURE);
-    sfRenderWindow_setFramerateLimit(w.window, 60);
+    window = w;
 }
 
-void painter_destroy_window()
+void painter_load_font(char *filename)
 {
-    if (w.window) {
-        sfRenderWindow_destroy(w.window);
-        w.window = 0;
+    font = sfFont_createFromFile(filename);
+    if (!font) {
+        printf("%s font load failed", filename);
+        exit(EXIT_FAILURE);
     }
+}
+
+void painter_destroy_font()
+{
+    sfFont_destroy(font);
 }
 
 unsigned long painter_register_field(struct field *fld)
 {
     struct idlist *last;
-    if (!fields_list)
-        last = fields_list = list_new();
+    if (!drawables)
+        last = drawables = list_new();
     else
-        last = list_append(fields_list);
+        last = list_append(drawables);
 
     struct field_drawable *f = calloc(1, sizeof(struct field_drawable));
+    f->t = TYPE_FIELD;
     f->size = fld->size;
     f->p = calloc(f->size.y, sizeof(sfRectangleShape **));
     for (unsigned int j = 0; j < f->size.y; j++) {
@@ -84,7 +106,7 @@ unsigned long painter_register_field(struct field *fld)
 
 void painter_update_field(unsigned long id, struct field *fld)
 {
-    struct idlist *node = list_get(fields_list, id);
+    struct idlist *node = list_get(drawables, id);
     if (!node)
         return;
     struct field_drawable *f = node->obj;
@@ -120,23 +142,18 @@ void painter_update_field(unsigned long id, struct field *fld)
                 }
 }
 
-static void draw_field(void *field)
+static void draw_field_drawable(struct drawable *d)
 {
-    struct field_drawable *f = field;
+    struct field_drawable *f = (void *)d;
     if (!(f->attr & FLD_ATTR_INVISIBLE))
         for (unsigned int j = 0; j < f->size.y; j++)
             for (unsigned int i = 0; i < f->size.x; i++)
-                sfRenderWindow_drawRectangleShape(w.window, f->p[j][i], NULL);
+                sfRenderWindow_drawRectangleShape(window, f->p[j][i], NULL);
 }
 
-static void draw_fields()
+static void destroy_field_drawable(struct drawable *d)
 {
-    list_foreach(fields_list, draw_field);
-}
-
-static void destroy_field(void *field)
-{
-    struct field_drawable *f = field;
+    struct field_drawable *f = (void *)d;
     for (unsigned int j = 0; j < f->size.y; j++) {
         for (unsigned int i = 0; i < f->size.x; i++)
              sfRectangleShape_destroy(f->p[j][i]);
@@ -146,30 +163,112 @@ static void destroy_field(void *field)
     free(f);
 }
 
-void painter_destroy_field(unsigned long id)
+unsigned long painter_register_text(struct text *txt)
 {
-    struct idlist *node = list_get(fields_list, id);
-    destroy_field(node->obj);
-    list_rm_node(node);
+    struct idlist *last;
+    if (!drawables)
+        last = drawables = list_new();
+    else
+        last = list_append(drawables);
+
+    struct text_drawable *t = calloc(1, sizeof(struct text_drawable));
+    t->t = TYPE_TEXT;
+    t->text = sfText_create();
+    sfText_setFont(t->text, font);
+    sfText_setCharacterSize(t->text, txt->size);
+    sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
+    sfText_setPosition(t->text, pos);
+    sfText_setString(t->text, txt->text);
+
+    last->obj = t;
+    return last->id;
 }
 
-void painter_destroy_fields()
+void painter_update_text(unsigned long id, struct text *txt)
 {
-    list_foreach(fields_list, destroy_field);
+    struct idlist *node = list_get(drawables, id);
+    if (!node)
+        return;
+    struct text_drawable *t = node->obj;
+    t->attr = txt->attr;
+    sfText_setCharacterSize(t->text, txt->size);
+    sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
+    sfText_setPosition(t->text, pos);
+    sfText_setString(t->text, txt->text);
+}
+
+static void draw_text_drawable(struct drawable *d)
+{
+    struct text_drawable *t = (struct text_drawable *)d;
+    if (!(t->attr & TXT_ATTR_INVISIBLE))
+        sfRenderWindow_drawText(window, t->text, NULL);
+}
+
+static void destroy_text_drawable(struct drawable *d)
+{
+    struct text_drawable *t = (struct text_drawable *)d;
+    sfText_destroy(t->text);
+    free(t);
+}
+
+static void draw_drawable(void *obj)
+{
+    struct drawable *d = obj;
+    switch (d->t) {
+    case TYPE_FIELD:
+        draw_field_drawable(d);
+        break;
+    case TYPE_TEXT:
+        draw_text_drawable(d);
+        break;
+    case TYPE_U:
+        fprintf(stderr, "ERROR: Unknown type of drawable\n");
+        exit(EXIT_FAILURE);
+        break;
+    }
 }
 
 void painter_draw()
 {
-    draw_fields();
+    sfRenderWindow_clear(window, (sfColor)UIBGCOLOR);
+    list_foreach(drawables, draw_drawable);
+    sfRenderWindow_display(window);
+}
+
+static void destroy_drawable(void *obj)
+{
+    struct drawable *d = obj;
+    switch (d->t) {
+    case TYPE_FIELD:
+        destroy_field_drawable(d);
+        break;
+    case TYPE_TEXT:
+        destroy_text_drawable(d);
+        break;
+    case TYPE_U:
+        fprintf(stderr, "ERROR: Unknown type of drawable\n");
+        exit(EXIT_FAILURE);
+        break;
+    }
+}
+
+void painter_destroy_drawable(unsigned long id)
+{
+    struct idlist *node = list_get(drawables, id);
+    destroy_drawable(node->obj);
+    list_rm_node(node);
 }
 
 void painter_destroy_drawables()
 {
-    painter_destroy_fields();
+    list_foreach(drawables, destroy_drawable);
+    list_destroy(drawables);
+    drawables = 0;
 }
 
 void painter_destroy_all()
 {
     painter_destroy_drawables();
-    painter_destroy_window();
+    painter_destroy_font();
+    window = 0;
 }

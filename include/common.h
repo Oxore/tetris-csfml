@@ -9,5 +9,5 @@ struct game {
     sfClock     *mTick;
     sfClock     *repPushDown;  // repeat latency when hold Down arrow
     sfClock     *repKeyLeft;   // repeat latency when hold Left arrow
-    sfClock     *repKeyRight;  // repeat latency when hold Left arrow
+    sfClock     *repKeyRight;  // repeat latency when hold Right arrow
 };
