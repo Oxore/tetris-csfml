@@ -19,6 +19,7 @@ CFLAGS+=$(INCLUDE)
 CFLAGS+=-Wall
 CFLAGS+=-Wextra
 CFLAGS+=-Wpedantic
+CFLAGS+=-Wno-microsoft-anon-tag
 CFLAGS+=-std=c11
 CFLAGS+=-fms-extensions
 CFLAGS+=-g3
