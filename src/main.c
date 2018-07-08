@@ -70,14 +70,15 @@ int main()
     fld.pos = FLD_POS;
     fld.size = (struct vector2ui){.x = FLD_SIZE_X, .y = FLD_SIZE_Y};
     fld.bound = (struct vector2ui){.x = FLD_BOUND_X, .y = FLD_BOUND_Y};
-    fld.shape_cnt = 1;
+    fld.shape_cnt = 2;
     field_init(&fld);
+    fld.shape[0].attr |= SHP_ATTR_GHOST;
 
     nxt.pos = NXT_POS;
     nxt.size = NXT_SIZE;
     nxt.bound = NXT_SIZE;
     nxt.shape_cnt = 3;
-    nxt.attr |= FLD_ATTR_TRANSPARENT | FLD_ATTR_INVISIBLE;
+    nxt.attr |= FLD_ATTR_HIDE_EMPTY_CELLS | FLD_ATTR_INVISIBLE;
     field_init(&nxt);
     nxt.shape[0].y = 4;
     nxt.shape[1].y = 1;

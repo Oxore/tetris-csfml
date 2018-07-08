@@ -29,6 +29,13 @@ void field_init(struct field *fld)
     fld->shape = calloc(fld->shape_cnt, sizeof(struct shape));
 }
 
+void field_deinit(struct field *fld) {
+    for (int j = 0; j < (int)fld->bound.y; j++)
+        free(fld->c[j]);
+    free(fld->c);
+    free(fld->shape);
+}
+
 void field_clear(struct field *fld)
 {
     for (unsigned int j = 0; j < fld->bound.y; j++)
@@ -53,7 +60,7 @@ void field_put_shape(struct field *fld, struct shape *active)
         for (int i = 0; i < 4; i++)
             if (active->c[j][i]) {
                 fld->c[j+active->y][i+active->x].a = active->c[j][i];
-                fld->c[j+active->y][i+active->x].color = active->color;
+                fld->c[j+active->y][i+active->x].color = active->t;
             }
 }
 
@@ -68,7 +75,6 @@ int field_shape_out_of_bounds(struct field *fld, struct shape *active)
 
 void shape_load(struct shape *shape)
 {
-    shape->color = shape->t;
     switch (shape->t) { // Copy cell active/inactive state
         case 1 :
             memcpy(&shape->c[0][0], &arrShapeL[0][0], sizeof(char)*4*4);
@@ -96,15 +102,15 @@ void shape_load(struct shape *shape)
 
 void field_reset_walking_shape(struct field *fld, unsigned int index)
 {
-    struct shape *active = &fld->shape[index];
-    shape_load(active);
-    active->x = 3;
-    if (active->t == 6)
-        active->y = 19;
+    struct shape *shape = &fld->shape[index];
+    shape_load(shape);
+    shape->x = 3;
+    if (shape->t == 6)
+        shape->y = 19;
     else
-        active->y = 18;
-    while (field_shape_collision(fld, active))
-        active->y++;
+        shape->y = 18;
+    while (field_shape_collision(fld, shape))
+        shape->y++;
 }
 
 void shape_gen_random(struct shape *shape)
@@ -181,6 +187,36 @@ void field_rotate_shape(struct field *fld, unsigned int index)
         rotate_shape_left(shape);
 }
 
+int field_move_shape_down(struct field *fld, unsigned int index)
+{
+    fld->shape[index].y--;
+    if (field_shape_collision(fld, &fld->shape[index])) {
+        fld->shape[index].y++;
+        return 0;
+    }
+    return -1;
+}
+
+int field_move_shape_left(struct field *fld, unsigned int index)
+{
+    fld->shape[index].x--;
+    if (field_shape_collision(fld, &fld->shape[index])) {
+        fld->shape[index].x++;
+        return 0;
+    }
+    return -1;
+}
+
+int field_move_shape_right(struct field *fld, unsigned int index)
+{
+    fld->shape[index].x++;
+    if (field_shape_collision(fld, &fld->shape[index])) {
+        fld->shape[index].x--;
+        return 0;
+    }
+    return -1;
+}
+
 int field_rm_lines(struct field *fld)
 {
     unsigned int lines = 0;
@@ -200,11 +236,4 @@ int field_rm_lines(struct field *fld)
         }
     }
     return lines;
-}
-
-void field_deinit(struct field *fld) {
-    for (int j = 0; j < (int)fld->bound.y; j++)
-        free(fld->c[j]);
-    free(fld->c);
-    free(fld->shape);
 }

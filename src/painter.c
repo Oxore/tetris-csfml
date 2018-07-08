@@ -120,7 +120,7 @@ void painter_update_field(unsigned long id, struct field *fld)
             if (fld->c[j][i].a) {
                 sfRectangleShape_setFillColor(f->p[j][i], shape_color_map[fld->c[j][i].color]);
                 sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UIFGACTIVECOLOR);
-            } else if (f->attr & FLD_ATTR_TRANSPARENT) {
+            } else if (f->attr & FLD_ATTR_HIDE_EMPTY_CELLS) {
                 sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UITRANSPARENT);
                 sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UITRANSPARENT);
             } else {
@@ -129,17 +129,24 @@ void painter_update_field(unsigned long id, struct field *fld)
             }
         }
     }
-    for (unsigned int s = 0; s < fld->shape_cnt; ++s)
+    for (unsigned int s = 0; s < fld->shape_cnt; ++s) {
+        sfColor fill_color = shape_color_map[fld->shape[s].t];
+        sfColor outline_color = (sfColor)UIFGACTIVECOLOR;
+        if (fld->shape[s].attr && SHP_ATTR_GHOST) {
+            fill_color.a = 100;
+            outline_color.a = 100;
+        }
         for (int j = 0; j < 4; j++)
             for (int i = 0; i < 4; i++)
                 if (fld->shape[s].c[j][i] && j + fld->shape[s].y < (int)fld->size.y) {
                     sfRectangleShape_setFillColor(
                             f->p[j + fld->shape[s].y][i + fld->shape[s].x],
-                            shape_color_map[fld->shape[s].color]);
+                            fill_color);
                     sfRectangleShape_setOutlineColor(
                             f->p[j + fld->shape[s].y][i + fld->shape[s].x],
-                            (sfColor)UIFGACTIVECOLOR);
+                            outline_color);
                 }
+    }
 }
 
 static void draw_field_drawable(struct drawable *d)

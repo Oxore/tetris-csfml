@@ -160,6 +160,7 @@ static void transition_game_over()
     painter_update_field(nxt.id, &nxt);
 
     fld.shape[0].y = fld.size.y;
+    fld.shape[1].y = fld.size.y;
     field_fill_random(&fld);
     painter_update_field(fld.id, &fld);
 
@@ -169,14 +170,29 @@ static void transition_game_over()
     list_foreach(texts, update_game_text);
 }
 
+static void project_ghost_shape(struct field *fld, unsigned int idreal, unsigned int idghost)
+{
+    fld->shape[idghost].t = fld->shape[idreal].t;
+    fld->shape[idghost].x = fld->shape[idreal].x;
+    fld->shape[idghost].y = fld->shape[idreal].y;
+    for (unsigned int j = 0; j < 4; j++)
+        for (unsigned int i = 0; i < 4; i++)
+            fld->shape[idghost].c[j][i] = fld->shape[idreal].c[j][i];
+    do {
+        --fld->shape[idghost].y;
+    } while (!field_shape_collision(fld, &fld->shape[idghost]));
+    ++fld->shape[idghost].y;
+}
+
 static void transition_put_shape()
 {
-    field_put_shape(&fld, &fld.shape[0]);
+    field_put_shape(&fld, &fld.shape[1]);
     int removedLines = field_rm_lines(&fld);
     game.lines += removedLines;
     game.scoreCurrent += rmlines_score[removedLines] * game.level;
-    fld.shape[0].t = nxt.shape[0].t;
-    field_reset_walking_shape(&fld, 0);
+    fld.shape[1].t = nxt.shape[0].t;
+    field_reset_walking_shape(&fld, 1);
+    project_ghost_shape(&fld, 1, 0);
     for (unsigned int s = 0; s < nxt.shape_cnt - 1; ++s) {
         nxt.shape[s] = nxt.shape[s + 1];
         nxt.shape[s].y = 4 - s * 3;
@@ -188,13 +204,12 @@ static void transition_put_shape()
 static void game_tick()
 {
     sfClock_restart(game.gameTick);
-    fld.shape[0].y--; // try
-    if (field_shape_collision(&fld, &fld.shape[0]))
-        fld.shape[0].y++; // fallback
-    else
+    if (field_move_shape_down(&fld, 1)) {
+        project_ghost_shape(&fld, 1, 0);
         sfClock_restart(game.putTick);
+    }
     if (sfClock_getElapsedTime(game.putTick).microseconds >= PUT_LATENCY) {
-        if (field_shape_out_of_bounds(&fld, &fld.shape[0]))
+        if (field_shape_out_of_bounds(&fld, &fld.shape[1]))
             transition_game_over();
         else
             transition_put_shape();
@@ -204,15 +219,14 @@ static void game_tick()
 
 static void signal_up()
 {
-    field_rotate_shape(&fld, 0);
+    field_rotate_shape(&fld, 1);
+    project_ghost_shape(&fld, 1, 0);
 }
 
 static void signal_down()
 {
-    fld.shape[0].y--;
-    if (field_shape_collision(&fld, &fld.shape[0])) {
-        fld.shape[0].y++;
-    } else {
+    if (field_move_shape_down(&fld, 1)) {
+        project_ghost_shape(&fld, 1, 0);
         sfClock_restart(game.gameTick);
         game.scoreCurrent++;
     }
@@ -221,21 +235,19 @@ static void signal_down()
 
 static void signal_left()
 {
-    fld.shape[0].x--;
-    if (field_shape_collision(&fld, &fld.shape[0]))
-        fld.shape[0].x++;
-    else
+    if (field_move_shape_left(&fld, 1)) {
+        project_ghost_shape(&fld, 1, 0);
         sfClock_restart(game.putTick);
+    }
     sfClock_restart(game.repKeyLeft);
 }
 
 static void signal_right()
 {
-    fld.shape[0].x++;
-    if (field_shape_collision(&fld, &fld.shape[0]))
-        fld.shape[0].x--;
-    else
+    if (field_move_shape_right(&fld, 1)) {
+        project_ghost_shape(&fld, 1, 0);
         sfClock_restart(game.putTick);
+    }
     sfClock_restart(game.repKeyRight);
 }
 
@@ -322,8 +334,10 @@ static void transition_game_start()
 {
     game.isStarted = 1;
     field_clear(&fld);
-    shape_gen_random(&fld.shape[0]);
-    field_reset_walking_shape(&fld, 0);
+    shape_gen_random(&fld.shape[1]);
+    field_reset_walking_shape(&fld, 1);
+    project_ghost_shape(&fld, 1, 0);
+    shape_load(&fld.shape[1]);
     for (unsigned int i = 0; i < nxt.shape_cnt; ++i)
         shape_gen_random(&nxt.shape[i]);
     nxt.attr &= ~FLD_ATTR_INVISIBLE;

@@ -1,5 +1,7 @@
-#define FLD_ATTR_INVISIBLE      (1 << 0)
-#define FLD_ATTR_TRANSPARENT    (1 << 1)
+#define FLD_ATTR_INVISIBLE          (1 << 0)
+#define FLD_ATTR_HIDE_EMPTY_CELLS   (1 << 1)
+
+#define SHP_ATTR_GHOST              (1 << 0)
 
 struct cell {
     char a; // active/empty state of cell
@@ -24,11 +26,10 @@ struct cell {
  */
 
 struct shape {
-    int x; // x coord of shape's left side
-    int y; // y coord of shape's bottom
+    struct vector2i; // position
     int t; // shape type
-    unsigned int color; // shape color
-    char c[4][4]; // array of logic shape cells
+    unsigned int attr;
+    char c[4][4];
 };
 
 struct field {
@@ -47,6 +48,9 @@ void field_deinit(struct field *fld);
 void field_fill_random(struct field *fld);
 void field_clear(struct field *fld);
 void field_rotate_shape(struct field *fld, unsigned int index);
+int  field_move_shape_down(struct field *fld, unsigned int index);
+int  field_move_shape_left(struct field *fld, unsigned int index);
+int  field_move_shape_right(struct field *fld, unsigned int index);
 void field_put_shape(struct field *fld, struct shape *shape);
 void field_reset_walking_shape(struct field *fld, unsigned int index);
 int  field_rm_lines(struct field *fld);
