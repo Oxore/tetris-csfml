@@ -20,6 +20,7 @@
 #define DOWN      (1 << 2)
 #define LEFT      (1 << 3)
 #define RIGHTHOLD (1 << 4)
+#define HARDDROP  (1 << 5)
 #define LEFTHOLD  (1 << 7)
 
 int level_move_latency[] = {
@@ -223,6 +224,14 @@ static void signal_up()
     project_ghost_shape(&fld, 1, 0);
 }
 
+static void signal_harddrop()
+{
+    while (field_move_shape_down(&fld, 1));
+    transition_put_shape();
+    sfClock_restart(game.gameTick);
+    sfClock_restart(game.putTick);
+}
+
 static void signal_down()
 {
     if (field_move_shape_down(&fld, 1)) {
@@ -261,6 +270,16 @@ static void game_keys()
         }
     } else {
         arrKeys = arrKeys & ~UP;
+    }
+
+    /* HARDDROP */
+    if (sfKeyboard_isKeyPressed(sfKeySpace)) {
+        if (!(arrKeys & HARDDROP)) {
+            arrKeys = arrKeys | HARDDROP;
+            signal_harddrop();
+        }
+    } else {
+        arrKeys = arrKeys & ~HARDDROP;
     }
 
     /* DOWN */
