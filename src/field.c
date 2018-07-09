@@ -179,12 +179,55 @@ static void rotate_shape_right(struct shape *shape)
             shape->c[j][i] = arr[i+1][3-j];
 }
 
-void field_rotate_shape(struct field *fld, unsigned int index)
+static int wall_kick(struct field *fld, struct shape *shape)
+{
+    // try kick the left wall
+    shape->x++;
+    if (field_shape_collision(fld, shape))
+        shape->x--;
+    else
+        return 1;
+
+    // try kick the right wall
+    shape->x--;
+    if (field_shape_collision(fld, shape)) {
+        if (shape->t == 6) {
+            shape->x--;
+            if (field_shape_collision(fld, shape))
+                shape->x++;
+            else
+                return 1;
+        }
+        shape->x++;
+    } else {
+        return 1;
+    }
+
+    // try kick the floor
+    shape->y++;
+    if (field_shape_collision(fld, shape)) {
+        if (shape->t == 6) {
+            shape->y++;
+            if (field_shape_collision(fld, shape))
+                shape->y--;
+            else
+                return 1;
+        }
+        shape->y--;
+    } else {
+        return 1;
+    }
+
+    return 0;
+}
+
+void field_rotate_shape_clockwise(struct field *fld, unsigned int index)
 {
     struct shape *shape = &fld->shape[index];
     rotate_shape_right(shape);
     if (field_shape_collision(fld, shape))
-        rotate_shape_left(shape);
+        if (!wall_kick(fld, shape))
+            rotate_shape_left(shape);
 }
 
 int field_move_shape_down(struct field *fld, unsigned int index)

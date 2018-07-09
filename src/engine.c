@@ -220,8 +220,9 @@ static void game_tick()
 
 static void signal_up()
 {
-    field_rotate_shape(&fld, 1);
+    field_rotate_shape_clockwise(&fld, 1);
     project_ghost_shape(&fld, 1, 0);
+    sfClock_restart(game.putTick);
 }
 
 static void signal_harddrop()
@@ -239,7 +240,6 @@ static void signal_down()
         sfClock_restart(game.gameTick);
         game.scoreCurrent++;
     }
-    sfClock_restart(game.repPushDown);
 }
 
 static void signal_left()
@@ -248,7 +248,6 @@ static void signal_left()
         project_ghost_shape(&fld, 1, 0);
         sfClock_restart(game.putTick);
     }
-    sfClock_restart(game.repKeyLeft);
 }
 
 static void signal_right()
@@ -257,7 +256,6 @@ static void signal_right()
         project_ghost_shape(&fld, 1, 0);
         sfClock_restart(game.putTick);
     }
-    sfClock_restart(game.repKeyRight);
 }
 
 static void game_keys()
@@ -287,6 +285,7 @@ static void game_keys()
         if (!(arrKeys & DOWN)) {
             arrKeys = arrKeys | DOWN;
             signal_down();
+            sfClock_restart(game.repPushDown);
         } else {
             if (sfClock_getElapsedTime(game.repPushDown).microseconds >= moveRepeatLatency2)
                 arrKeys = arrKeys & ~DOWN;
@@ -300,6 +299,7 @@ static void game_keys()
         if (!(arrKeys & LEFT)) {
             arrKeys = arrKeys | LEFT;
             signal_left();
+            sfClock_restart(game.repKeyLeft);
         } else if (!(arrKeys & LEFTHOLD)) {
             if (sfClock_getElapsedTime(game.repKeyLeft).microseconds >= moveRepeatLatency1) {
                 arrKeys = arrKeys | LEFTHOLD;
@@ -319,6 +319,7 @@ static void game_keys()
         if (!(arrKeys & RIGHT)) {
             arrKeys = arrKeys | RIGHT;
             signal_right();
+            sfClock_restart(game.repKeyRight);
         } else if (!(arrKeys & RIGHTHOLD)) {
             if (sfClock_getElapsedTime(game.repKeyRight).microseconds >= moveRepeatLatency1) {
                 arrKeys = arrKeys | RIGHTHOLD;

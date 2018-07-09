@@ -22,6 +22,12 @@ make all
 ```
 File named "tetris" is the final binary. Run it. Hit *S* to start game.
 
+- `s` - start a game.
+- `Left arrow` - move shape left.
+- `Right arrow` - move shape right.
+- `Up arrow` - rotate shape clockwise.
+- `Space` - hard drop.
+
 Cleaning:
 ```
 make clean
@@ -36,7 +42,7 @@ Look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)! Now
 - Add screenshots and gameplay gif
 - [x] Levels speed and scores calibration
 - [x] Scoring system as in Tetris for NES which is described on [this page](https://tetris.wiki/Scoring)
-- [Wall kick](https://tetris.wiki/Wall_kick)
+- [x] [Wall kick](https://tetris.wiki/Wall_kick). Implemented order: left wall, right wall, floor
 - [x] Hard drop
 - [x] Phantom shape
 - Table of records

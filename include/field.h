@@ -47,7 +47,7 @@ void field_init(struct field *fld);
 void field_deinit(struct field *fld);
 void field_fill_random(struct field *fld);
 void field_clear(struct field *fld);
-void field_rotate_shape(struct field *fld, unsigned int index);
+void field_rotate_shape_clockwise(struct field *fld, unsigned int index);
 int  field_move_shape_down(struct field *fld, unsigned int index);
 int  field_move_shape_left(struct field *fld, unsigned int index);
 int  field_move_shape_right(struct field *fld, unsigned int index);
