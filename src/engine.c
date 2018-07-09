@@ -227,7 +227,8 @@ static void signal_up()
 
 static void signal_harddrop()
 {
-    while (field_move_shape_down(&fld, 1));
+    while (field_move_shape_down(&fld, 1))
+        game.scoreCurrent++;
     if (field_shape_out_of_bounds(&fld, &fld.shape[1]))
         transition_game_over();
     else
