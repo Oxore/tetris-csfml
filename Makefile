@@ -12,7 +12,7 @@ DEPENDS:=$(OBJECTS:.o=.d)
 INCLUDE+=include
 INCLUDE:=$(INCLUDE:%=-I%)
 
-COMMON+=-fsanitize=address
+#COMMON+=-fsanitize=address
 
 CFLAGS+=$(COMMON)
 CFLAGS+=$(INCLUDE)
