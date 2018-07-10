@@ -90,7 +90,7 @@ static void render_level_value(void *obj)
     }
 }
 
-static int getMoveLatencyOfLevel(unsigned int level)
+static int get_level_latency(unsigned int level)
 {
     if (level > 29)
         return level_move_latency[29];
@@ -103,7 +103,7 @@ static void level_up(struct game *game)
     while (game->lines >= LEVELUP_LINES) {
         game->level++;
         game->lines -= LEVELUP_LINES;
-        game->moveLatency = getMoveLatencyOfLevel(game->level);
+        game->moveLatency = get_level_latency(game->level);
     }
 }
 
@@ -153,8 +153,8 @@ static void transition_game_over()
 {
     game.isStarted = 0;
     game.scoreCurrent = 0;
-    game.level = 0;
-    game.moveLatency = L00LATENCY;
+    game.level = 1;
+    game.moveLatency = get_level_latency(game.level);
     game.lines = 0;
 
     nxt.attr |= FLD_ATTR_INVISIBLE;

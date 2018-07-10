@@ -19,7 +19,6 @@
 sfRenderWindow *window;
 struct idlist *texts;
 
-sfFont       *fontScore;
 struct field  fld, nxt;
 struct game   game = {
     .isStarted = 0,
@@ -54,11 +53,6 @@ int main()
     game.repKeyLeft = sfClock_create();
     game.repKeyRight = sfClock_create();
     painter_load_font("dat/arial.ttf");
-    fontScore = sfFont_createFromFile("dat/arial.ttf");
-    if (!fontScore) {
-        printf("%s font load failed", "dat/arial.ttf");
-        exit(EXIT_FAILURE);
-    }
 
     sfVideoMode mode = (sfVideoMode){450, 570, 32};
     window = sfRenderWindow_create(mode, windowName_conf, sfResize | sfClose, NULL);
@@ -111,7 +105,6 @@ int main()
         sfRenderWindow_destroy(window);
         window = 0;
     }
-    sfFont_destroy(fontScore);
     painter_destroy_font();
     sfClock_destroy(game.gameTick);
     sfClock_destroy(game.putTick);
