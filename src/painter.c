@@ -185,7 +185,7 @@ unsigned long painter_register_text(struct text *txt)
     sfText_setCharacterSize(t->text, txt->size);
     sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
     sfText_setPosition(t->text, pos);
-    sfText_setString(t->text, txt->text);
+    sfText_setUnicodeString(t->text, (unsigned int *)txt->text);
 
     last->obj = t;
     return last->id;
@@ -201,7 +201,7 @@ void painter_update_text(unsigned long id, struct text *txt)
     sfText_setCharacterSize(t->text, txt->size);
     sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
     sfText_setPosition(t->text, pos);
-    sfText_setString(t->text, txt->text);
+    sfText_setUnicodeString(t->text, (unsigned int *)txt->text);
 }
 
 static void draw_text_drawable(struct drawable *d)

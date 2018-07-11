@@ -11,11 +11,62 @@
 #include "vector.h"
 #include "text.h"
 
+static inline unsigned int utf8_char_len(unsigned char c)
+{
+    if (c > 0x00 && c < 0xC0)
+        return 1;
+    else if (c >= 0xC2 && c < 0xE0)
+        return 2;
+    else if (c >= 0xE0 && c < 0xF0)
+        return 3;
+    else if (c >= 0xF0 && c < 0xF5)
+        return 4;
+    else
+        return 0;
+}
+
+unsigned long utf8_strlen(void *string)
+{
+    unsigned long len = 0, keep = 0;
+    for (unsigned char *c = string; *c; (keep ? --keep : ++len), ++c)
+        if (!keep)
+            keep = (keep = utf8_char_len(*c)) ? keep - 1 : keep;
+    return len;
+}
+
+void utf8to32_strcpy(wchar_t *dest, char *src)
+{
+    wchar_t *dc = dest;
+    char *c = src;
+    unsigned long len = 0;
+    while (*c) {
+        int clen = utf8_char_len(*c);
+        if (clen == 1) {
+            dc[len] = c[0] & 0x7f;
+            c += 1;
+        } else if (clen == 2) {
+            dc[len] = ((c[0] & 0x1f) << 6) | ((c[1] & 0x3f) << 0);
+            c += 2;
+        } else if (clen == 3) {
+            dc[len] = ((c[0] & 0x0f) << 12) | ((c[1] & 0x3f) << 6) | ((c[2] & 0x3f) << 0);
+            c += 3;
+        } else if (clen == 4) {
+            dc[len] = ((c[0] & 0x07) << 18) | ((c[1] & 0x3f) << 12) | ((c[2] & 0x3f) << 6) | ((c[3] & 0x3f) << 0);
+            c += 4;
+        } else {
+            dc[len] = 0;
+            return;
+        }
+        ++len;
+    }
+    dc[len] = 0;
+}
+
 static FILE *openFile(char *filename)
 {
     FILE *file;
     if (!(file = fopen(filename, "rb"))){
-        printf("ERROR: fild \"%s\"cannot be opened\n", filename);
+        printf("ERROR: file \"%s\"cannot be opened\n", filename);
         exit(EXIT_FAILURE);
     }
     return file;
@@ -65,8 +116,8 @@ struct idlist *load_texts(char *filename)
                 text->scene = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));
                 strcpy(text->scene, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "text")) {
-                text->text = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));
-                strcpy(text->text, (char *)ev.data.scalar.value);
+                text->text = calloc((utf8_strlen(ev.data.scalar.value)) + 1, sizeof(unsigned int));
+                utf8to32_strcpy(text->text, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "font")) {
                 text->font = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));
                 strcpy(text->font, (char *)ev.data.scalar.value);

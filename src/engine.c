@@ -4,7 +4,6 @@
 #include <SFML/System/Clock.h>
 #include <SFML/Window/Keyboard.h>
 #include <SFML/Graphics/RenderWindow.h>
-#include <SFML/Graphics/Text.h>
 
 #include "common.h"
 #include "idlist.h"
@@ -75,8 +74,11 @@ static void render_score_value(void *obj)
     struct text *text = obj;
     if (!strcmp(text->type, "score.value")) {
         if (!text->text)
-            text->text = malloc(sizeof(char) * BUFSIZ);
-        sprintf(text->text, "%d", game.scoreCurrent);
+            text->text = calloc(BUFSIZ, sizeof(char));
+        char *a = calloc(BUFSIZ, sizeof(char));
+        sprintf(a, "%d", game.scoreCurrent);
+        utf8to32_strcpy(text->text, a);
+        free(a);
     }
 }
 
@@ -85,8 +87,11 @@ static void render_level_value(void *obj)
     struct text *text = obj;
     if (!strcmp(text->type, "level.value")) {
         if (!text->text)
-            text->text = malloc(sizeof(char) * BUFSIZ);
-        sprintf(text->text, "%d", game.level);
+            text->text = calloc(BUFSIZ, sizeof(char));
+        char *a = calloc(BUFSIZ, sizeof(char));
+        sprintf(a, "%d", game.level);
+        utf8to32_strcpy(text->text, a);
+        free(a);
     }
 }
 
