@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <SFML/System/Clock.h>
 #include <SFML/Window/Keyboard.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <SFML/Graphics/Font.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #include "common.h"
 #include "idlist.h"

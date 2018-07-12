@@ -3,10 +3,12 @@ language: c
 os: osx
 
 before_script:
+    - git submodule update --init --recursive
     - brew install csfml
 
-script: 
+script:
     - make all
+    - ./test
 
-compiler: 
+compiler:
     - gcc

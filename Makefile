@@ -1,15 +1,23 @@
 Q=@
 QQ=@
 
-TARGET:=tetris
+TARGET_TETRIS:=tetris
+TARGET_TEST:=test
+MUNIT:=deps/munit
 
-BUILD:=build
+ifeq ($(wildcard $(MUNIT)/*),)
+NOTEST=1
+endif
+
 SRC:=src
+BUILD:=build
+TARGET:=$(BUILD)/target
 SOURCES:=$(wildcard $(SRC)/*.c)
 OBJECTS:=$(SOURCES:$(SRC)/%.c=$(BUILD)/%.c.o)
 DEPENDS:=$(OBJECTS:.o=.d)
 
 INCLUDE+=include
+INCLUDE+=$(MUNIT)
 INCLUDE:=$(INCLUDE:%=-I%)
 
 #COMMON+=-fsanitize=address
@@ -27,25 +35,44 @@ CFLAGS+=-O0
 CFLAGS+=-MD
 
 LDFLAGS+=$(COMMON)
-LDFLAGS+=-lcsfml-graphics
-LDFLAGS+=-lcsfml-window
-LDFLAGS+=-lcsfml-system
-LDFLAGS+=-lyaml
+
+LDFLAGS_TETRIS+=$(LDFLAGS)
+LDFLAGS_TETRIS+=-lcsfml-graphics
+LDFLAGS_TETRIS+=-lcsfml-window
+LDFLAGS_TETRIS+=-lcsfml-system
+LDFLAGS_TETRIS+=-lyaml
+
+LDFLAGS_TEST+=$(LDFLAGS)
 
 #======================================================================
 
 all:
 all: $(TARGET)
+all: $(TARGET_TETRIS)
+ifndef NOTEST
+all: $(TARGET_TEST)
+endif
 
-$(TARGET): $(OBJECTS)
+$(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o
 	$(QQ) echo "  LD      $@"
-	$(Q) $(CC) -o $@ $^ $(LDFLAGS)
+	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TETRIS)
+
+$(TARGET_TEST): $(TARGET)/$(TARGET_TEST).c.o $(MUNIT)/munit.c.o $(BUILD)/unicode.c.o
+	$(QQ) echo "  LD      $@"
+	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TEST)
 
 $(DEPENDS): | $(BUILD)
 $(OBJECTS): | $(BUILD)
 
 $(BUILD):
-	$(Q) mkdir -p $(BUILD)
+	$(Q) mkdir -p $@
+
+$(TARGET):
+	$(Q) mkdir -p $@
+
+$(MUNIT)/munit.c.o: $(MUNIT)/munit.c
+	$(QQ) echo "  CC      $@"
+	$(Q) $(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD)/%.c.o: $(SRC)/%.c
 	$(QQ) echo "  CC      $@"
@@ -54,6 +81,7 @@ $(BUILD)/%.c.o: $(SRC)/%.c
 -include $(DEPENDS)
 
 clean:
-	$(Q) $(RM) -rfv $(TARGET) $(BUILD)
+	$(Q) $(RM) -rfv $(TARGET_TETRIS) $(TARGET_TEST) $(BUILD)
+	$(Q) $(RM) -rfv $(MUNIT)/*.d $(MUNIT)/*.o
 
 .PHONY: all clean

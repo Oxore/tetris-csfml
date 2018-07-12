@@ -11,6 +11,7 @@
 #include "vector.h"
 #include "text.h"
 #include "field.h"
+#include "unicode.h"
 #include "painter.h"
 #include "engine.h"
 
