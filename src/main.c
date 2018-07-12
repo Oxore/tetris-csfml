@@ -21,14 +21,13 @@ struct idlist *texts;
 
 struct field  fld, nxt;
 struct game   game = {
-    .isStarted = 0,
+    .started = 0,
+    .paused = 0,
     .scoreCurrent = 0,
     .level = 1,
     .moveLatency = L00LATENCY,
     .lines = 0
 };
-
-char arrKeys = 0;
 
 static void handleWindowEvents() {
     sfEvent event;

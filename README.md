@@ -22,11 +22,12 @@ make all
 ```
 File named "tetris" is the final binary. Run it. Hit *S* to start game.
 
-- `s` - start a game.
+- `S` - start a game.
 - `Left arrow` - move shape left.
 - `Right arrow` - move shape right.
 - `Up arrow` - rotate shape clockwise.
 - `Space` - hard drop.
+- `P` - pause.
 
 Cleaning:
 ```
@@ -51,5 +52,6 @@ Look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)! Now
   - Change colorscheme and define new
   - Number of levels
 - [x] Three next shapes
+- [x] Pause
 - Look with sprites and shaders
 - Interprocess communication interface for control from other process (I want to connect machine learning algorithm and make it play and learn)

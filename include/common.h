@@ -1,6 +1,7 @@
 struct game {
     unsigned int level;
-    int          isStarted;
+    int          started;
+    int          paused;
     int          scoreCurrent;
     int          moveLatency;
     int          lines;

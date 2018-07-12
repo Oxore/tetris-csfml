@@ -24,7 +24,7 @@ CFLAGS+=-std=c11
 CFLAGS+=-fms-extensions
 CFLAGS+=-g3
 CFLAGS+=-O0
-CFLAGS+=-MMD -MP
+CFLAGS+=-MD
 
 LDFLAGS+=$(COMMON)
 LDFLAGS+=-lcsfml-graphics

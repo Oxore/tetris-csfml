@@ -20,6 +20,7 @@
 #define LEFT      (1 << 3)
 #define RIGHTHOLD (1 << 4)
 #define HARDDROP  (1 << 5)
+#define PAUSE     (1 << 6)
 #define LEFTHOLD  (1 << 7)
 
 int level_move_latency[] = {
@@ -67,7 +68,7 @@ int rmlines_score[] = {
 extern struct game    game;
 extern struct field   fld, nxt;
 extern struct idlist *texts;
-extern char           arrKeys;
+char                  arrKeys = 0;
 
 static void render_score_value(void *obj)
 {
@@ -140,6 +141,20 @@ static void show_game_text(void *obj)
         text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
+static void hide_pause_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game") && !strcmp(text->type, "pause"))
+        text->attr |= TXT_ATTR_INVISIBLE;
+}
+
+static void show_pause_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game") && !strcmp(text->type, "pause"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
 static void update_menu_text(void *obj)
 {
     struct text *text = obj;
@@ -156,7 +171,7 @@ static void update_game_text(void *obj)
 
 static void transition_game_over()
 {
-    game.isStarted = 0;
+    game.started = 0;
     game.scoreCurrent = 0;
     game.level = 1;
     game.moveLatency = get_level_latency(game.level);
@@ -207,9 +222,30 @@ static void transition_put_shape()
     level_up(&game);
 }
 
+static void transition_pause()
+{
+    game.paused = 1;
+    int elapsed = sfClock_getElapsedTime(game.gameTick).microseconds;
+    if (game.moveLatency - elapsed >= 0)
+        game.moveLatency -= elapsed;
+    else
+        game.moveLatency = get_level_latency(game.level);
+    sfClock_restart(game.gameTick);
+    list_foreach(texts, show_pause_text);
+}
+
+static void transition_unpause()
+{
+    game.paused = 0;
+    sfClock_restart(game.gameTick);
+    list_foreach(texts, hide_pause_text);
+}
+
 static void game_tick()
 {
     sfClock_restart(game.gameTick);
+
+    game.moveLatency = get_level_latency(game.level);
     if (field_move_shape_down(&fld, 1)) {
         project_ghost_shape(&fld, 1, 0);
         sfClock_restart(game.putTick);
@@ -221,6 +257,11 @@ static void game_tick()
             transition_put_shape();
         sfClock_restart(game.putTick);
     }
+
+    list_foreach(texts, render_score_value);
+    list_foreach(texts, render_level_value);
+    painter_update_field(fld.id, &fld);
+    painter_update_field(nxt.id, &nxt);
 }
 
 static void signal_up()
@@ -267,8 +308,27 @@ static void signal_right()
     }
 }
 
+static void signal_pause()
+{
+    if (game.paused)
+        transition_unpause();
+    else
+        transition_pause();
+    sfClock_restart(game.putTick);
+}
+
 static void game_keys()
 {
+    /* PAUSE */
+    if (sfKeyboard_isKeyPressed(sfKeyP)) {
+        if (!(arrKeys & PAUSE)) {
+            arrKeys = arrKeys | PAUSE;
+            signal_pause();
+        }
+    } else {
+        arrKeys = arrKeys & ~PAUSE;
+    }
+
     /* UP */
     if (sfKeyboard_isKeyPressed(sfKeyUp)) {
         if (!(arrKeys & UP)) {
@@ -344,6 +404,19 @@ static void game_keys()
     }
 }
 
+static void pause_keys()
+{
+    /* PAUSE */
+    if (sfKeyboard_isKeyPressed(sfKeyP)) {
+        if (!(arrKeys & PAUSE)) {
+            arrKeys = arrKeys | PAUSE;
+            signal_pause();
+        }
+    } else {
+        arrKeys = arrKeys & ~PAUSE;
+    }
+}
+
 static void menuTick()
 {
     sfClock_restart(game.mTick);
@@ -361,7 +434,8 @@ void transition_init(void)
 
 static void transition_game_start()
 {
-    game.isStarted = 1;
+    game.started = 1;
+    game.paused = 0;
     field_clear(&fld);
     shape_gen_random(&fld.shape[1]);
     field_reset_walking_shape(&fld, 1);
@@ -372,8 +446,11 @@ static void transition_game_start()
     nxt.attr &= ~FLD_ATTR_INVISIBLE;
     list_foreach(texts, hide_menu_text);
     list_foreach(texts, show_game_text);
+    list_foreach(texts, hide_pause_text);
     list_foreach(texts, update_menu_text);
     list_foreach(texts, update_game_text);
+    painter_update_field(fld.id, &fld);
+    painter_update_field(nxt.id, &nxt);
     sfClock_restart(game.gameTick);
 }
 
@@ -382,7 +459,6 @@ static void menu_loop() {
         menuTick();
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1)
         transition_game_start();
-    painter_draw();
 }
 
 static void game_loop() {
@@ -391,17 +467,25 @@ static void game_loop() {
         game_tick();
     list_foreach(texts, render_score_value);
     list_foreach(texts, render_level_value);
+    list_foreach(texts, update_game_text);
     painter_update_field(fld.id, &fld);
     painter_update_field(nxt.id, &nxt);
-    list_foreach(texts, update_game_text);
-    painter_draw();
+}
+
+static void pause_loop() {
+    pause_keys();
 }
 
 void main_loop()
 {
-    if (game.isStarted)
-        game_loop();
-    else
+    if (game.started) {
+        if (game.paused)
+            pause_loop();
+        else
+            game_loop();
+    } else {
         menu_loop();
+    }
+    painter_draw();
 }
 

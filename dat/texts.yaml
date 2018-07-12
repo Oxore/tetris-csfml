@@ -59,3 +59,12 @@
   size: 20
   x: 276
   y: 200
+
+-
+  type: "pause"
+  scene: "game"
+  text: "PAUSED"
+  font: "Arial"
+  size: 36
+  x: 60
+  y: 188
