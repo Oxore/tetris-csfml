@@ -62,7 +62,7 @@ struct idlist *load_texts(char *filename)
                 text->scene = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));
                 strcpy(text->scene, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "text")) {
-                text->text = calloc((utf8_strlen(ev.data.scalar.value)) + 1, sizeof(unsigned int));
+                text->text = calloc((utf8_strlen((char *)ev.data.scalar.value)) + 1, sizeof(unsigned int));
                 utf8to32_strcpy(text->text, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "font")) {
                 text->font = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));

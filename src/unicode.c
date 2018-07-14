@@ -17,10 +17,10 @@ static inline unsigned int utf8_char_len(unsigned char c)
         return 0;
 }
 
-unsigned long utf8_strlen(void *string)
+unsigned long utf8_strlen(char *string)
 {
     unsigned long len = 0, keep = 0;
-    for (unsigned char *c = string; *c; (keep ? --keep : ++len), ++c)
+    for (char *c = string; *c; (keep ? --keep : ++len), ++c)
         if (!keep)
             keep = (keep = utf8_char_len(*c)) ? keep - 1 : keep;
     return len;
