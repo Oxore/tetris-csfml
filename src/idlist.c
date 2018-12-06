@@ -21,7 +21,7 @@ struct idlist *list_append(struct idlist *list)
     return last->next;
 }
 
-struct idlist *list_get(const struct idlist *list, unsigned long id)
+struct idlist *list_get(const struct idlist *list, size_t id)
 {
     const struct idlist *sought = list;
     if (sought) {

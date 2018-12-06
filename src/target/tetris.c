@@ -1,10 +1,13 @@
+/*
+ * tetris.c
+ *
+ * The main file. Here all the resources are initialized, run and destroyed.
+ *
+ * */
+
 #include <SFML/System/Clock.h>
-#include <SFML/Window/Keyboard.h>
 #include <SFML/Graphics/RenderWindow.h>
-#include <SFML/Graphics/Font.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
 #include "common.h"
@@ -17,10 +20,9 @@
 #include "tet_conf.h"
 
 sfRenderWindow *window;
-struct idlist *texts;
-
-struct field  fld, nxt;
-struct game   game = {
+struct idlist  *texts;
+struct field    fld, nxt;
+struct game     game = {
     .started = 0,
     .paused = 0,
     .scoreCurrent = 0,
@@ -51,10 +53,12 @@ int main()
     game.repPushDown = sfClock_create();
     game.repKeyLeft = sfClock_create();
     game.repKeyRight = sfClock_create();
+
     painter_load_font("dat/arial.ttf");
 
     sfVideoMode mode = (sfVideoMode){450, 570, 32};
-    window = sfRenderWindow_create(mode, windowName_conf, sfResize | sfClose, NULL);
+    window = sfRenderWindow_create(mode, windowName_conf, sfResize | sfClose,
+                                                                        NULL);
     if (!window)
         exit(EXIT_FAILURE);
     sfRenderWindow_setFramerateLimit(window, 60);
@@ -84,7 +88,6 @@ int main()
     painter_update_field(nxt.id, &nxt);
 
     texts = load_texts("dat/texts.yaml");
-
     list_foreach(texts, register_text);
 
     transition_init();
@@ -105,11 +108,13 @@ int main()
         window = 0;
     }
     painter_destroy_font();
+
     sfClock_destroy(game.gameTick);
     sfClock_destroy(game.putTick);
     sfClock_destroy(game.mTick);
     sfClock_destroy(game.repPushDown);
     sfClock_destroy(game.repKeyLeft);
     sfClock_destroy(game.repKeyRight);
+
     return EXIT_SUCCESS;
 }

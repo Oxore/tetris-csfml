@@ -39,14 +39,14 @@ struct field_drawable {
 
     sfRectangleShape ***p;
     struct vector2ui    size;
-    unsigned int        attr;
+    size_t        attr;
 };
 
 struct text_drawable {
     struct drawable;
 
     sfText *text;
-    unsigned long attr;
+    size_t attr;
 };
 
 static sfRenderWindow *window;
@@ -73,7 +73,7 @@ void painter_destroy_font()
     sfFont_destroy(font);
 }
 
-unsigned long painter_register_field(struct field *fld)
+size_t painter_register_field(struct field *fld)
 {
     struct idlist *last;
     if (!drawables)
@@ -85,9 +85,9 @@ unsigned long painter_register_field(struct field *fld)
     f->t = TYPE_FIELD;
     f->size = fld->size;
     f->p = calloc(f->size.y, sizeof(sfRectangleShape **));
-    for (unsigned int j = 0; j < f->size.y; j++) {
+    for (size_t j = 0; j < f->size.y; j++) {
         f->p[j] = calloc(f->size.x, sizeof(sfRectangleShape *));
-        for (unsigned int i = 0; i < f->size.x; i++) {
+        for (size_t i = 0; i < f->size.x; i++) {
             f->p[j][i] = sfRectangleShape_create();
             sfVector2f cell_pos;
             cell_pos.x = fld->pos.x + (i * (CELL_SIZE.x + 2 * OUT_THICK));
@@ -104,15 +104,15 @@ unsigned long painter_register_field(struct field *fld)
     return last->id;
 }
 
-void painter_update_field(unsigned long id, struct field *fld)
+void painter_update_field(size_t id, struct field *fld)
 {
     struct idlist *node = list_get(drawables, id);
     if (!node)
         return;
     struct field_drawable *f = node->obj;
     f->attr = fld->attr;
-    for (unsigned int j = 0; j < fld->size.y; j++) {
-        for (unsigned int i = 0; i < fld->size.x; i++) {
+    for (size_t j = 0; j < fld->size.y; j++) {
+        for (size_t i = 0; i < fld->size.x; i++) {
             sfVector2f cell_pos;
             cell_pos.x = fld->pos.x + (i * (CELL_SIZE.x + 2 * OUT_THICK));
             cell_pos.y = fld->pos.y - (j * (CELL_SIZE.y + 2 * OUT_THICK));
@@ -129,7 +129,7 @@ void painter_update_field(unsigned long id, struct field *fld)
             }
         }
     }
-    for (unsigned int s = 0; s < fld->shape_cnt; ++s) {
+    for (size_t s = 0; s < fld->shape_cnt; ++s) {
         sfColor fill_color = shape_color_map[fld->shape[s].t];
         sfColor outline_color = (sfColor)UIFGACTIVECOLOR;
         if (fld->shape[s].attr && SHP_ATTR_GHOST) {
@@ -153,16 +153,16 @@ static void draw_field_drawable(struct drawable *d)
 {
     struct field_drawable *f = (void *)d;
     if (!(f->attr & FLD_ATTR_INVISIBLE))
-        for (unsigned int j = 0; j < f->size.y; j++)
-            for (unsigned int i = 0; i < f->size.x; i++)
+        for (size_t j = 0; j < f->size.y; j++)
+            for (size_t i = 0; i < f->size.x; i++)
                 sfRenderWindow_drawRectangleShape(window, f->p[j][i], NULL);
 }
 
 static void destroy_field_drawable(struct drawable *d)
 {
     struct field_drawable *f = (void *)d;
-    for (unsigned int j = 0; j < f->size.y; j++) {
-        for (unsigned int i = 0; i < f->size.x; i++)
+    for (size_t j = 0; j < f->size.y; j++) {
+        for (size_t i = 0; i < f->size.x; i++)
              sfRectangleShape_destroy(f->p[j][i]);
         free(f->p[j]);
     }
@@ -170,7 +170,7 @@ static void destroy_field_drawable(struct drawable *d)
     free(f);
 }
 
-unsigned long painter_register_text(struct text *txt)
+size_t painter_register_text(struct text *txt)
 {
     struct idlist *last;
     if (!drawables)
@@ -191,7 +191,7 @@ unsigned long painter_register_text(struct text *txt)
     return last->id;
 }
 
-void painter_update_text(unsigned long id, struct text *txt)
+void painter_update_text(size_t id, struct text *txt)
 {
     struct idlist *node = list_get(drawables, id);
     if (!node)
@@ -259,7 +259,7 @@ static void destroy_drawable(void *obj)
     }
 }
 
-void painter_destroy_drawable(unsigned long id)
+void painter_destroy_drawable(size_t id)
 {
     struct idlist *node = list_get(drawables, id);
     destroy_drawable(node->obj);

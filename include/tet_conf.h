@@ -52,7 +52,7 @@
 #define RM_2LINES_SCORE 100
 #define RM_3LINES_SCORE 300
 #define RM_4LINES_SCORE 1200
-#define LEVELUP_LINES 10
+#define LEVELUP_LINES   10
 
 #define FLD_SIZE_Y  22
 #define FLD_SIZE_X  10

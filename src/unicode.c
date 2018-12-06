@@ -3,7 +3,7 @@
 
 #include "unicode.h"
 
-static inline unsigned int utf8_char_len(unsigned char c)
+static inline size_t utf8_char_len(unsigned char c)
 {
     if (c > 0x00 && c < 0xC0)
         return 1;
@@ -17,9 +17,9 @@ static inline unsigned int utf8_char_len(unsigned char c)
         return 0;
 }
 
-unsigned long utf8_strlen(char *string)
+size_t utf8_strlen(char *string)
 {
-    unsigned long len = 0, keep = 0;
+    size_t len = 0, keep = 0;
     for (char *c = string; *c; (keep ? --keep : ++len), ++c)
         if (!keep)
             keep = (keep = utf8_char_len(*c)) ? keep - 1 : keep;
@@ -30,7 +30,7 @@ void utf8to32_strcpy(wchar_t *dest, char *src)
 {
     wchar_t *dc = dest;
     char *c = src;
-    unsigned long len = 0;
+    size_t len = 0;
     while (*c) {
         int clen = utf8_char_len(*c);
         if (clen == 1) {

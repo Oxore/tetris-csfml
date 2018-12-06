@@ -1,15 +1,15 @@
-#define TXT_ATTR_INVISIBLE      (1 << 0)
+#define TXT_ATTR_INVISIBLE (1 << 0)
 
 typedef struct text {
-    char             *type;
-    char             *scene;
-    char             *font;
-    wchar_t          *text;
-    unsigned int      size;
-    struct vector2ui  pos;
-    unsigned int      attr;
-    unsigned long     id;
+    char               *type;
+    char               *scene;
+    char               *font;
+    wchar_t            *text;
+    size_t              size;
+    struct vector2ui    pos;
+    size_t              attr;
+    size_t              id;
 } Text;
 
-struct idlist *load_texts(char *filename);
-void           text_destroy(void *text);
+struct idlist  *load_texts(char *filename);
+void            text_destroy(void *text);

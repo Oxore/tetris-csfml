@@ -3,5 +3,5 @@ struct vector2i {
 };
 
 struct vector2ui {
-    unsigned int x, y;
+    size_t x, y;
 };

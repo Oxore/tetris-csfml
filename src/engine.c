@@ -1,3 +1,22 @@
+/*
+ * engine.c
+ *
+ * Engine module - business logic. A couple of functions are exposed to use in
+ * the main tetris module (tetris.c), see engine.h.
+ *
+ * The game has simple state machine:
+ *
+ * Menu --[start]-> Started --[pause]-> Paused
+ *   ^                |  ^                |
+ *   +---[gameover]---+  +---[unpause]----+
+ *
+ * Transitions between states are implemented in a distinct functions. Each
+ * transition function name starts with "transition_". State functions has names
+ * with suffix "_loop" except for "main_loop" function - it is just an
+ * aggregator of state functions.
+ *
+ * */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,10 +85,10 @@ int rmlines_score[] = {
 };
 
 /* Externs from main.c */
-extern struct game    game;
-extern struct field   fld, nxt;
-extern struct idlist *texts;
-char                  arrKeys = 0;
+extern struct game      game;
+extern struct field     fld, nxt;
+extern struct idlist   *texts;
+char                    arrKeys = 0;
 
 static void render_score_value(void *obj)
 {
@@ -91,13 +110,13 @@ static void render_level_value(void *obj)
         if (!text->text)
             text->text = calloc(BUFSIZ, sizeof(char));
         char *a = calloc(BUFSIZ, sizeof(char));
-        sprintf(a, "%d", game.level);
+        sprintf(a, "%ld", game.level);
         utf8to32_strcpy(text->text, a);
         free(a);
     }
 }
 
-static int get_level_latency(unsigned int level)
+static int get_level_latency(size_t level)
 {
     if (level > 29)
         return level_move_latency[29];
@@ -181,8 +200,8 @@ static void transition_game_over()
     nxt.attr |= FLD_ATTR_INVISIBLE;
     painter_update_field(nxt.id, &nxt);
 
-    fld.shape[0].y = fld.size.y;
-    fld.shape[1].y = fld.size.y;
+    fld.shape[GHOST_SHAPE_INDEX].y = fld.size.y;
+    fld.shape[ACTIVE_SHAPE_INDEX].y = fld.size.y;
     field_fill_random(&fld);
     painter_update_field(fld.id, &fld);
 
@@ -192,13 +211,13 @@ static void transition_game_over()
     list_foreach(texts, update_game_text);
 }
 
-static void project_ghost_shape(struct field *fld, unsigned int idreal, unsigned int idghost)
+static void project_ghost_shape(struct field *fld, size_t idreal, size_t idghost)
 {
     fld->shape[idghost].t = fld->shape[idreal].t;
     fld->shape[idghost].x = fld->shape[idreal].x;
     fld->shape[idghost].y = fld->shape[idreal].y;
-    for (unsigned int j = 0; j < 4; j++)
-        for (unsigned int i = 0; i < 4; i++)
+    for (size_t j = 0; j < 4; j++)
+        for (size_t i = 0; i < 4; i++)
             fld->shape[idghost].c[j][i] = fld->shape[idreal].c[j][i];
     do {
         --fld->shape[idghost].y;
@@ -208,14 +227,14 @@ static void project_ghost_shape(struct field *fld, unsigned int idreal, unsigned
 
 static void transition_put_shape()
 {
-    field_put_shape(&fld, &fld.shape[1]);
+    field_put_shape(&fld, &fld.shape[ACTIVE_SHAPE_INDEX]);
     int removedLines = field_rm_lines(&fld);
     game.lines += removedLines;
     game.scoreCurrent += rmlines_score[removedLines] * game.level;
-    fld.shape[1].t = nxt.shape[0].t;
+    fld.shape[ACTIVE_SHAPE_INDEX].t = nxt.shape[0].t;
     field_reset_walking_shape(&fld, 1);
     project_ghost_shape(&fld, 1, 0);
-    for (unsigned int s = 0; s < nxt.shape_cnt - 1; ++s) {
+    for (size_t s = 0; s < nxt.shape_cnt - 1; ++s) {
         nxt.shape[s] = nxt.shape[s + 1];
         nxt.shape[s].y = 4 - s * 3;
     }
@@ -252,7 +271,7 @@ static void game_tick()
         sfClock_restart(game.putTick);
     }
     if (sfClock_getElapsedTime(game.putTick).microseconds >= PUT_LATENCY) {
-        if (field_shape_out_of_bounds(&fld, &fld.shape[1]))
+        if (field_shape_out_of_bounds(&fld, &fld.shape[ACTIVE_SHAPE_INDEX]))
             transition_game_over();
         else
             transition_put_shape();
@@ -276,7 +295,7 @@ static void signal_harddrop()
 {
     while (field_move_shape_down(&fld, 1))
         game.scoreCurrent++;
-    if (field_shape_out_of_bounds(&fld, &fld.shape[1]))
+    if (field_shape_out_of_bounds(&fld, &fld.shape[ACTIVE_SHAPE_INDEX]))
         transition_game_over();
     else
         transition_put_shape();
@@ -418,7 +437,7 @@ static void pause_keys()
     }
 }
 
-static void menuTick()
+static void menu_tick()
 {
     sfClock_restart(game.mTick);
     field_fill_random(&fld);
@@ -438,11 +457,11 @@ static void transition_game_start()
     game.started = 1;
     game.paused = 0;
     field_clear(&fld);
-    shape_gen_random(&fld.shape[1]);
+    shape_gen_random(&fld.shape[ACTIVE_SHAPE_INDEX]);
     field_reset_walking_shape(&fld, 1);
     project_ghost_shape(&fld, 1, 0);
-    shape_load(&fld.shape[1]);
-    for (unsigned int i = 0; i < nxt.shape_cnt; ++i)
+    shape_load(&fld.shape[ACTIVE_SHAPE_INDEX]);
+    for (size_t i = 0; i < nxt.shape_cnt; ++i)
         shape_gen_random(&nxt.shape[i]);
     nxt.attr &= ~FLD_ATTR_INVISIBLE;
     list_foreach(texts, hide_menu_text);
@@ -455,14 +474,16 @@ static void transition_game_start()
     sfClock_restart(game.gameTick);
 }
 
-static void menu_loop() {
+static void menu_loop()
+{
     if (sfClock_getElapsedTime(game.mTick).microseconds >= basicLatency)
-        menuTick();
+        menu_tick();
     if (sfKeyboard_isKeyPressed(sfKeyS) == 1)
         transition_game_start();
 }
 
-static void game_loop() {
+static void game_loop()
+{
     game_keys();
     if (sfClock_getElapsedTime(game.gameTick).microseconds >= game.moveLatency)
         game_tick();
@@ -473,7 +494,8 @@ static void game_loop() {
     painter_update_field(nxt.id, &nxt);
 }
 
-static void pause_loop() {
+static void pause_loop()
+{
     pause_keys();
 }
 

@@ -21,9 +21,9 @@ static int out_of_bounds(struct field *fld, struct shape *active);
 void field_init(struct field *fld)
 {
     fld->c = calloc(fld->bound.y, sizeof(struct cell *));
-    for (unsigned int j = 0; j < fld->bound.y; j++) {
+    for (size_t j = 0; j < fld->bound.y; j++) {
         fld->c[j] = calloc(fld->bound.x, sizeof(struct cell));
-        for (unsigned int i = 0; i < fld->size.x; i++)
+        for (size_t i = 0; i < fld->size.x; i++)
             fld->c[j][i].a = 0;
     }
     fld->shape = calloc(fld->shape_cnt, sizeof(struct shape));
@@ -38,8 +38,8 @@ void field_deinit(struct field *fld) {
 
 void field_clear(struct field *fld)
 {
-    for (unsigned int j = 0; j < fld->bound.y; j++)
-        for (unsigned int i = 0; i < fld->bound.x; i++) {
+    for (size_t j = 0; j < fld->bound.y; j++)
+        for (size_t i = 0; i < fld->bound.x; i++) {
             fld->c[j][i].a = 0;
             fld->c[j][i].color = 0;
         }
@@ -47,8 +47,8 @@ void field_clear(struct field *fld)
 
 void field_fill_random(struct field *fld)
 {
-    for (unsigned int j = 0; j < fld->size.y; j++)
-        for (unsigned int i = 0; i < fld->size.x; i++) {
+    for (size_t j = 0; j < fld->size.y; j++)
+        for (size_t i = 0; i < fld->size.x; i++) {
             fld->c[j][i].a = 1;
             fld->c[j][i].color = rand() % 7 + 1;
         }
@@ -100,7 +100,7 @@ void shape_load(struct shape *shape)
     }
 }
 
-void field_reset_walking_shape(struct field *fld, unsigned int index)
+void field_reset_walking_shape(struct field *fld, size_t index)
 {
     struct shape *shape = &fld->shape[index];
     shape_load(shape);
@@ -221,7 +221,7 @@ static int wall_kick(struct field *fld, struct shape *shape)
     return 0;
 }
 
-void field_rotate_shape_clockwise(struct field *fld, unsigned int index)
+void field_rotate_shape_clockwise(struct field *fld, size_t index)
 {
     struct shape *shape = &fld->shape[index];
     rotate_shape_right(shape);
@@ -230,7 +230,7 @@ void field_rotate_shape_clockwise(struct field *fld, unsigned int index)
             rotate_shape_left(shape);
 }
 
-int field_move_shape_down(struct field *fld, unsigned int index)
+int field_move_shape_down(struct field *fld, size_t index)
 {
     fld->shape[index].y--;
     if (field_shape_collision(fld, &fld->shape[index])) {
@@ -240,7 +240,7 @@ int field_move_shape_down(struct field *fld, unsigned int index)
     return -1;
 }
 
-int field_move_shape_left(struct field *fld, unsigned int index)
+int field_move_shape_left(struct field *fld, size_t index)
 {
     fld->shape[index].x--;
     if (field_shape_collision(fld, &fld->shape[index])) {
@@ -250,7 +250,7 @@ int field_move_shape_left(struct field *fld, unsigned int index)
     return -1;
 }
 
-int field_move_shape_right(struct field *fld, unsigned int index)
+int field_move_shape_right(struct field *fld, size_t index)
 {
     fld->shape[index].x++;
     if (field_shape_collision(fld, &fld->shape[index])) {
@@ -262,16 +262,16 @@ int field_move_shape_right(struct field *fld, unsigned int index)
 
 int field_rm_lines(struct field *fld)
 {
-    unsigned int lines = 0;
-    for (unsigned int j = 0; j < fld->bound.y; j++) {
-        unsigned int cells = 0;
-        for (unsigned int i = 0; i < fld->bound.x; i++)
+    size_t lines = 0;
+    for (size_t j = 0; j < fld->bound.y; j++) {
+        size_t cells = 0;
+        for (size_t i = 0; i < fld->bound.x; i++)
             if (fld->c[j][i].a)
                 ++cells;
         if (cells == fld->bound.x) {
             ++lines;
-            for (unsigned int n = j; n < fld->bound.y - 1; n++)
-                for (unsigned int m = 0; m < fld->bound.x; m++) {
+            for (size_t n = j; n < fld->bound.y - 1; n++)
+                for (size_t m = 0; m < fld->bound.x; m++) {
                     fld->c[n][m].a = fld->c[n + 1][m].a;
                     fld->c[n][m].color = fld->c[n + 1][m].color;
                 }

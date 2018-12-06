@@ -31,6 +31,8 @@ CFLAGS+=-Wall
 CFLAGS+=-Wextra
 CFLAGS+=-Wpedantic
 CFLAGS+=-Wno-microsoft-anon-tag
+# CSFML headers used SFML 2.5.1 have some deprecated structs involved
+CFLAGS+=-Wno-deprecated-declarations
 CFLAGS+=-std=c11
 CFLAGS+=-fms-extensions
 CFLAGS+=-g3
