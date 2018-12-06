@@ -18,7 +18,7 @@ __Compilation and use__
 
 Compilation:
 ```
-make all
+make
 ```
 File named "tetris" is the final binary. Run it. Hit *S* to start game.
 
@@ -29,14 +29,30 @@ File named "tetris" is the final binary. Run it. Hit *S* to start game.
 - `Space` - hard drop.
 - `P` - pause.
 
-Cleaning:
+Force exclude producing test binary:
+```
+make NOTEST=1
+```
+
+Clean:
 ```
 make clean
 ```
 
+__Compilation with libs in prefix__
+
+Probably your package manager does not have `SFML` and/or `CSFML` in repos.
+You can build them in prefix and then specify `PREFIX` path when running `make`:
+```
+make PREFIX=$(pwd)/deps/prefix
+```
+
+It is better to use absolute path, so you can then put produced `tetris` binary to any other place and have prefix location unchanged.
+
 __Windows__
 
-Look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)! Now I have some windows binaries there!
+Look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)!
+Windows compilation flow currently is unsupported, but sometimes I put Windows binary releases there.
 
 ### TODO:
 
