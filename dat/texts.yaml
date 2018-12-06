@@ -68,3 +68,21 @@
   size: 36
   x: 60
   y: 188
+
+-
+  type: "title"
+  scene: "game_over"
+  text: "Game Over"
+  font: "Arial"
+  size: 36
+  x: 42
+  y: 188
+
+-
+  type: "press_key"
+  scene: "game_over"
+  text: "press any key"
+  font: "Arial"
+  size: 24
+  x: 57
+  y: 240

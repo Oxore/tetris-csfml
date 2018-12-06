@@ -48,6 +48,7 @@ int main()
 {
     srand(time(NULL));
     game.gameTick = sfClock_create();
+    game.over_wait_tick = sfClock_create();
     game.putTick = sfClock_create();
     game.mTick = sfClock_create();
     game.repPushDown = sfClock_create();

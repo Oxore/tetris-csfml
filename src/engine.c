@@ -5,10 +5,18 @@
  * the main tetris module (tetris.c), see engine.h.
  *
  * The game has simple state machine:
+ * legend: [transition]--> STATE -->[transition]--> STATE
  *
- * Menu --[start]-> Started --[pause]-> Paused
- *   ^                |  ^                |
- *   +---[gameover]---+  +---[unpause]----+
+ *          (start)
+ *             |
+ *           [init]
+ *             |    +------------------+  +------[unpause]<------+
+ *             V    |                  V  V                      |
+ * +-[menu]-> MENU ----[game_start]--> GAME -->[game_over_wait]----+
+ * |                |                  |  |                      | |
+ * |                +----[put_shape]---+  +-->[pause]--> PAUSE --+ |
+ * |                                                               |
+ * +----- GAME_OVER <-----[game_over]<----- GAME_OVER_WAIT <-------+
  *
  * Transitions between states are implemented in a distinct functions. Each
  * transition function name starts with "transition_". State functions has names
@@ -42,6 +50,7 @@
 #define HARDDROP  (1 << 5)
 #define PAUSE     (1 << 6)
 #define LEFTHOLD  (1 << 7)
+#define GAMEOVER  (1 << 8)
 
 int level_move_latency[] = {
     L00LATENCY,
@@ -88,7 +97,7 @@ int rmlines_score[] = {
 extern struct game      game;
 extern struct field     fld, nxt;
 extern struct idlist   *texts;
-char                    arrKeys = 0;
+int                     keys = 0;
 
 static void render_score_value(void *obj)
 {
@@ -175,6 +184,34 @@ static void show_pause_text(void *obj)
         text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
+static void hide_game_over_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game_over"))
+        text->attr |= TXT_ATTR_INVISIBLE;
+}
+
+static void show_game_over_title_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game_over") && !strcmp(text->type, "title"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void show_game_over_press_any_key_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game_over") && !strcmp(text->type, "press_key"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void update_game_over_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game_over"))
+        painter_update_text(text->id, text);
+}
+
 static void update_menu_text(void *obj)
 {
     struct text *text = obj;
@@ -189,8 +226,9 @@ static void update_game_text(void *obj)
         painter_update_text(text->id, text);
 }
 
-static void transition_game_over()
+static void transition_menu()
 {
+    game.over = 0;
     game.started = 0;
     game.scoreCurrent = 0;
     game.level = 1;
@@ -205,10 +243,28 @@ static void transition_game_over()
     field_fill_random(&fld);
     painter_update_field(fld.id, &fld);
 
+    list_foreach(texts, hide_game_over_text);
     list_foreach(texts, show_menu_text);
     list_foreach(texts, hide_game_text);
+    list_foreach(texts, update_game_over_text);
     list_foreach(texts, update_menu_text);
     list_foreach(texts, update_game_text);
+}
+
+static void transition_game_over_wait()
+{
+    game.over_wait = 1;
+    sfClock_restart(game.over_wait_tick);
+    list_foreach(texts, show_game_over_title_text);
+    list_foreach(texts, update_game_over_text);
+}
+
+static void transition_game_over()
+{
+    game.over_wait = 0;
+    game.over = 1;
+    list_foreach(texts, show_game_over_press_any_key_text);
+    list_foreach(texts, update_game_over_text);
 }
 
 static void project_ghost_shape(struct field *fld, size_t idreal, size_t idghost)
@@ -272,7 +328,7 @@ static void game_tick()
     }
     if (sfClock_getElapsedTime(game.putTick).microseconds >= PUT_LATENCY) {
         if (field_shape_out_of_bounds(&fld, &fld.shape[ACTIVE_SHAPE_INDEX]))
-            transition_game_over();
+            transition_game_over_wait();
         else
             transition_put_shape();
         sfClock_restart(game.putTick);
@@ -296,7 +352,7 @@ static void signal_harddrop()
     while (field_move_shape_down(&fld, 1))
         game.scoreCurrent++;
     if (field_shape_out_of_bounds(&fld, &fld.shape[ACTIVE_SHAPE_INDEX]))
-        transition_game_over();
+        transition_game_over_wait();
     else
         transition_put_shape();
     sfClock_restart(game.gameTick);
@@ -341,86 +397,86 @@ static void game_keys()
 {
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
-        if (!(arrKeys & PAUSE)) {
-            arrKeys = arrKeys | PAUSE;
+        if (!(keys & PAUSE)) {
+            keys = keys | PAUSE;
             signal_pause();
         }
     } else {
-        arrKeys = arrKeys & ~PAUSE;
+        keys = keys & ~PAUSE;
     }
 
     /* UP */
     if (sfKeyboard_isKeyPressed(sfKeyUp)) {
-        if (!(arrKeys & UP)) {
-            arrKeys = arrKeys | UP;
+        if (!(keys & UP)) {
+            keys = keys | UP;
             signal_up();
         }
     } else {
-        arrKeys = arrKeys & ~UP;
+        keys = keys & ~UP;
     }
 
     /* HARDDROP */
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
-        if (!(arrKeys & HARDDROP)) {
-            arrKeys = arrKeys | HARDDROP;
+        if (!(keys & HARDDROP)) {
+            keys = keys | HARDDROP;
             signal_harddrop();
         }
     } else {
-        arrKeys = arrKeys & ~HARDDROP;
+        keys = keys & ~HARDDROP;
     }
 
     /* DOWN */
     if (sfKeyboard_isKeyPressed(sfKeyDown)) {
-        if (!(arrKeys & DOWN)) {
-            arrKeys = arrKeys | DOWN;
+        if (!(keys & DOWN)) {
+            keys = keys | DOWN;
             signal_down();
             sfClock_restart(game.repPushDown);
         } else {
             if (sfClock_getElapsedTime(game.repPushDown).microseconds >= moveRepeatLatency2)
-                arrKeys = arrKeys & ~DOWN;
+                keys = keys & ~DOWN;
         }
     } else {
-        arrKeys = arrKeys & ~DOWN;
+        keys = keys & ~DOWN;
     }
 
     /* LEFT */
     if (sfKeyboard_isKeyPressed(sfKeyLeft) && !sfKeyboard_isKeyPressed(sfKeyRight)) {
-        if (!(arrKeys & LEFT)) {
-            arrKeys = arrKeys | LEFT;
+        if (!(keys & LEFT)) {
+            keys = keys | LEFT;
             signal_left();
             sfClock_restart(game.repKeyLeft);
-        } else if (!(arrKeys & LEFTHOLD)) {
+        } else if (!(keys & LEFTHOLD)) {
             if (sfClock_getElapsedTime(game.repKeyLeft).microseconds >= moveRepeatLatency1) {
-                arrKeys = arrKeys | LEFTHOLD;
-                arrKeys = arrKeys & ~LEFT;
+                keys = keys | LEFTHOLD;
+                keys = keys & ~LEFT;
             }
         } else {
             if (sfClock_getElapsedTime(game.repKeyLeft).microseconds >= moveRepeatLatency2)
-                arrKeys = arrKeys & ~LEFT;
+                keys = keys & ~LEFT;
         }
     } else {
-        arrKeys = arrKeys & ~LEFT;
-        arrKeys = arrKeys & ~LEFTHOLD;
+        keys = keys & ~LEFT;
+        keys = keys & ~LEFTHOLD;
     }
 
     /* RIGHT */
     if (sfKeyboard_isKeyPressed(sfKeyRight) && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
-        if (!(arrKeys & RIGHT)) {
-            arrKeys = arrKeys | RIGHT;
+        if (!(keys & RIGHT)) {
+            keys = keys | RIGHT;
             signal_right();
             sfClock_restart(game.repKeyRight);
-        } else if (!(arrKeys & RIGHTHOLD)) {
+        } else if (!(keys & RIGHTHOLD)) {
             if (sfClock_getElapsedTime(game.repKeyRight).microseconds >= moveRepeatLatency1) {
-                arrKeys = arrKeys | RIGHTHOLD;
-                arrKeys = arrKeys & ~RIGHT;
+                keys = keys | RIGHTHOLD;
+                keys = keys & ~RIGHT;
             }
         } else {
             if (sfClock_getElapsedTime(game.repKeyRight).microseconds >= moveRepeatLatency2)
-                arrKeys = arrKeys & ~RIGHT;
+                keys = keys & ~RIGHT;
         }
     } else {
-        arrKeys = arrKeys & ~RIGHT;
-        arrKeys = arrKeys & ~RIGHTHOLD;
+        keys = keys & ~RIGHT;
+        keys = keys & ~RIGHTHOLD;
     }
 }
 
@@ -428,12 +484,12 @@ static void pause_keys()
 {
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
-        if (!(arrKeys & PAUSE)) {
-            arrKeys = arrKeys | PAUSE;
+        if (!(keys & PAUSE)) {
+            keys = keys | PAUSE;
             signal_pause();
         }
     } else {
-        arrKeys = arrKeys & ~PAUSE;
+        keys = keys & ~PAUSE;
     }
 }
 
@@ -448,8 +504,10 @@ void transition_init(void)
 {
     list_foreach(texts, show_menu_text);
     list_foreach(texts, hide_game_text);
+    list_foreach(texts, hide_game_over_text);
     list_foreach(texts, update_menu_text);
     list_foreach(texts, update_game_text);
+    list_foreach(texts, update_game_over_text);
 }
 
 static void transition_game_start()
@@ -478,8 +536,13 @@ static void menu_loop()
 {
     if (sfClock_getElapsedTime(game.mTick).microseconds >= basicLatency)
         menu_tick();
-    if (sfKeyboard_isKeyPressed(sfKeyS) == 1)
-        transition_game_start();
+
+    if (sfKeyboard_isKeyPressed(sfKeyS)) {
+        if (!(keys & GAMEOVER))
+            transition_game_start();
+    } else {
+        keys = 0;
+    }
 }
 
 static void game_loop()
@@ -494,6 +557,30 @@ static void game_loop()
     painter_update_field(nxt.id, &nxt);
 }
 
+static void game_over_wait_loop()
+{
+    if (sfClock_getElapsedTime(game.over_wait_tick).microseconds > GAMEOVERWAIT)
+        transition_game_over();
+}
+
+static void game_over_loop()
+{
+    int anykey = 0;
+
+    for (int keycode = sfKeyUnknown; keycode < sfKeyCount; keycode++)
+        if (sfKeyboard_isKeyPressed(keycode))
+            anykey = 1;
+
+    if (anykey) {
+        if (!(keys & GAMEOVER)) {
+            keys |= GAMEOVER;
+            transition_menu();
+        }
+    } else {
+        keys &= ~GAMEOVER;
+    }
+}
+
 static void pause_loop()
 {
     pause_keys();
@@ -504,6 +591,10 @@ void main_loop()
     if (game.started) {
         if (game.paused)
             pause_loop();
+        else if (game.over_wait)
+            game_over_wait_loop();
+        else if (game.over)
+            game_over_loop();
         else
             game_loop();
     } else {

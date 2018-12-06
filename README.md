@@ -62,6 +62,7 @@ Windows compilation flow currently is unsupported, but sometimes I put Windows b
 - [x] [Wall kick](https://tetris.wiki/Wall_kick). Implemented order: left wall, right wall, floor
 - [x] Hard drop
 - [x] Phantom shape
+- [x] Game Over screen
 - Table of records
 - Settings menu with external `config.yml` file which allows
   - Change key bindings

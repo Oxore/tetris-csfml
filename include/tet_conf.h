@@ -12,6 +12,7 @@
 #define ICOLOR            {94,  141, 135, 255}
 #define TCOLOR            {133, 103, 143, 255}
 
+#define GAMEOVERWAIT        700000 // 0.7 second
 #define moveRepeatLatency1 150000 // microseconds, only for left-right arrows,
                                   // first repeat move when long push
 #define moveRepeatLatency2  30000 // microseconds, for Left, Right and Down
