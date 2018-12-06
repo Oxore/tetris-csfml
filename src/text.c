@@ -56,16 +56,21 @@ struct idlist *load_texts(char *filename)
             }
             struct text *text = texts_node->obj;
             if (!strcmp((char *)event.data.scalar.value, "type")) {
-                text->type = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));
+                text->type = malloc(sizeof(char)
+                        * (strlen((char *)ev.data.scalar.value) + 1));
                 strcpy(text->type, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "scene")) {
-                text->scene = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));
+                text->scene = malloc(sizeof(char)
+                        * (strlen((char *)ev.data.scalar.value) + 1));
                 strcpy(text->scene, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "text")) {
-                text->text = calloc((utf8_strlen((char *)ev.data.scalar.value)) + 1, sizeof(size_t));
+                text->text
+                    = calloc((utf8_strlen((char *)ev.data.scalar.value)) + 1,
+                        sizeof(size_t));
                 utf8to32_strcpy(text->text, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "font")) {
-                text->font = malloc(sizeof(char) * (strlen((char *)ev.data.scalar.value) + 1));
+                text->font = malloc(sizeof(char)
+                        * (strlen((char *)ev.data.scalar.value) + 1));
                 strcpy(text->font, (char *)ev.data.scalar.value);
             } else if (!strcmp((char *)event.data.scalar.value, "size")) {
                 text->size = atoi((char *)ev.data.scalar.value);

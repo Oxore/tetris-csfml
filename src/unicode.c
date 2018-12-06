@@ -38,9 +38,11 @@ void utf8to32_strcpy(wchar_t *dest, char *src)
         } else if (clen == 2) {
             dc[len] = ((c[0] & 0x1f) << 6) | ((c[1] & 0x3f) << 0);
         } else if (clen == 3) {
-            dc[len] = ((c[0] & 0x0f) << 12) | ((c[1] & 0x3f) << 6) | ((c[2] & 0x3f) << 0);
+            dc[len] = ((c[0] & 0x0f) << 12) | ((c[1] & 0x3f) << 6)
+                | ((c[2] & 0x3f) << 0);
         } else if (clen == 4) {
-            dc[len] = ((c[0] & 0x07) << 18) | ((c[1] & 0x3f) << 12) | ((c[2] & 0x3f) << 6) | ((c[3] & 0x3f) << 0);
+            dc[len] = ((c[0] & 0x07) << 18) | ((c[1] & 0x3f) << 12)
+                | ((c[2] & 0x3f) << 6) | ((c[3] & 0x3f) << 0);
         } else {
             dc[len] = 0;
             return;

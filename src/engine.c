@@ -267,7 +267,8 @@ static void transition_game_over()
     list_foreach(texts, update_game_over_text);
 }
 
-static void project_ghost_shape(struct field *fld, size_t idreal, size_t idghost)
+static void project_ghost_shape(struct field *fld, size_t idreal,
+        size_t idghost)
 {
     fld->shape[idghost].t = fld->shape[idreal].t;
     fld->shape[idghost].x = fld->shape[idreal].x;
@@ -398,11 +399,11 @@ static void game_keys()
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
         if (!(keys & PAUSE)) {
-            keys = keys | PAUSE;
+            keys |= PAUSE;
             signal_pause();
         }
     } else {
-        keys = keys & ~PAUSE;
+        keys &= ~PAUSE;
     }
 
     /* UP */
@@ -418,11 +419,11 @@ static void game_keys()
     /* HARDDROP */
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
         if (!(keys & HARDDROP)) {
-            keys = keys | HARDDROP;
+            keys |= HARDDROP;
             signal_harddrop();
         }
     } else {
-        keys = keys & ~HARDDROP;
+        keys &= ~HARDDROP;
     }
 
     /* DOWN */
@@ -432,51 +433,58 @@ static void game_keys()
             signal_down();
             sfClock_restart(game.repPushDown);
         } else {
-            if (sfClock_getElapsedTime(game.repPushDown).microseconds >= moveRepeatLatency2)
-                keys = keys & ~DOWN;
+            if (sfClock_getElapsedTime(game.repPushDown).microseconds
+             >= moveRepeatLatency2)
+                keys &= ~DOWN;
         }
     } else {
-        keys = keys & ~DOWN;
+        keys &= ~DOWN;
     }
 
     /* LEFT */
-    if (sfKeyboard_isKeyPressed(sfKeyLeft) && !sfKeyboard_isKeyPressed(sfKeyRight)) {
+    if (sfKeyboard_isKeyPressed(sfKeyLeft)
+     && !sfKeyboard_isKeyPressed(sfKeyRight)) {
         if (!(keys & LEFT)) {
             keys = keys | LEFT;
             signal_left();
             sfClock_restart(game.repKeyLeft);
         } else if (!(keys & LEFTHOLD)) {
-            if (sfClock_getElapsedTime(game.repKeyLeft).microseconds >= moveRepeatLatency1) {
-                keys = keys | LEFTHOLD;
-                keys = keys & ~LEFT;
+            if (sfClock_getElapsedTime(game.repKeyLeft).microseconds
+             >= moveRepeatLatency1) {
+                keys |= LEFTHOLD;
+                keys &= ~LEFT;
             }
         } else {
-            if (sfClock_getElapsedTime(game.repKeyLeft).microseconds >= moveRepeatLatency2)
-                keys = keys & ~LEFT;
+            if (sfClock_getElapsedTime(game.repKeyLeft).microseconds
+             >= moveRepeatLatency2)
+                keys &= ~LEFT;
         }
     } else {
-        keys = keys & ~LEFT;
-        keys = keys & ~LEFTHOLD;
+        keys &= ~LEFT;
+        keys &= ~LEFTHOLD;
     }
 
     /* RIGHT */
-    if (sfKeyboard_isKeyPressed(sfKeyRight) && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
+    if (sfKeyboard_isKeyPressed(sfKeyRight)
+     && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
         if (!(keys & RIGHT)) {
             keys = keys | RIGHT;
             signal_right();
             sfClock_restart(game.repKeyRight);
         } else if (!(keys & RIGHTHOLD)) {
-            if (sfClock_getElapsedTime(game.repKeyRight).microseconds >= moveRepeatLatency1) {
-                keys = keys | RIGHTHOLD;
-                keys = keys & ~RIGHT;
+            if (sfClock_getElapsedTime(game.repKeyRight).microseconds
+             >= moveRepeatLatency1) {
+                keys |= RIGHTHOLD;
+                keys &= ~RIGHT;
             }
         } else {
-            if (sfClock_getElapsedTime(game.repKeyRight).microseconds >= moveRepeatLatency2)
-                keys = keys & ~RIGHT;
+            if (sfClock_getElapsedTime(game.repKeyRight).microseconds
+             >= moveRepeatLatency2)
+                keys &= ~RIGHT;
         }
     } else {
-        keys = keys & ~RIGHT;
-        keys = keys & ~RIGHTHOLD;
+        keys &= ~RIGHT;
+        keys &= ~RIGHTHOLD;
     }
 }
 
@@ -485,11 +493,11 @@ static void pause_keys()
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
         if (!(keys & PAUSE)) {
-            keys = keys | PAUSE;
+            keys |= PAUSE;
             signal_pause();
         }
     } else {
-        keys = keys & ~PAUSE;
+        keys &= ~PAUSE;
     }
 }
 

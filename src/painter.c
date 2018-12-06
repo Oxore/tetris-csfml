@@ -95,7 +95,8 @@ size_t painter_register_field(struct field *fld)
             sfRectangleShape_setPosition(f->p[j][i], cell_pos);
             sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UIBGCOLOR);
             sfRectangleShape_setSize(f->p[j][i], CELL_SIZE);
-            sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UIFGACTIVECOLOR);
+            sfRectangleShape_setOutlineColor(f->p[j][i],
+                    (sfColor)UIFGACTIVECOLOR);
             sfRectangleShape_setOutlineThickness(f->p[j][i], OUT_THICK);
         }
     }
@@ -118,27 +119,36 @@ void painter_update_field(size_t id, struct field *fld)
             cell_pos.y = fld->pos.y - (j * (CELL_SIZE.y + 2 * OUT_THICK));
             sfRectangleShape_setPosition(f->p[j][i], cell_pos);
             if (fld->c[j][i].a) {
-                sfRectangleShape_setFillColor(f->p[j][i], shape_color_map[fld->c[j][i].color]);
-                sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UIFGACTIVECOLOR);
+                sfRectangleShape_setFillColor(f->p[j][i],
+                        shape_color_map[fld->c[j][i].color]);
+                sfRectangleShape_setOutlineColor(f->p[j][i],
+                        (sfColor)UIFGACTIVECOLOR);
             } else if (f->attr & FLD_ATTR_HIDE_EMPTY_CELLS) {
-                sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UITRANSPARENT);
-                sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UITRANSPARENT);
+                sfRectangleShape_setFillColor(f->p[j][i],
+                        (sfColor)UITRANSPARENT);
+                sfRectangleShape_setOutlineColor(f->p[j][i],
+                        (sfColor)UITRANSPARENT);
             } else {
                 sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UIBGCOLOR);
-                sfRectangleShape_setOutlineColor(f->p[j][i], (sfColor)UIFGINACTIVECOLOR);
+                sfRectangleShape_setOutlineColor(f->p[j][i],
+                        (sfColor)UIFGINACTIVECOLOR);
             }
         }
     }
+
     for (size_t s = 0; s < fld->shape_cnt; ++s) {
         sfColor fill_color = shape_color_map[fld->shape[s].t];
         sfColor outline_color = (sfColor)UIFGACTIVECOLOR;
+
         if (fld->shape[s].attr && SHP_ATTR_GHOST) {
             fill_color.a = 100;
             outline_color.a = 100;
         }
+
         for (int j = 0; j < 4; j++)
             for (int i = 0; i < 4; i++)
-                if (fld->shape[s].c[j][i] && j + fld->shape[s].y < (int)fld->size.y) {
+                if (fld->shape[s].c[j][i] && j + fld->shape[s].y
+                 < (int)fld->size.y) {
                     sfRectangleShape_setFillColor(
                             f->p[j + fld->shape[s].y][i + fld->shape[s].x],
                             fill_color);

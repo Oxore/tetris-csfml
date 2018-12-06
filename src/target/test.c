@@ -27,14 +27,18 @@ struct u_pair text_fixture[] = {
 };
 
 
-static void *test_utf8_strlen_setup(const MunitParameter params[], void *user_data) {
+static void *test_utf8_strlen_setup(const MunitParameter params[],
+        void *user_data)
+{
     (void) params;
     (void) user_data;
 
     return text_fixture;
 }
 
-static MunitResult test_utf8_strlen(const MunitParameter params[], void *fixture) {
+static MunitResult test_utf8_strlen(const MunitParameter params[],
+        void *fixture)
+{
     (void) params;
     struct u_pair *f = fixture;
 
@@ -64,6 +68,7 @@ static const MunitSuite test_suite = {
     MUNIT_SUITE_OPTION_NONE
 };
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     return munit_suite_main(&test_suite, NULL, argc, argv);
 }

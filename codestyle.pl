@@ -33,7 +33,7 @@ sub eolSpace {
 }
 
 if (not $ARGV[0]) {
-	open(LS, 'find -name \*.\[c\|h\] |');
+	open(LS, 'find src include -name \*.\[c\|h\] |');
 	while (<LS>) {
 		chomp;
 		my $string = $_;
