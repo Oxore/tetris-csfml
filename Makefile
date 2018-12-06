@@ -16,7 +16,9 @@ SOURCES:=$(wildcard $(SRC)/*.c)
 OBJECTS:=$(SOURCES:$(SRC)/%.c=$(BUILD)/%.c.o)
 DEPENDS:=$(OBJECTS:.o=.d)
 
+ifdef PREFIX
 INCLUDE+=$(PREFIX)/include
+endif
 INCLUDE+=include
 INCLUDE+=$(MUNIT)
 INCLUDE:=$(INCLUDE:%=-I%)
@@ -35,8 +37,10 @@ CFLAGS+=-g3
 CFLAGS+=-O0
 CFLAGS+=-MD
 
+ifdef PREFIX
 LDFLAGS+=-L$(PREFIX)/lib
 LDFLAGS+=-Wl,-rpath=$(PREFIX)/lib
+endif
 LDFLAGS+=$(COMMON)
 
 LDFLAGS_TETRIS+=$(LDFLAGS)
