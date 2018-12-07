@@ -42,10 +42,38 @@ static MunitResult test_utf8_strlen(const MunitParameter params[],
     (void) params;
     struct u_pair *f = fixture;
 
-    munit_assert_ulong(utf8_strlen(f[0].utf8), ==, strlen(f[0].utf8));
-    munit_assert_ulong(utf8_strlen(f[1].utf8) * 2, ==, strlen(f[1].utf8));
-    munit_assert_ulong(utf8_strlen(f[2].utf8) * 3, ==, strlen(f[2].utf8));
-    munit_assert_ulong(utf8_strlen(f[3].utf8) * 4, ==, strlen(f[3].utf8));
+    for (int i = 0; i < 4; i++)
+        munit_assert_ulong(utf8_strlen(f[i].utf8) * (i + 1),
+                ==, strlen(f[i].utf8));
+
+    return MUNIT_OK;
+}
+
+static void *test_utf8to32_strcpy_setup(const MunitParameter params[],
+        void *user_data)
+{
+    (void) params;
+    (void) user_data;
+
+    return text_fixture;
+}
+
+static MunitResult test_utf8to32_strcpy(const MunitParameter params[],
+        void *fixture)
+{
+    (void) params;
+
+    struct u_pair  *f = fixture;
+    size_t          len;
+    wchar_t        *str;
+
+    for (int i = 0; i < 4; i++) {
+        len = utf8_strlen(f[i].utf8);
+        str = malloc((len + 1) * sizeof(wchar_t));
+        utf8to32_strcpy(str, f[i].utf8);
+        munit_assert_uint(memcmp(str, f[i].utf32, len), ==, 0);
+        free(str);
+    }
 
     return MUNIT_OK;
 }
@@ -57,6 +85,14 @@ static const MunitSuite test_suite = {
             "/unicode/utf8_strlen",
             test_utf8_strlen,
             test_utf8_strlen_setup,
+            NULL,
+            MUNIT_TEST_OPTION_NONE,
+            NULL
+        },
+        {
+            "/unicode/utf8to32_strcpy",
+            test_utf8to32_strcpy,
+            test_utf8to32_strcpy_setup,
             NULL,
             MUNIT_TEST_OPTION_NONE,
             NULL
