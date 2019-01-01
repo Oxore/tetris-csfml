@@ -5,3 +5,4 @@ test
 *.out
 build
 tags
+compile_commands.js
