@@ -3,4 +3,4 @@
 	url = https://github.com/nemequ/munit.git
 [submodule "deps/libf8"]
 	path = deps/libf8
-	url = git@github.com:Oxore/libf8.git
+	url = https://github.com/Oxore/libf8.git
