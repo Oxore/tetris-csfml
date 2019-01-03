@@ -48,8 +48,6 @@ endif
 LDFLAGS+=$(COMMON)
 
 LDFLAGS_TETRIS+=$(LDFLAGS)
-LDFLAGS_TETRIS+=-L$(LIBF8)
-LDFLAGS_TETRIS+=-l:libf8.a
 LDFLAGS_TETRIS+=-lcsfml-graphics
 LDFLAGS_TETRIS+=-lcsfml-window
 LDFLAGS_TETRIS+=-lcsfml-system
