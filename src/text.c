@@ -1,3 +1,4 @@
+#include <f8.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +7,6 @@
 #include "idlist.h"
 #include "vector.h"
 #include "text.h"
-#include "unicode.h"
 
 static FILE *openFile(char *filename)
 {

@@ -10,9 +10,11 @@ This is unfinished tetris project written in pure C with CSFML library. It is un
 
 __Dependencies__
 
-`SFML`
-`CSFML`
-`libyaml`
+- `SFML` - Graphics and controls
+- `CSFML` - C SFML bindings
+- `libyaml` - YAML parser
+- [`munit`](https://github.com/nemequ/munit) - Testing framework (submodule)
+- [`libf8`](https://github.com/Oxore/libf8) - Unicode helper functions (submodule)
 
 __Compilation and use__
 

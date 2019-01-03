@@ -4,6 +4,7 @@ QQ=@
 TARGET_TETRIS:=tetris
 TARGET_TEST:=test
 MUNIT:=deps/munit
+LIBF8:=deps/libf8
 
 ifeq ($(wildcard $(MUNIT)/*),)
 NOTEST=1
@@ -21,6 +22,7 @@ INCLUDE+=$(PREFIX)/include
 endif
 INCLUDE+=include
 INCLUDE+=$(MUNIT)
+INCLUDE+=$(LIBF8)
 INCLUDE:=$(INCLUDE:%=-I%)
 
 #COMMON+=-fsanitize=address
@@ -46,6 +48,8 @@ endif
 LDFLAGS+=$(COMMON)
 
 LDFLAGS_TETRIS+=$(LDFLAGS)
+LDFLAGS_TETRIS+=-L$(LIBF8)
+LDFLAGS_TETRIS+=-l:libf8.a
 LDFLAGS_TETRIS+=-lcsfml-graphics
 LDFLAGS_TETRIS+=-lcsfml-window
 LDFLAGS_TETRIS+=-lcsfml-system
@@ -62,11 +66,11 @@ ifndef NOTEST
 all: $(TARGET_TEST)
 endif
 
-$(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o
+$(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o $(LIBF8)/libf8.a
 	$(QQ) echo "  LD      $@"
 	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TETRIS)
 
-$(TARGET_TEST): $(TARGET)/$(TARGET_TEST).c.o $(MUNIT)/munit.c.o $(BUILD)/unicode.c.o
+$(TARGET_TEST): $(TARGET)/$(TARGET_TEST).c.o $(MUNIT)/munit.c.o
 	$(QQ) echo "  LD      $@"
 	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TEST)
 
@@ -78,6 +82,9 @@ $(BUILD):
 
 $(TARGET):
 	$(Q) mkdir -p $@
+
+$(LIBF8)/libf8.a: $(LIBF8)
+	make -C $<
 
 $(MUNIT)/munit.c.o: $(MUNIT)/munit.c
 	$(QQ) echo "  CC      $@"
