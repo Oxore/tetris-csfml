@@ -7,6 +7,7 @@
 
 #include <SFML/System/Clock.h>
 #include <SFML/Graphics/RenderWindow.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -41,8 +42,7 @@ int main()
     struct idlist  *texts;
     struct field fld, nxt;
     struct game game = {
-        .started = 0,
-        .paused = 0,
+        .state = GS_MAIN_MENU,
         .scoreCurrent = 0,
         .level = 1,
         .moveLatency = L00LATENCY,

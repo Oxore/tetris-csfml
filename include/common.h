@@ -1,11 +1,17 @@
 struct field;
+struct idlist;
+
+enum game_state {
+    GS_MAIN_MENU,
+    GS_STARTED,
+    GS_GAME_OVER,
+    GS_GAME_OVER_WAIT,
+    GS_PAUSED
+};
 
 struct game {
+    enum game_state state;
     size_t      level;
-    int         started;
-    int         paused;
-    int         over_wait;
-    int         over;
     int         scoreCurrent;
     int         moveLatency;
     int         lines;

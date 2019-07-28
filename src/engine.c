@@ -26,6 +26,7 @@
  * */
 
 #include <f8.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -224,8 +225,7 @@ static void update_game_text(void *obj)
 
 static void transition_menu(struct game *game)
 {
-    game->over = 0;
-    game->started = 0;
+    game->state = GS_MAIN_MENU;
     game->scoreCurrent = 0;
     game->level = 1;
     game->moveLatency = get_level_latency(game->level);
@@ -255,7 +255,8 @@ static void transition_menu(struct game *game)
 
 static void transition_game_over_wait(struct game *game)
 {
-    game->over_wait = 1;
+    game->state = GS_GAME_OVER_WAIT;
+
     sfClock_restart(game->over_wait_tick);
 
     struct idlist *texts = game->texts;
@@ -268,8 +269,7 @@ static void transition_game_over_wait(struct game *game)
 
 static void transition_game_over(struct game *game)
 {
-    game->over_wait = 0;
-    game->over = 1;
+    game->state = GS_GAME_OVER;
 
     struct idlist *texts = game->texts;
 
@@ -316,7 +316,7 @@ static void transition_put_shape(struct game *game)
 
 static void transition_pause(struct game *game)
 {
-    game->paused = 1;
+    game->state = GS_PAUSED;
     int elapsed = sfClock_getElapsedTime(game->gameTick).microseconds;
     if (game->moveLatency - elapsed >= 0)
         game->moveLatency -= elapsed;
@@ -333,7 +333,7 @@ static void transition_pause(struct game *game)
 
 static void transition_unpause(struct game *game)
 {
-    game->paused = 0;
+    game->state = GS_STARTED;
     sfClock_restart(game->gameTick);
 
     struct idlist *texts = game->texts;
@@ -430,10 +430,15 @@ static void signal_right(struct game *game)
 
 static void signal_pause(struct game *game)
 {
-    if (game->paused)
+    switch (game->state) {
+    case GS_PAUSED:
         transition_unpause(game);
-    else
+        break;
+    default:
         transition_pause(game);
+        break;
+    }
+
     sfClock_restart(game->putTick);
 }
 
@@ -572,8 +577,7 @@ static void transition_game_start(struct game *game)
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
-    game->started = 1;
-    game->paused = 0;
+    game->state = GS_STARTED;
     field_clear(fld);
     shape_gen_random(&fld->shape[ACTIVE_SHAPE_INDEX]);
     field_reset_walking_shape(fld, 1);
@@ -663,17 +667,28 @@ static void pause_loop(struct game *game)
 
 void main_loop(struct game *game)
 {
-    if (game->started) {
-        if (game->paused)
-            pause_loop(game);
-        else if (game->over_wait)
-            game_over_wait_loop(game);
-        else if (game->over)
-            game_over_loop(game);
-        else
-            game_loop(game);
-    } else {
+    switch (game->state) {
+    case GS_STARTED:
+        game_loop(game);
+        break;
+
+    case GS_PAUSED:
+        pause_loop(game);
+        break;
+
+    case GS_GAME_OVER:
+        game_over_loop(game);
+        break;
+
+    case GS_GAME_OVER_WAIT:
+        game_over_wait_loop(game);
+        break;
+
+    case GS_MAIN_MENU:
+    default:
         menu_loop(game);
+        break;
     }
+
     painter_draw();
 }
