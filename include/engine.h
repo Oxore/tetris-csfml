@@ -1,2 +1,4 @@
-void transition_init(void);
-void main_loop(void);
+struct game;
+
+void transition_init(struct game *game);
+void main_loop(struct game *);

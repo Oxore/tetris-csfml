@@ -248,7 +248,11 @@ static void draw_drawable(void *obj)
 void painter_draw()
 {
     sfRenderWindow_clear(window, (sfColor)UIBGCOLOR);
-    list_foreach(drawables, draw_drawable);
+
+    LIST_FOREACH(drawables, drawable) {
+        draw_drawable(drawable->obj);
+    }
+
     sfRenderWindow_display(window);
 }
 
@@ -278,7 +282,10 @@ void painter_destroy_drawable(size_t id)
 
 void painter_destroy_drawables()
 {
-    list_foreach(drawables, destroy_drawable);
+    LIST_FOREACH(drawables, drawable) {
+        destroy_drawable(drawable->obj);
+    }
+
     list_destroy(drawables);
     drawables = 0;
 }

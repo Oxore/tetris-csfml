@@ -5,4 +5,4 @@ test
 *.out
 build
 tags
-compile_commands.js
+compile_commands.json

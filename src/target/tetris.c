@@ -19,20 +19,10 @@
 #include "engine.h"
 #include "tet_conf.h"
 
-sfRenderWindow *window;
-struct idlist  *texts;
-struct field    fld, nxt;
-struct game     game = {
-    .started = 0,
-    .paused = 0,
-    .scoreCurrent = 0,
-    .level = 1,
-    .moveLatency = L00LATENCY,
-    .lines = 0
-};
-
-static void handleWindowEvents() {
+static void handleWindowEvents(sfRenderWindow *window)
+{
     sfEvent event;
+
     while (sfRenderWindow_pollEvent(window, &event))
         if (event.type == sfEvtClosed)
             sfRenderWindow_close(window);
@@ -46,6 +36,22 @@ static void register_text(void *obj)
 
 int main()
 {
+    sfRenderWindow *window;
+
+    struct idlist  *texts;
+    struct field fld, nxt;
+    struct game game = {
+        .started = 0,
+        .paused = 0,
+        .scoreCurrent = 0,
+        .level = 1,
+        .moveLatency = L00LATENCY,
+        .lines = 0,
+        .fld = &fld,
+        .nxt = &nxt,
+        .texts = NULL,
+    };
+
     srand(time(NULL));
     game.gameTick = sfClock_create();
     game.over_wait_tick = sfClock_create();
@@ -89,15 +95,22 @@ int main()
     painter_update_field(nxt.id, &nxt);
 
     texts = load_texts("dat/texts.yaml");
-    list_foreach(texts, register_text);
-
-    transition_init();
-    while (sfRenderWindow_isOpen(window)) {
-        handleWindowEvents();
-        main_loop();
+    LIST_FOREACH(texts, text) {
+        register_text(text->obj);
     }
 
-    list_foreach(texts, text_destroy);
+    game.texts = texts;
+
+    transition_init(&game);
+    while (sfRenderWindow_isOpen(window)) {
+        handleWindowEvents(window);
+        main_loop(&game);
+    }
+
+    LIST_FOREACH(texts, text) {
+        text_destroy(text->obj);
+    }
+
     list_destroy(texts);
 
     painter_destroy_drawables();

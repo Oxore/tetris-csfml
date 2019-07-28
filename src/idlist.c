@@ -45,15 +45,6 @@ void list_rm_node(struct idlist *node)
     }
 }
 
-void list_foreach(struct idlist *list, void (*job)(void *))
-{
-    if (list) {
-        job(list->obj);
-        while ((list = list->next))
-            job(list->obj);
-    }
-}
-
 void list_destroy(struct idlist *list)
 {
     if (list) {

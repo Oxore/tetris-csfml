@@ -18,5 +18,7 @@ struct idlist  *list_new();
 struct idlist  *list_append(struct idlist *list);
 struct idlist  *list_get(const struct idlist *list, size_t id);
 void            list_rm_node(struct idlist *node);
-void            list_foreach(struct idlist *list, void (*job)(void *));
 void            list_destroy(struct idlist *list);
+
+#define LIST_FOREACH(head, e) \
+    for (struct idlist *e = head; e; e = e->next)
