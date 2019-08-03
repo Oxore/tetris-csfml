@@ -94,7 +94,11 @@ int main()
     painter_update_field(fld.id, &fld);
     painter_update_field(nxt.id, &nxt);
 
-    texts = load_texts("dat/texts.yaml");
+    texts = load_texts_from_json("dat/texts.json");
+    if (texts == NULL) {
+        goto cleanup_load_texts;
+    }
+
     LIST_FOREACH(texts, text) {
         register_text(text->obj);
     }
@@ -113,6 +117,7 @@ int main()
 
     list_destroy(texts);
 
+cleanup_load_texts:
     painter_destroy_drawables();
     field_deinit(&fld);
     field_deinit(&nxt);

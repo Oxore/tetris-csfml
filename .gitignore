@@ -1,6 +1,7 @@
 tetris
 test
 *.o
+*.d
 *.swp
 *.out
 build

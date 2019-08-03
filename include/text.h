@@ -12,4 +12,5 @@ typedef struct text {
 } Text;
 
 struct idlist  *load_texts(char *filename);
+struct idlist  *load_texts_from_json(const char *filename);
 void            text_destroy(void *text);

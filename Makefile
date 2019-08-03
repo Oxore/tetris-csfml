@@ -3,6 +3,7 @@ QQ=@
 
 TARGET_TETRIS:=tetris
 TARGET_TEST:=test
+CJSON:=deps/cJSON
 MUNIT:=deps/munit
 LIBF8:=deps/libf8
 
@@ -21,6 +22,7 @@ ifdef PREFIX
 INCLUDE+=$(PREFIX)/include
 endif
 INCLUDE+=include
+INCLUDE+=$(CJSON)
 INCLUDE+=$(MUNIT)
 INCLUDE+=$(LIBF8)
 INCLUDE:=$(INCLUDE:%=-I%)
@@ -64,7 +66,8 @@ ifndef NOTEST
 all: $(TARGET_TEST)
 endif
 
-$(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o $(LIBF8)/libf8.a
+$(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o $(LIBF8)/libf8.a \
+	$(CJSON)/cJSON.o
 	$(QQ) echo "  LD      $@"
 	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TETRIS)
 
@@ -84,6 +87,10 @@ $(TARGET):
 $(LIBF8)/libf8.a: $(LIBF8)
 	make -C $<
 
+$(CJSON)/cJSON.c.o: $(CJSON)/cJSON.c
+	$(QQ) echo "  CC      $@"
+	$(Q) $(CC) -c $(CFLAGS) -o $@ $<
+
 $(MUNIT)/munit.c.o: $(MUNIT)/munit.c
 	$(QQ) echo "  CC      $@"
 	$(Q) $(CC) -c $(CFLAGS) -o $@ $<
@@ -97,5 +104,6 @@ $(BUILD)/%.c.o: $(SRC)/%.c
 clean:
 	$(Q) $(RM) -rfv $(TARGET_TETRIS) $(TARGET_TEST) $(BUILD)
 	$(Q) $(RM) -rfv $(MUNIT)/*.d $(MUNIT)/*.o
+	$(Q) $(RM) -rfv $(CJSON)/*.d $(CJSON)/*.o
 
 .PHONY: all clean
