@@ -124,6 +124,7 @@ int main()
     painter_destroy_font();
 
     sfClock_destroy(game.gameTick);
+    sfClock_destroy(game.over_wait_tick);
     sfClock_destroy(game.putTick);
     sfClock_destroy(game.mTick);
     sfClock_destroy(game.repPushDown);
