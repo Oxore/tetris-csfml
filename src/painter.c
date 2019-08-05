@@ -1,8 +1,10 @@
+#include <f8.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <SFML/Graphics/RectangleShape.h>
 #include <SFML/Graphics/Font.h>
 #include <SFML/Graphics/Text.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "tet_conf.h"
@@ -180,6 +182,21 @@ static void destroy_field_drawable(struct drawable *d)
     free(f);
 }
 
+static void painter_update_text_drawable(struct text_drawable *t,
+        struct text *txt)
+{
+    t->attr = txt->attr;
+    sfText_setCharacterSize(t->text, txt->size);
+    sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
+    sfText_setPosition(t->text, pos);
+    if (t->text) {
+        sfUint32 buf[BUFSIZ];
+        buf[sizeof(buf)/sizeof(*buf) - 1] = 0;
+        utf8to32_strcpy_s((int32_t *)buf, sizeof(buf), txt->text);
+        sfText_setUnicodeString(t->text, buf);
+    }
+}
+
 size_t painter_register_text(struct text *txt)
 {
     struct idlist *last;
@@ -192,10 +209,7 @@ size_t painter_register_text(struct text *txt)
     t->t = TYPE_TEXT;
     t->text = sfText_create();
     sfText_setFont(t->text, font);
-    sfText_setCharacterSize(t->text, txt->size);
-    sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
-    sfText_setPosition(t->text, pos);
-    sfText_setUnicodeString(t->text, (unsigned int *)txt->text);
+    painter_update_text_drawable(t, txt);
 
     last->obj = t;
     return last->id;
@@ -204,14 +218,8 @@ size_t painter_register_text(struct text *txt)
 void painter_update_text(size_t id, struct text *txt)
 {
     struct idlist *node = list_get(drawables, id);
-    if (!node)
-        return;
-    struct text_drawable *t = node->obj;
-    t->attr = txt->attr;
-    sfText_setCharacterSize(t->text, txt->size);
-    sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
-    sfText_setPosition(t->text, pos);
-    sfText_setUnicodeString(t->text, (unsigned int *)txt->text);
+    if (node)
+        painter_update_text_drawable(node->obj, txt);
 }
 
 static void draw_text_drawable(struct drawable *d)

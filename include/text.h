@@ -4,7 +4,7 @@ typedef struct text {
     char               *type;
     char               *scene;
     char               *font;
-    wchar_t            *text;
+    char               *text;
     size_t              size;
     struct vector2ui    pos;
     size_t              attr;

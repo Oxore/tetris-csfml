@@ -104,7 +104,7 @@ static void render_score_value(struct game *game, void *obj)
             text->text = calloc(BUFSIZ, sizeof(char));
         char *a = calloc(BUFSIZ, sizeof(char));
         sprintf(a, "%d", game->scoreCurrent);
-        utf8to32_strcpy(text->text, a);
+        strncpy(text->text, a, BUFSIZ - 1);
         free(a);
     }
 }
@@ -117,7 +117,7 @@ static void render_level_value(struct game *game, void *obj)
             text->text = calloc(BUFSIZ, sizeof(char));
         char *a = calloc(BUFSIZ, sizeof(char));
         sprintf(a, "%ld", game->level);
-        utf8to32_strcpy(text->text, a);
+        strncpy(text->text, a, BUFSIZ - 1);
         free(a);
     }
 }
