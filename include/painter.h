@@ -25,13 +25,13 @@
 
 void    painter_set_window(sfRenderWindow *window);
 
-void    painter_load_font(char *filename);
+void    painter_load_font(const char *filename);
 void    painter_destroy_font();
 
-size_t  painter_register_field(struct field *fld);
-void    painter_update_field(size_t id, struct field *fld);
-size_t  painter_register_text(struct text *txt);
-void    painter_update_text(size_t id, struct text *txt);
+size_t  painter_register_field(const struct field *fld);
+void    painter_update_field(size_t id, const struct field *fld);
+size_t  painter_register_text(const struct text *txt);
+void    painter_update_text(size_t id, const struct text *txt);
 
 void    painter_draw();
 

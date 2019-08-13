@@ -61,7 +61,7 @@ void painter_set_window(sfRenderWindow *w)
     window = w;
 }
 
-void painter_load_font(char *filename)
+void painter_load_font(const char *filename)
 {
     font = sfFont_createFromFile(filename);
     if (!font) {
@@ -75,7 +75,7 @@ void painter_destroy_font()
     sfFont_destroy(font);
 }
 
-size_t painter_register_field(struct field *fld)
+size_t painter_register_field(const struct field *fld)
 {
     struct idlist *last;
     if (!drawables)
@@ -107,7 +107,7 @@ size_t painter_register_field(struct field *fld)
     return last->id;
 }
 
-void painter_update_field(size_t id, struct field *fld)
+void painter_update_field(size_t id, const struct field *fld)
 {
     struct idlist *node = list_get(drawables, id);
     if (!node)
@@ -183,7 +183,7 @@ static void destroy_field_drawable(struct drawable *d)
 }
 
 static void painter_update_text_drawable(struct text_drawable *t,
-        struct text *txt)
+        const struct text *txt)
 {
     t->attr = txt->attr;
     sfText_setCharacterSize(t->text, txt->size);
@@ -197,7 +197,7 @@ static void painter_update_text_drawable(struct text_drawable *t,
     }
 }
 
-size_t painter_register_text(struct text *txt)
+size_t painter_register_text(const struct text *txt)
 {
     struct idlist *last;
     if (!drawables)
@@ -215,7 +215,7 @@ size_t painter_register_text(struct text *txt)
     return last->id;
 }
 
-void painter_update_text(size_t id, struct text *txt)
+void painter_update_text(size_t id, const struct text *txt)
 {
     struct idlist *node = list_get(drawables, id);
     if (node)
