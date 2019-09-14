@@ -40,7 +40,7 @@ CFLAGS+=-Wno-deprecated-declarations
 CFLAGS+=-std=c11
 CFLAGS+=-fms-extensions
 CFLAGS+=-g3
-CFLAGS+=-O0
+CFLAGS+=-Og
 CFLAGS+=-MD
 
 ifdef PREFIX
@@ -60,7 +60,6 @@ LDFLAGS_TEST+=$(LDFLAGS)
 #======================================================================
 
 all:
-all: $(TARGET)
 all: $(TARGET_TETRIS)
 ifndef NOTEST
 all: $(TARGET_TEST)
@@ -75,13 +74,10 @@ $(TARGET_TEST): $(TARGET)/$(TARGET_TEST).c.o $(MUNIT)/munit.c.o
 	$(QQ) echo "  LD      $@"
 	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TEST)
 
-$(DEPENDS): | $(BUILD)
-$(OBJECTS): | $(BUILD)
+$(DEPENDS): | $(BUILD)/ $(TARGET)/
+$(OBJECTS): | $(BUILD)/ $(TARGET)/
 
-$(BUILD):
-	$(Q) mkdir -p $@
-
-$(TARGET):
+%/:
 	$(Q) mkdir -p $@
 
 $(LIBF8)/libf8.a: $(LIBF8)
