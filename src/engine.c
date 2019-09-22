@@ -391,20 +391,6 @@ static void signal_up(struct game *game)
     sfClock_restart(game->putTick);
 }
 
-static void signal_harddrop(struct game *game)
-{
-    struct field *fld = game->fld;
-
-    while (field_move_shape_down(fld, 1))
-        game->scoreCurrent++;
-    if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
-        transition_game_over_wait(game);
-    else
-        transition_put_shape(game);
-    sfClock_restart(game->gameTick);
-    sfClock_restart(game->putTick);
-}
-
 static void signal_down(struct game *game)
 {
     struct field *fld = game->fld;
@@ -656,7 +642,18 @@ static int game_loop(struct game *game)
     }
 
     if (ret_keys & HARDDROP) {
-        signal_harddrop(game);
+        struct field *fld = game->fld;
+
+        while (field_move_shape_down(fld, 1))
+            game->scoreCurrent++;
+
+        sfClock_restart(game->gameTick);
+        sfClock_restart(game->putTick);
+
+        if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
+            return GAME_LOOP_GAME_OVER;
+        else
+            transition_put_shape(game);
     }
 
     if (ret_keys & LEFT) {
