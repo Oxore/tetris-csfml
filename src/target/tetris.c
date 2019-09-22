@@ -8,6 +8,7 @@
 #include <SFML/System/Clock.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -47,6 +48,16 @@ int main()
         .level = 1,
         .moveLatency = L00LATENCY,
         .lines = 0,
+        .gameTick = NULL,
+        .over_wait_tick = NULL,
+        .putTick = NULL,
+        .mTick = NULL,
+        .controls = {
+            .keys = 0,
+            .repPushDown = NULL,
+            .repKeyLeft = NULL,
+            .repKeyRight = NULL,
+        },
         .fld = &fld,
         .nxt = &nxt,
         .texts = NULL,
@@ -57,9 +68,9 @@ int main()
     game.over_wait_tick = sfClock_create();
     game.putTick = sfClock_create();
     game.mTick = sfClock_create();
-    game.repPushDown = sfClock_create();
-    game.repKeyLeft = sfClock_create();
-    game.repKeyRight = sfClock_create();
+    game.controls.repPushDown = sfClock_create();
+    game.controls.repKeyLeft = sfClock_create();
+    game.controls.repKeyRight = sfClock_create();
 
     painter_load_font("dat/arial.ttf");
 
@@ -132,9 +143,9 @@ cleanup_load_texts:
     sfClock_destroy(game.over_wait_tick);
     sfClock_destroy(game.putTick);
     sfClock_destroy(game.mTick);
-    sfClock_destroy(game.repPushDown);
-    sfClock_destroy(game.repKeyLeft);
-    sfClock_destroy(game.repKeyRight);
+    sfClock_destroy(game.controls.repPushDown);
+    sfClock_destroy(game.controls.repKeyLeft);
+    sfClock_destroy(game.controls.repKeyRight);
 
     return EXIT_SUCCESS;
 }

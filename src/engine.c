@@ -43,16 +43,6 @@
 #include "painter.h"
 #include "engine.h"
 
-#define RIGHT     (1 << 0)
-#define UP        (1 << 1)
-#define DOWN      (1 << 2)
-#define LEFT      (1 << 3)
-#define RIGHTHOLD (1 << 4)
-#define HARDDROP  (1 << 5)
-#define PAUSE     (1 << 6)
-#define LEFTHOLD  (1 << 7)
-#define GAMEOVER  (1 << 8)
-
 static int level_move_latency[] = {
     L00LATENCY,
     L01LATENCY,
@@ -93,8 +83,6 @@ static int rmlines_score[] = {
     RM_3LINES_SCORE,
     RM_4LINES_SCORE
 };
-
-static int keys = 0;
 
 static void render_score_value(struct game *game, void *obj)
 {
@@ -422,108 +410,105 @@ static void signal_right(struct game *game)
     }
 }
 
-static int game_keys(struct game *game)
+static int game_keys(struct controls *ctl)
 {
-    // TODO: Should not accept `struct game *` argument
-    // Should permute only `keys` variable, reset timers and return changed keys
-
     int ret = 0;
 
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
-        if (!(keys & PAUSE)) {
-            keys |= PAUSE;
+        if (!(ctl->keys & PAUSE)) {
+            ctl->keys |= PAUSE;
             ret |= PAUSE;
         }
     } else {
-        keys &= ~PAUSE;
+        ctl->keys &= ~PAUSE;
     }
 
     /* UP */
     if (sfKeyboard_isKeyPressed(sfKeyUp)) {
-        if (!(keys & UP)) {
-            keys = keys | UP;
+        if (!(ctl->keys & UP)) {
+            ctl->keys |= UP;
             ret |= UP;
         }
     } else {
-        keys = keys & ~UP;
+        ctl->keys = ctl->keys & ~UP;
     }
 
     /* HARDDROP */
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
-        if (!(keys & HARDDROP)) {
-            keys |= HARDDROP;
+        if (!(ctl->keys & HARDDROP)) {
+            ctl->keys |= HARDDROP;
             ret |= HARDDROP;
         }
     } else {
-        keys &= ~HARDDROP;
+        ctl->keys &= ~HARDDROP;
     }
 
     /* DOWN */
     if (sfKeyboard_isKeyPressed(sfKeyDown)) {
-        if (!(keys & DOWN)) {
-            keys = keys | DOWN;
+        if (!(ctl->keys & DOWN)) {
+            ctl->keys |= DOWN;
             ret |= DOWN;
-            sfClock_restart(game->repPushDown);
+            sfClock_restart(ctl->repPushDown);
         } else {
-            if (sfClock_getElapsedTime(game->repPushDown).microseconds
+            if (sfClock_getElapsedTime(ctl->repPushDown).microseconds
              >= moveRepeatLatency2)
-                keys &= ~DOWN;
+                ctl->keys &= ~DOWN;
         }
     } else {
-        keys &= ~DOWN;
+        ctl->keys &= ~DOWN;
     }
 
     /* LEFT */
     if (sfKeyboard_isKeyPressed(sfKeyLeft)
      && !sfKeyboard_isKeyPressed(sfKeyRight)) {
-        if (!(keys & LEFT)) {
-            keys = keys | LEFT;
+        if (!(ctl->keys & LEFT)) {
+            ctl->keys |= LEFT;
             ret |= LEFT;
-            sfClock_restart(game->repKeyLeft);
-        } else if (!(keys & LEFTHOLD)) {
-            if (sfClock_getElapsedTime(game->repKeyLeft).microseconds
+            sfClock_restart(ctl->repKeyLeft);
+        } else if (!(ctl->keys & LEFTHOLD)) {
+            if (sfClock_getElapsedTime(ctl->repKeyLeft).microseconds
              >= moveRepeatLatency1) {
-                keys |= LEFTHOLD;
-                keys &= ~LEFT;
+                ctl->keys |= LEFTHOLD;
+                ctl->keys &= ~LEFT;
             }
         } else {
-            if (sfClock_getElapsedTime(game->repKeyLeft).microseconds
+            if (sfClock_getElapsedTime(ctl->repKeyLeft).microseconds
              >= moveRepeatLatency2)
-                keys &= ~LEFT;
+                ctl->keys &= ~LEFT;
         }
     } else {
-        keys &= ~LEFT;
-        keys &= ~LEFTHOLD;
+        ctl->keys &= ~LEFT;
+        ctl->keys &= ~LEFTHOLD;
     }
 
     /* RIGHT */
     if (sfKeyboard_isKeyPressed(sfKeyRight)
      && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
-        if (!(keys & RIGHT)) {
-            keys = keys | RIGHT;
+        if (!(ctl->keys & RIGHT)) {
+            ctl->keys |= RIGHT;
             ret |= RIGHT;
-            sfClock_restart(game->repKeyRight);
-        } else if (!(keys & RIGHTHOLD)) {
-            if (sfClock_getElapsedTime(game->repKeyRight).microseconds
+            sfClock_restart(ctl->repKeyRight);
+        } else if (!(ctl->keys & RIGHTHOLD)) {
+            if (sfClock_getElapsedTime(ctl->repKeyRight).microseconds
              >= moveRepeatLatency1) {
-                keys |= RIGHTHOLD;
-                keys &= ~RIGHT;
+                ctl->keys |= RIGHTHOLD;
+                ctl->keys &= ~RIGHT;
             }
         } else {
-            if (sfClock_getElapsedTime(game->repKeyRight).microseconds
+            if (sfClock_getElapsedTime(ctl->repKeyRight).microseconds
              >= moveRepeatLatency2)
-                keys &= ~RIGHT;
+                ctl->keys &= ~RIGHT;
         }
     } else {
-        keys &= ~RIGHT;
-        keys &= ~RIGHTHOLD;
+        ctl->keys &= ~RIGHT;
+        ctl->keys &= ~RIGHTHOLD;
     }
 
     return ret;
 }
 
-static int pause_keys(struct game *game)
+static int pause_keys(struct controls *ctl)
 {
     // TODO: merge with game_keys
 
@@ -531,13 +516,12 @@ static int pause_keys(struct game *game)
 
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
-        if (!(keys & PAUSE)) {
-            keys |= PAUSE;
+        if (!(ctl->keys & PAUSE)) {
+            ctl->keys |= PAUSE;
             ret |= PAUSE;
-            sfClock_restart(game->putTick);
         }
     } else {
-        keys &= ~PAUSE;
+        ctl->keys &= ~PAUSE;
     }
 
     return ret;
@@ -605,11 +589,11 @@ static int menu_loop(struct game *game)
         menu_tick(game);
 
     if (sfKeyboard_isKeyPressed(sfKeyS)) {
-        if (!(keys & GAMEOVER)) {
+        if (!(game->controls.keys & GAMEOVER)) {
             ret = MENU_LOOP_GAME_START;
         }
     } else {
-        keys = 0;
+        game->controls.keys = 0;
     }
 
     return ret;
@@ -623,10 +607,10 @@ static int game_loop(struct game *game)
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
-    // TODO: Elaborate on precedence of timers and keys checking
+    // TODO: Elaborate on precedence of timers and ctl->keys checking
     // Here should be only one return statement - at the end of the function
 
-    int ret_keys = game_keys(game);
+    int ret_keys = game_keys(&game->controls);
 
     if (ret_keys & PAUSE) {
         ret = GAME_LOOP_PAUSE;
@@ -703,7 +687,7 @@ static int game_over_wait_loop(struct game *game)
 }
 
 #define GAME_OVER_LOOP_MENU 1
-static int game_over_loop(void)
+static int game_over_loop(struct controls *ctl)
 {
     int anykey = 0;
     int ret = 0;
@@ -713,12 +697,12 @@ static int game_over_loop(void)
             anykey = 1;
 
     if (anykey) {
-        if (!(keys & GAMEOVER)) {
-            keys |= GAMEOVER;
+        if (!(ctl->keys & GAMEOVER)) {
+            ctl->keys |= GAMEOVER;
             ret = GAME_OVER_LOOP_MENU;
         }
     } else {
-        keys &= ~GAMEOVER;
+        ctl->keys &= ~GAMEOVER;
     }
 
     return ret;
@@ -727,8 +711,9 @@ static int game_over_loop(void)
 #define PAUSE_LOOP_UNPAUSE 1
 static int pause_loop(struct game *game)
 {
-    int ret = pause_keys(game);
+    int ret = pause_keys(&game->controls);
     if (ret & PAUSE) {
+        sfClock_restart(game->putTick);
         return PAUSE_LOOP_UNPAUSE;
     }
     return 0;
@@ -753,7 +738,7 @@ void main_loop(struct game *game)
         break;
 
     case GS_GAME_OVER:
-        ret = game_over_loop();
+        ret = game_over_loop(&game->controls);
         if (ret == GAME_OVER_LOOP_MENU)
             transition_menu(game);
         break;
