@@ -439,7 +439,7 @@ static void signal_right(struct game *game)
 static int game_keys(struct game *game)
 {
     // TODO: Should not accept `struct game *` argument
-    // Should just permute `keys` variable and return changed keys
+    // Should permute only `keys` variable, reset timers and return changed keys
 
     int ret = 0;
 
@@ -448,7 +448,6 @@ static int game_keys(struct game *game)
         if (!(keys & PAUSE)) {
             keys |= PAUSE;
             ret |= PAUSE;
-            sfClock_restart(game->putTick);
         }
     } else {
         keys &= ~PAUSE;
@@ -459,7 +458,6 @@ static int game_keys(struct game *game)
         if (!(keys & UP)) {
             keys = keys | UP;
             ret |= UP;
-            signal_up(game);
         }
     } else {
         keys = keys & ~UP;
@@ -470,7 +468,6 @@ static int game_keys(struct game *game)
         if (!(keys & HARDDROP)) {
             keys |= HARDDROP;
             ret |= HARDDROP;
-            signal_harddrop(game);
         }
     } else {
         keys &= ~HARDDROP;
@@ -481,7 +478,6 @@ static int game_keys(struct game *game)
         if (!(keys & DOWN)) {
             keys = keys | DOWN;
             ret |= DOWN;
-            signal_down(game);
             sfClock_restart(game->repPushDown);
         } else {
             if (sfClock_getElapsedTime(game->repPushDown).microseconds
@@ -498,7 +494,6 @@ static int game_keys(struct game *game)
         if (!(keys & LEFT)) {
             keys = keys | LEFT;
             ret |= LEFT;
-            signal_left(game);
             sfClock_restart(game->repKeyLeft);
         } else if (!(keys & LEFTHOLD)) {
             if (sfClock_getElapsedTime(game->repKeyLeft).microseconds
@@ -522,7 +517,6 @@ static int game_keys(struct game *game)
         if (!(keys & RIGHT)) {
             keys = keys | RIGHT;
             ret |= RIGHT;
-            signal_right(game);
             sfClock_restart(game->repKeyRight);
         } else if (!(keys & RIGHTHOLD)) {
             if (sfClock_getElapsedTime(game->repKeyRight).microseconds
@@ -646,12 +640,32 @@ static int game_loop(struct game *game)
     // TODO: Elaborate on precedence of timers and keys checking
     // Here should be only one return statement - at the end of the function
 
-    // TODO: `game_keys` should return pressed keys and reaction should be
-    // performed here
-
     int ret_keys = game_keys(game);
-    if (ret_keys & PAUSE)
+
+    if (ret_keys & PAUSE) {
         ret = GAME_LOOP_PAUSE;
+        sfClock_restart(game->putTick);
+    }
+
+    if (ret_keys & UP) {
+        signal_up(game);
+    }
+
+    if (ret_keys & DOWN) {
+        signal_down(game);
+    }
+
+    if (ret_keys & HARDDROP) {
+        signal_harddrop(game);
+    }
+
+    if (ret_keys & LEFT) {
+        signal_left(game);
+    }
+
+    if (ret_keys & RIGHT) {
+        signal_right(game);
+    }
 
     if (sfClock_getElapsedTime(game->gameTick).microseconds >= game->moveLatency) {
         switch (game_tick(game)) {
