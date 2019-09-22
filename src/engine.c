@@ -328,6 +328,7 @@ static void transition_pause(struct game *game)
 
     LIST_FOREACH(texts, text) {
         show_pause_text(text->obj);
+        update_game_text(text->obj);
     }
 }
 
@@ -343,7 +344,10 @@ static void transition_unpause(struct game *game)
     }
 }
 
-static void game_tick(struct game *game)
+#define GAME_TICK_STEP      0
+#define GAME_TICK_PUT_SHAPE 1
+#define GAME_TICK_GAME_OVER 2
+static int game_tick(struct game *game)
 {
     sfClock_restart(game->gameTick);
 
@@ -351,16 +355,18 @@ static void game_tick(struct game *game)
     struct field *nxt = game->nxt;
 
     game->moveLatency = get_level_latency(game->level);
+
     if (field_move_shape_down(fld, 1)) {
         project_ghost_shape(fld, 1, 0);
         sfClock_restart(game->putTick);
     }
+
     if (sfClock_getElapsedTime(game->putTick).microseconds >= PUT_LATENCY) {
-        if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
-            transition_game_over_wait(game);
-        else
-            transition_put_shape(game);
         sfClock_restart(game->putTick);
+        if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
+            return GAME_TICK_GAME_OVER;
+        else
+            return GAME_TICK_PUT_SHAPE;
     }
 
     struct idlist *texts = game->texts;
@@ -372,6 +378,8 @@ static void game_tick(struct game *game)
 
     painter_update_field(fld->id, fld);
     painter_update_field(nxt->id, nxt);
+
+    return GAME_TICK_STEP;
 }
 
 static void signal_up(struct game *game)
@@ -428,27 +436,19 @@ static void signal_right(struct game *game)
     }
 }
 
-static void signal_pause(struct game *game)
+static int game_keys(struct game *game)
 {
-    switch (game->state) {
-    case GS_PAUSED:
-        transition_unpause(game);
-        break;
-    default:
-        transition_pause(game);
-        break;
-    }
+    // TODO: Should not accept `struct game *` argument
+    // Should just permute `keys` variable and return changed keys
 
-    sfClock_restart(game->putTick);
-}
+    int ret = 0;
 
-static void game_keys(struct game *game)
-{
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
         if (!(keys & PAUSE)) {
             keys |= PAUSE;
-            signal_pause(game);
+            ret |= PAUSE;
+            sfClock_restart(game->putTick);
         }
     } else {
         keys &= ~PAUSE;
@@ -458,6 +458,7 @@ static void game_keys(struct game *game)
     if (sfKeyboard_isKeyPressed(sfKeyUp)) {
         if (!(keys & UP)) {
             keys = keys | UP;
+            ret |= UP;
             signal_up(game);
         }
     } else {
@@ -468,6 +469,7 @@ static void game_keys(struct game *game)
     if (sfKeyboard_isKeyPressed(sfKeySpace)) {
         if (!(keys & HARDDROP)) {
             keys |= HARDDROP;
+            ret |= HARDDROP;
             signal_harddrop(game);
         }
     } else {
@@ -478,6 +480,7 @@ static void game_keys(struct game *game)
     if (sfKeyboard_isKeyPressed(sfKeyDown)) {
         if (!(keys & DOWN)) {
             keys = keys | DOWN;
+            ret |= DOWN;
             signal_down(game);
             sfClock_restart(game->repPushDown);
         } else {
@@ -494,6 +497,7 @@ static void game_keys(struct game *game)
      && !sfKeyboard_isKeyPressed(sfKeyRight)) {
         if (!(keys & LEFT)) {
             keys = keys | LEFT;
+            ret |= LEFT;
             signal_left(game);
             sfClock_restart(game->repKeyLeft);
         } else if (!(keys & LEFTHOLD)) {
@@ -517,6 +521,7 @@ static void game_keys(struct game *game)
      && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
         if (!(keys & RIGHT)) {
             keys = keys | RIGHT;
+            ret |= RIGHT;
             signal_right(game);
             sfClock_restart(game->repKeyRight);
         } else if (!(keys & RIGHTHOLD)) {
@@ -534,19 +539,28 @@ static void game_keys(struct game *game)
         keys &= ~RIGHT;
         keys &= ~RIGHTHOLD;
     }
+
+    return ret;
 }
 
-static void pause_keys(struct game *game)
+static int pause_keys(struct game *game)
 {
+    // TODO: merge with game_keys
+
+    int ret = 0;
+
     /* PAUSE */
     if (sfKeyboard_isKeyPressed(sfKeyP)) {
         if (!(keys & PAUSE)) {
             keys |= PAUSE;
-            signal_pause(game);
+            ret |= PAUSE;
+            sfClock_restart(game->putTick);
         }
     } else {
         keys &= ~PAUSE;
     }
+
+    return ret;
 }
 
 static void menu_tick(struct game *game)
@@ -602,27 +616,57 @@ static void transition_game_start(struct game *game)
     sfClock_restart(game->gameTick);
 }
 
-static void menu_loop(struct game *game)
+#define MENU_LOOP_GAME_START 1
+static int menu_loop(struct game *game)
 {
+    int ret = 0;
+
     if (sfClock_getElapsedTime(game->mTick).microseconds >= basicLatency)
         menu_tick(game);
 
     if (sfKeyboard_isKeyPressed(sfKeyS)) {
-        if (!(keys & GAMEOVER))
-            transition_game_start(game);
+        if (!(keys & GAMEOVER)) {
+            ret = MENU_LOOP_GAME_START;
+        }
     } else {
         keys = 0;
     }
+
+    return ret;
 }
 
-static void game_loop(struct game *game)
+#define GAME_LOOP_PAUSE 1
+#define GAME_LOOP_GAME_OVER 2
+static int game_loop(struct game *game)
 {
+    int ret = 0;
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
-    game_keys(game);
+    // TODO: Elaborate on precedence of timers and keys checking
+    // Here should be only one return statement - at the end of the function
+
+    // TODO: `game_keys` should return pressed keys and reaction should be
+    // performed here
+
+    int ret_keys = game_keys(game);
+    if (ret_keys & PAUSE)
+        ret = GAME_LOOP_PAUSE;
+
     if (sfClock_getElapsedTime(game->gameTick).microseconds >= game->moveLatency) {
-        game_tick(game);
+        switch (game_tick(game)) {
+        case GAME_TICK_PUT_SHAPE:
+            transition_put_shape(game);
+            break;
+
+        case GAME_TICK_GAME_OVER:
+            return GAME_LOOP_GAME_OVER;
+            break;
+
+        case GAME_TICK_STEP:
+        default:
+            break;
+        }
     }
 
     struct idlist *texts = game->texts;
@@ -634,17 +678,24 @@ static void game_loop(struct game *game)
     }
     painter_update_field(fld->id, fld);
     painter_update_field(nxt->id, nxt);
+
+    return ret;
 }
 
-static void game_over_wait_loop(struct game *game)
+#define GAME_OVER_WAIT_LOOP_GAME_OVER 1
+static int game_over_wait_loop(struct game *game)
 {
+    int ret = 0;
     if (sfClock_getElapsedTime(game->over_wait_tick).microseconds > GAMEOVERWAIT)
-        transition_game_over(game);
+        ret = GAME_OVER_WAIT_LOOP_GAME_OVER;
+    return ret;
 }
 
-static void game_over_loop(struct game *game)
+#define GAME_OVER_LOOP_MENU 1
+static int game_over_loop(void)
 {
     int anykey = 0;
+    int ret = 0;
 
     for (int keycode = sfKeyUnknown; keycode < sfKeyCount; keycode++)
         if (sfKeyboard_isKeyPressed(keycode))
@@ -653,40 +704,60 @@ static void game_over_loop(struct game *game)
     if (anykey) {
         if (!(keys & GAMEOVER)) {
             keys |= GAMEOVER;
-            transition_menu(game);
+            ret = GAME_OVER_LOOP_MENU;
         }
     } else {
         keys &= ~GAMEOVER;
     }
+
+    return ret;
 }
 
-static void pause_loop(struct game *game)
+#define PAUSE_LOOP_UNPAUSE 1
+static int pause_loop(struct game *game)
 {
-    pause_keys(game);
+    int ret = pause_keys(game);
+    if (ret & PAUSE) {
+        return PAUSE_LOOP_UNPAUSE;
+    }
+    return 0;
 }
 
 void main_loop(struct game *game)
 {
+    int ret;
     switch (game->state) {
     case GS_STARTED:
-        game_loop(game);
+        ret = game_loop(game);
+        if (ret == GAME_LOOP_GAME_OVER)
+            transition_game_over_wait(game);
+        else if (ret == GAME_LOOP_PAUSE)
+            transition_pause(game);
         break;
 
     case GS_PAUSED:
-        pause_loop(game);
+        ret = pause_loop(game);
+        if (ret == PAUSE_LOOP_UNPAUSE)
+            transition_unpause(game);
         break;
 
     case GS_GAME_OVER:
-        game_over_loop(game);
+        ret = game_over_loop();
+        if (ret == GAME_OVER_LOOP_MENU)
+            transition_menu(game);
         break;
 
     case GS_GAME_OVER_WAIT:
-        game_over_wait_loop(game);
+        ret = game_over_wait_loop(game);
+        if (ret == GAME_OVER_WAIT_LOOP_GAME_OVER)
+            transition_game_over(game);
         break;
 
     case GS_MAIN_MENU:
     default:
-        menu_loop(game);
+        ret = menu_loop(game);
+        if (ret == MENU_LOOP_GAME_START)
+            transition_game_start(game);
         break;
     }
 
