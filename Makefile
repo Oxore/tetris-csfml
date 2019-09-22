@@ -65,6 +65,10 @@ ifndef NOTEST
 all: $(TARGET_TEST)
 endif
 
+.PHONY: pg
+pg:
+	make -f pg.mk $@ PREFIX=$(PREFIX)
+
 $(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o $(LIBF8)/libf8.a \
 	$(CJSON)/cJSON.o
 	$(QQ) echo "  LD      $@"
@@ -81,7 +85,7 @@ $(OBJECTS): | $(BUILD)/ $(TARGET)/
 	$(Q) mkdir -p $@
 
 $(LIBF8)/libf8.a: $(LIBF8)
-	make -C $<
+	make -C $< NOTEST=1
 
 $(CJSON)/cJSON.c.o: $(CJSON)/cJSON.c
 	$(QQ) echo "  CC      $@"
@@ -98,8 +102,16 @@ $(BUILD)/%.c.o: $(SRC)/%.c
 -include $(DEPENDS)
 
 clean:
-	$(Q) $(RM) -rfv $(TARGET_TETRIS) $(TARGET_TEST) $(BUILD)
-	$(Q) $(RM) -rfv $(MUNIT)/*.d $(MUNIT)/*.o
-	$(Q) $(RM) -rfv $(CJSON)/*.d $(CJSON)/*.o
+	$(Q) $(RM) -rfv $(OBJECTS) $(DEPENDS) \
+		$(TARGET_TETRIS) $(TARGET_TEST) \
+		$(TARGET)/$(TARGET_TETRIS).c.o $(TARGET)/$(TARGET_TETRIS).c.d \
+		$(TARGET)/$(TARGET_TEST).c.o $(TARGET)/$(TARGET_TEST).c.d
+	make -f pg.mk $@
 
-.PHONY: all clean
+mrproper: clean
+	$(Q) $(RM) -rfv $(BUILD) \
+		$(MUNIT)/*.d $(MUNIT)/*.o \
+		$(CJSON)/*.d $(CJSON)/*.o
+	make -C $(LIBF8) clean
+
+.PHONY: all clean mrproper
