@@ -741,8 +741,9 @@ static int pause_loop(struct game *game)
     return 0;
 }
 
-void main_loop(struct game *game)
+void main_loop(struct game *game, struct idlist *events)
 {
+    (void) events;
     int ret;
     switch (game->state) {
     case GS_STARTED:

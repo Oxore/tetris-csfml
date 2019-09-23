@@ -21,13 +21,29 @@
 #include "engine.h"
 #include "tet_conf.h"
 
-static void handleWindowEvents(sfRenderWindow *window)
+static struct idlist *handleWindowEvents(sfRenderWindow *window)
 {
     sfEvent event;
+    struct idlist *events = NULL;
 
-    while (sfRenderWindow_pollEvent(window, &event))
-        if (event.type == sfEvtClosed)
+    while (sfRenderWindow_pollEvent(window, &event)) {
+        if (event.type == sfEvtClosed) {
             sfRenderWindow_close(window);
+
+        } else {
+            struct idlist *e = NULL;
+
+            if (events == NULL) {
+                e = events = list_new();
+            } else {
+                e = list_append(events);
+            }
+
+            e->obj = calloc(1, sizeof(sfEvent));
+            *(sfEvent *)e->obj = event;
+        }
+    }
+    return events;
 }
 
 static void register_text(void *obj)
@@ -118,8 +134,11 @@ int main()
 
     transition_init(&game);
     while (sfRenderWindow_isOpen(window)) {
-        handleWindowEvents(window);
-        main_loop(&game);
+        struct idlist *events = handleWindowEvents(window);
+        main_loop(&game, events);
+        LIST_FOREACH(events, event)
+            free(event->obj);
+        list_destroy(events);
     }
 
     LIST_FOREACH(texts, text) {
