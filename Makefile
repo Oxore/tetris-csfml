@@ -67,7 +67,7 @@ endif
 
 .PHONY: pg
 pg:
-	make -f pg.mk $@ PREFIX=$(PREFIX)
+	$(MAKE) -f pg.mk $@ PREFIX=$(PREFIX)
 
 $(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o $(LIBF8)/libf8.a \
 	$(CJSON)/cJSON.o
@@ -85,7 +85,7 @@ $(OBJECTS): | $(BUILD)/ $(TARGET)/
 	$(Q) mkdir -p $@
 
 $(LIBF8)/libf8.a: $(LIBF8)
-	make -C $< NOTEST=1
+	$(MAKE) -C $< NOTEST=1
 
 $(CJSON)/cJSON.c.o: $(CJSON)/cJSON.c
 	$(QQ) echo "  CC      $@"
@@ -106,12 +106,12 @@ clean:
 		$(TARGET_TETRIS) $(TARGET_TEST) \
 		$(TARGET)/$(TARGET_TETRIS).c.o $(TARGET)/$(TARGET_TETRIS).c.d \
 		$(TARGET)/$(TARGET_TEST).c.o $(TARGET)/$(TARGET_TEST).c.d
-	make -f pg.mk $@
+	$(MAKE) -f pg.mk $@
 
 mrproper: clean
 	$(Q) $(RM) -rfv $(BUILD) \
 		$(MUNIT)/*.d $(MUNIT)/*.o \
 		$(CJSON)/*.d $(CJSON)/*.o
-	make -C $(LIBF8) clean
+	$(MAKE) -C $(LIBF8) clean
 
 .PHONY: all clean mrproper
