@@ -81,7 +81,10 @@ $(TARGET_TEST): $(TARGET)/$(TARGET_TEST).c.o $(MUNIT)/munit.c.o
 $(DEPENDS): | $(BUILD)/ $(TARGET)/
 $(OBJECTS): | $(BUILD)/ $(TARGET)/
 
-%/:
+$(BUILD)/:
+	$(Q) mkdir -p $@
+
+$(TARGET)/:
 	$(Q) mkdir -p $@
 
 $(LIBF8)/libf8.a: $(LIBF8)
