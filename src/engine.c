@@ -241,6 +241,16 @@ static void transition_menu(struct game *game)
     }
 }
 
+static void transition_highscores_input(struct game *game)
+{
+    game->state = GS_HIGHSCORES_INPUT;
+}
+
+static void transition_highscores_table(struct game *game)
+{
+    game->state = GS_HIGHSCORES_TABLE;
+}
+
 static void transition_game_over_wait(struct game *game)
 {
     game->state = GS_GAME_OVER_WAIT;
@@ -686,7 +696,7 @@ static int game_over_wait_loop(struct game *game)
     return ret;
 }
 
-#define GAME_OVER_LOOP_MENU 1
+#define GAME_OVER_LOOP_HIGHSCORES_INPUT 1
 static int game_over_loop(struct controls *ctl)
 {
     int anykey = 0;
@@ -699,13 +709,25 @@ static int game_over_loop(struct controls *ctl)
     if (anykey) {
         if (!(ctl->keys & GAMEOVER)) {
             ctl->keys |= GAMEOVER;
-            ret = GAME_OVER_LOOP_MENU;
+            ret = GAME_OVER_LOOP_HIGHSCORES_INPUT;
         }
     } else {
         ctl->keys &= ~GAMEOVER;
     }
 
     return ret;
+}
+
+#define HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE 1
+static int highscores_input_loop(void)
+{
+    return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
+}
+
+#define HIGHSCORES_TABLE_LOOP_MENU 1
+static int highscores_table_loop(void)
+{
+    return HIGHSCORES_TABLE_LOOP_MENU;
 }
 
 #define PAUSE_LOOP_UNPAUSE 1
@@ -739,14 +761,26 @@ void main_loop(struct game *game)
 
     case GS_GAME_OVER:
         ret = game_over_loop(&game->controls);
-        if (ret == GAME_OVER_LOOP_MENU)
-            transition_menu(game);
+        if (ret == GAME_OVER_LOOP_HIGHSCORES_INPUT)
+            transition_highscores_input(game);
         break;
 
     case GS_GAME_OVER_WAIT:
         ret = game_over_wait_loop(game);
         if (ret == GAME_OVER_WAIT_LOOP_GAME_OVER)
             transition_game_over(game);
+        break;
+
+    case GS_HIGHSCORES_INPUT:
+        ret = highscores_input_loop();
+        if (ret == HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE)
+            transition_highscores_table(game);
+        break;
+
+    case GS_HIGHSCORES_TABLE:
+        ret = highscores_table_loop();
+        if (ret == HIGHSCORES_TABLE_LOOP_MENU)
+            transition_menu(game);
         break;
 
     case GS_MAIN_MENU:

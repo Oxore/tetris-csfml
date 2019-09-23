@@ -6,6 +6,8 @@ enum game_state {
     GS_STARTED,
     GS_GAME_OVER,
     GS_GAME_OVER_WAIT,
+    GS_HIGHSCORES_INPUT,
+    GS_HIGHSCORES_TABLE,
     GS_PAUSED
 };
 
