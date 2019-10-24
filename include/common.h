@@ -44,4 +44,7 @@ struct game {
     struct field *fld;
     struct field *nxt;
     struct idlist *texts;
+
+    struct input input_name;
+    struct hs_table highscores;
 };

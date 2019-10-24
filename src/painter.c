@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <f8.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <SFML/Graphics/RectangleShape.h>
@@ -11,6 +12,8 @@
 #include "vector.h"
 #include "text.h"
 #include "field.h"
+#include "input.h"
+#include "hs_table.h"
 #include "painter.h"
 
 #include "idlist.h"
@@ -29,7 +32,9 @@ static sfColor shape_color_map[] = {
 enum t {
     TYPE_U,
     TYPE_FIELD,
-    TYPE_TEXT
+    TYPE_TEXT,
+    TYPE_INPUT,
+    TYPE_HS_TABLE,
 };
 
 struct drawable {
@@ -51,6 +56,24 @@ struct text_drawable {
     size_t attr;
 };
 
+struct input_drawable {
+    struct drawable;
+
+    sfText *text;
+    size_t attr;
+};
+
+struct hs_table_drawable {
+    struct drawable;
+
+    struct {
+        sfText *score;
+        sfText *name;
+    } lines[CFG_HS_TABLE_SIZE];
+
+    size_t attr;
+};
+
 static sfRenderWindow *window;
 static sfFont *font;
 
@@ -66,6 +89,7 @@ void painter_load_font(const char *filename)
     font = sfFont_createFromFile(filename);
     if (!font) {
         printf("%s font load failed", filename);
+        // TODO: return -1 instead of exiting
         exit(EXIT_FAILURE);
     }
 }
@@ -222,6 +246,135 @@ void painter_update_text(size_t id, const struct text *txt)
         painter_update_text_drawable(node->obj, txt);
 }
 
+static void painter_update_input_drawable(struct input_drawable *idrwbl,
+        const struct input *input)
+{
+    idrwbl->attr = input->attr;
+    sfText_setCharacterSize(idrwbl->text, input->fontsize);
+    sfVector2f pos = (sfVector2f){.x = input->pos.x, .y = input->pos.y};
+    sfText_setPosition(idrwbl->text, pos);
+    if (idrwbl->text) {
+        sfUint32 buf[BUFSIZ];
+        buf[sizeof(buf)/sizeof(*buf) - 1] = 0;
+        utf8to32_strcpy_s((int32_t *)buf, sizeof(buf), input->text);
+        sfText_setUnicodeString(idrwbl->text, buf);
+    }
+}
+
+size_t painter_register_input(const struct input *input)
+{
+    struct idlist *last;
+    if (!drawables)
+        last = drawables = list_new();
+    else
+        last = list_append(drawables);
+
+    struct input_drawable *idrwbl = calloc(1, sizeof(struct input_drawable));
+    idrwbl->t = TYPE_INPUT;
+    idrwbl->text = sfText_create();
+    sfText_setFont(idrwbl->text, font);
+    painter_update_input_drawable(idrwbl, input);
+
+    last->obj = idrwbl;
+    return last->id;
+}
+
+static inline void sfText_setUnicodeStringFromUtf8(sfText *sf_text,
+        const char *text, size_t size)
+{
+    assert(text);
+    assert(sf_text);
+
+    sfUint32 buf[size * 4];
+    buf[sizeof(buf)/sizeof(*buf) - 1] = 0;
+    utf8to32_strncpy_s((int32_t *)buf, sizeof(buf), text, size);
+    sfText_setUnicodeString(sf_text, buf);
+}
+
+static inline void sfText_setUnicodeStringFromSizeT(sfText *sf_text,
+        size_t value)
+{
+    assert(sf_text);
+
+    // 128 should be enough for size_t number
+    sfUint32 buf[128] = {0};
+    char buf_utf8[128] = {0};
+
+    snprintf(buf_utf8, sizeof(buf_utf8), "%zd", value);
+    buf[sizeof(buf)/sizeof(*buf) - 1] = 0;
+
+    utf8to32_strncpy_s((int32_t *)buf, sizeof(buf), buf_utf8, sizeof(buf_utf8));
+    sfText_setUnicodeString(sf_text, buf);
+}
+
+static void painter_update_hs_table_drawable(struct hs_table_drawable *hstdrwbl,
+        const struct hs_table *hs_table)
+{
+    hstdrwbl->attr = hs_table->attr;
+
+    sfVector2f pos;
+    for (size_t i = 0; i < CFG_HS_TABLE_SIZE; i++) {
+        pos = (sfVector2f){
+            .x = hs_table->pos.x,
+            .y = hs_table->pos.y + i * hs_table->score_cell_size.y,
+        };
+        sfText_setPosition(hstdrwbl->lines[i].score, pos);
+        sfText_setCharacterSize(hstdrwbl->lines[i].score, hs_table->fontsize);
+        sfText_setUnicodeStringFromSizeT(hstdrwbl->lines[i].score,
+                hs_table->entries[i].score);
+
+        pos = (sfVector2f){
+            .x = hs_table->pos.x + hs_table->score_cell_size.x,
+            .y = hs_table->pos.y + i * hs_table->name_cell_size.y,
+        };
+        sfText_setPosition(hstdrwbl->lines[i].name, pos);
+        sfText_setCharacterSize(hstdrwbl->lines[i].name, hs_table->fontsize);
+        sfText_setUnicodeStringFromUtf8(hstdrwbl->lines[i].name,
+                hs_table->entries[i].name, CFG_NAME_MAX);
+    }
+
+}
+
+void painter_update_input(size_t id, const struct input *input)
+{
+    struct idlist *node = list_get(drawables, id);
+    if (node)
+        painter_update_input_drawable(node->obj, input);
+}
+
+size_t painter_register_hs_table(const struct hs_table *hs_table)
+{
+    struct idlist *last;
+    if (!drawables)
+        last = drawables = list_new();
+    else
+        last = list_append(drawables);
+
+    struct hs_table_drawable *hstdrwbl
+        = calloc(1, sizeof(struct hs_table_drawable));
+
+    hstdrwbl->t = TYPE_HS_TABLE;
+
+    for (size_t i = 0; i < CFG_HS_TABLE_SIZE; i++) {
+        hstdrwbl->lines[i].score = sfText_create();
+        sfText_setFont(hstdrwbl->lines[i].score, font);
+        hstdrwbl->lines[i].name = sfText_create();
+        sfText_setFont(hstdrwbl->lines[i].name, font);
+    }
+
+    painter_update_hs_table_drawable(hstdrwbl, hs_table);
+
+    last->obj = hstdrwbl;
+    return last->id;
+}
+
+void painter_update_hs_table(size_t id, const struct hs_table *hs_table)
+{
+    struct idlist *node = list_get(drawables, id);
+    if (node)
+        painter_update_hs_table_drawable(node->obj, hs_table);
+}
+
 static void draw_text_drawable(struct drawable *d)
 {
     struct text_drawable *t = (struct text_drawable *)d;
@@ -229,11 +382,47 @@ static void draw_text_drawable(struct drawable *d)
         sfRenderWindow_drawText(window, t->text, NULL);
 }
 
+static void draw_input_drawable(struct drawable *d)
+{
+    // TODO: make fancier
+    struct input_drawable *idrwbl = (struct input_drawable *)d;
+    if (!(idrwbl->attr & INPUT_ATTR_INVISIBLE))
+        sfRenderWindow_drawText(window, idrwbl->text, NULL);
+}
+
+static void draw_hs_table_drawable(struct drawable *d)
+{
+    struct hs_table_drawable *hstdrwbl = (struct hs_table_drawable *)d;
+    if (!(hstdrwbl->attr & HS_TABLE_ATTR_INVISIBLE)) {
+        for (size_t i = 0; i < CFG_HS_TABLE_SIZE; i++) {
+            sfRenderWindow_drawText(window, hstdrwbl->lines[i].score, NULL);
+            sfRenderWindow_drawText(window, hstdrwbl->lines[i].name, NULL);
+        }
+    }
+}
+
 static void destroy_text_drawable(struct drawable *d)
 {
     struct text_drawable *t = (struct text_drawable *)d;
     sfText_destroy(t->text);
     free(t);
+}
+
+static void destroy_input_drawable(struct drawable *d)
+{
+    struct input_drawable *idrwbl = (struct input_drawable *)d;
+    sfText_destroy(idrwbl->text);
+    free(idrwbl);
+}
+
+static void destroy_hs_table_drawable(struct drawable *d)
+{
+    struct hs_table_drawable *hstdrwbl = (struct hs_table_drawable *)d;
+    for (size_t i = 0; i < CFG_HS_TABLE_SIZE; i++) {
+        sfText_destroy(hstdrwbl->lines[i].score);
+        sfText_destroy(hstdrwbl->lines[i].name);
+    }
+    free(hstdrwbl);
 }
 
 static void draw_drawable(void *obj)
@@ -245,6 +434,12 @@ static void draw_drawable(void *obj)
         break;
     case TYPE_TEXT:
         draw_text_drawable(d);
+        break;
+    case TYPE_INPUT:
+        draw_input_drawable(d);
+        break;
+    case TYPE_HS_TABLE:
+        draw_hs_table_drawable(d);
         break;
     case TYPE_U:
         fprintf(stderr, "ERROR: Unknown type of drawable\n");
@@ -273,6 +468,12 @@ static void destroy_drawable(void *obj)
         break;
     case TYPE_TEXT:
         destroy_text_drawable(d);
+        break;
+    case TYPE_INPUT:
+        destroy_input_drawable(d);
+        break;
+    case TYPE_HS_TABLE:
+        destroy_hs_table_drawable(d);
         break;
     case TYPE_U:
         fprintf(stderr, "ERROR: Unknown type of drawable\n");

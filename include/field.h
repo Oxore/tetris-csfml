@@ -28,6 +28,8 @@ struct cell {
  *
  */
 
+struct vector2i;
+
 struct shape {
     struct  vector2i; // position
     int     t; // shape type

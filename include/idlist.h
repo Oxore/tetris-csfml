@@ -22,3 +22,6 @@ void            list_destroy(struct idlist *list);
 
 #define LIST_FOREACH(head, e) \
     for (struct idlist *e = head; e; e = e->next)
+
+#define LIST_FOREACH_CONST(head, e) \
+    for (const struct idlist *e = head; e; e = e->next)

@@ -86,5 +86,32 @@
     "size" : 24,
     "x" : 57,
     "y" : 240
+  },
+  {
+    "type" : "title",
+    "scene" : "input_name",
+    "text" : "Type your name",
+    "font" : "Arial",
+    "size" : 24,
+    "x" : 30,
+    "y" : 150
+  },
+  {
+    "type" : "title",
+    "scene" : "highscores",
+    "text" : "Higscores",
+    "font" : "Arial",
+    "size" : 24,
+    "x" : 30,
+    "y" : 30
+  },
+  {
+    "type" : "press_key",
+    "scene" : "highscores",
+    "text" : "Press \"S\" to continue",
+    "font" : "Arial",
+    "size" : 16,
+    "x" : 30,
+    "y" : 470
   }
 ]

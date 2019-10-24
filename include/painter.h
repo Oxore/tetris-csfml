@@ -32,6 +32,10 @@ size_t  painter_register_field(const struct field *fld);
 void    painter_update_field(size_t id, const struct field *fld);
 size_t  painter_register_text(const struct text *txt);
 void    painter_update_text(size_t id, const struct text *txt);
+size_t  painter_register_input(const struct input *input);
+void    painter_update_input(size_t id, const struct input *input);
+size_t  painter_register_hs_table(const struct hs_table *hs_table);
+void    painter_update_hs_table(size_t id, const struct hs_table *hs_table);
 
 void    painter_draw();
 

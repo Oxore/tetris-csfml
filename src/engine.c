@@ -34,10 +34,12 @@
 #include <SFML/Window/Keyboard.h>
 #include <SFML/Graphics/RenderWindow.h>
 
-#include "common.h"
-#include "idlist.h"
 #include "tet_conf.h"
 #include "vector.h"
+#include "input.h"
+#include "hs_table.h"
+#include "common.h"
+#include "idlist.h"
 #include "text.h"
 #include "field.h"
 #include "painter.h"
@@ -190,6 +192,34 @@ static void show_game_over_press_any_key_text(void *obj)
         text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
+static void show_input_name_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "input_name"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void hide_input_name_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "input_name"))
+        text->attr |= TXT_ATTR_INVISIBLE;
+}
+
+static void show_highscores_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "highscores"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void hide_highscores_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "highscores"))
+        text->attr |= TXT_ATTR_INVISIBLE;
+}
+
 static void update_game_over_text(void *obj)
 {
     struct text *text = obj;
@@ -211,6 +241,20 @@ static void update_game_text(void *obj)
         painter_update_text(text->id, text);
 }
 
+static void update_input_name_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "input_name"))
+        painter_update_text(text->id, text);
+}
+
+static void update_highscores_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "highscores"))
+        painter_update_text(text->id, text);
+}
+
 static void transition_menu(struct game *game)
 {
     game->state = GS_MAIN_MENU;
@@ -229,26 +273,73 @@ static void transition_menu(struct game *game)
     fld->shape[GHOST_SHAPE_INDEX].y = fld->size.y;
     fld->shape[ACTIVE_SHAPE_INDEX].y = fld->size.y;
     field_fill_random(fld);
+    fld->attr &= ~FLD_ATTR_INVISIBLE;
     painter_update_field(fld->id, fld);
 
     LIST_FOREACH(texts, text) {
         hide_game_over_text(text->obj);
         show_menu_text(text->obj);
         hide_game_text(text->obj);
+        hide_highscores_text(text->obj);
         update_game_over_text(text->obj);
         update_menu_text(text->obj);
         update_game_text(text->obj);
+        update_highscores_text(text->obj);
     }
+
+    game->highscores.attr |= HS_TABLE_ATTR_INVISIBLE;
+    painter_update_hs_table(game->highscores.id, &game->highscores);
 }
 
 static void transition_highscores_input(struct game *game)
 {
+    game->nxt->attr |= FLD_ATTR_INVISIBLE;
+    painter_update_field(game->nxt->id, game->nxt);
+    game->fld->attr |= FLD_ATTR_INVISIBLE;
+    painter_update_field(game->fld->id, game->fld);
+
+    LIST_FOREACH(game->texts, text) {
+        hide_game_over_text(text->obj);
+        hide_menu_text(text->obj);
+        hide_game_text(text->obj);
+        show_input_name_text(text->obj);
+        hide_highscores_text(text->obj);
+        update_game_over_text(text->obj);
+        update_menu_text(text->obj);
+        update_game_text(text->obj);
+        update_input_name_text(text->obj);
+        update_highscores_text(text->obj);
+    }
+
     game->state = GS_HIGHSCORES_INPUT;
+    game->input_name.attr &= ~INPUT_ATTR_INVISIBLE;
+    painter_update_input(game->input_name.id, &game->input_name);
+    game->highscores.attr |= HS_TABLE_ATTR_INVISIBLE;
+    painter_update_hs_table(game->highscores.id, &game->highscores);
 }
 
 static void transition_highscores_table(struct game *game)
 {
     game->state = GS_HIGHSCORES_TABLE;
+
+    game->input_name.attr |= INPUT_ATTR_INVISIBLE;
+    painter_update_input(game->input_name.id, &game->input_name);
+
+    hs_table_insert(&game->highscores, game->input_name.text,
+            (size_t)game->scoreCurrent);
+    hs_table_save_to_json_file(&game->highscores, CFG_HIGHSCORES_FNAME);
+
+    input_clear(&game->input_name);
+
+    game->highscores.attr &= ~HS_TABLE_ATTR_INVISIBLE;
+    painter_update_hs_table(game->highscores.id, &game->highscores);
+
+    LIST_FOREACH(game->texts, text) {
+        hide_input_name_text(text->obj);
+        show_highscores_text(text->obj);
+        update_input_name_text(text->obj);
+        update_highscores_text(text->obj);
+    }
 }
 
 static void transition_game_over_wait(struct game *game)
@@ -554,9 +645,13 @@ void transition_init(struct game *game)
         show_menu_text(text->obj);
         hide_game_text(text->obj);
         hide_game_over_text(text->obj);
+        hide_input_name_text(text->obj);
+        hide_highscores_text(text->obj);
         update_menu_text(text->obj);
         update_game_text(text->obj);
         update_game_over_text(text->obj);
+        update_input_name_text(text->obj);
+        update_highscores_text(text->obj);
     }
 }
 
@@ -690,17 +785,16 @@ static int game_loop(struct game *game)
 #define GAME_OVER_WAIT_LOOP_GAME_OVER 1
 static int game_over_wait_loop(struct game *game)
 {
-    int ret = 0;
     if (sfClock_getElapsedTime(game->over_wait_tick).microseconds > GAMEOVERWAIT)
-        ret = GAME_OVER_WAIT_LOOP_GAME_OVER;
-    return ret;
+        return GAME_OVER_WAIT_LOOP_GAME_OVER;
+
+    return 0;
 }
 
 #define GAME_OVER_LOOP_HIGHSCORES_INPUT 1
 static int game_over_loop(struct controls *ctl)
 {
     int anykey = 0;
-    int ret = 0;
 
     for (int keycode = sfKeyUnknown; keycode < sfKeyCount; keycode++)
         if (sfKeyboard_isKeyPressed(keycode))
@@ -709,25 +803,54 @@ static int game_over_loop(struct controls *ctl)
     if (anykey) {
         if (!(ctl->keys & GAMEOVER)) {
             ctl->keys |= GAMEOVER;
-            ret = GAME_OVER_LOOP_HIGHSCORES_INPUT;
+            return GAME_OVER_LOOP_HIGHSCORES_INPUT;
         }
     } else {
         ctl->keys &= ~GAMEOVER;
     }
 
-    return ret;
+    return 0;
 }
 
 #define HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE 1
-static int highscores_input_loop(void)
+static int highscores_input_loop(struct game *game, const struct idlist *events)
 {
-    return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
+#define UTF32_BACKSPACE L'\b'
+#define UTF32_RETURN    L'\r'
+
+    LIST_FOREACH_CONST(events, event) {
+        const sfEvent *e = (sfEvent *)event->obj;
+        if (e->type == sfEvtTextEntered) {
+            int32_t c = e->text.unicode;
+            if (c == UTF32_RETURN) {
+                return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
+            } else {
+                if (c == UTF32_BACKSPACE)
+                    input_rm_last_char(&game->input_name);
+                else
+                    input_append_utf32char(&game->input_name, c);
+
+                painter_update_input(game->input_name.id, &game->input_name);
+            }
+        }
+    }
+
+    return 0;
 }
 
 #define HIGHSCORES_TABLE_LOOP_MENU 1
-static int highscores_table_loop(void)
+static int highscores_table_loop(struct controls *ctl)
 {
-    return HIGHSCORES_TABLE_LOOP_MENU;
+    if (sfKeyboard_isKeyPressed(sfKeyS)) {
+        if (!(ctl->keys & GAMEOVER)) {
+            ctl->keys |= GAMEOVER;
+            return HIGHSCORES_TABLE_LOOP_MENU;
+        }
+    } else {
+        ctl->keys &= ~GAMEOVER;
+    }
+
+    return 0;
 }
 
 #define PAUSE_LOOP_UNPAUSE 1
@@ -741,9 +864,8 @@ static int pause_loop(struct game *game)
     return 0;
 }
 
-void main_loop(struct game *game, struct idlist *events)
+void main_loop(struct game *game, const struct idlist *events)
 {
-    (void) events;
     int ret;
     switch (game->state) {
     case GS_STARTED:
@@ -773,13 +895,13 @@ void main_loop(struct game *game, struct idlist *events)
         break;
 
     case GS_HIGHSCORES_INPUT:
-        ret = highscores_input_loop();
+        ret = highscores_input_loop(game, events);
         if (ret == HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE)
             transition_highscores_table(game);
         break;
 
     case GS_HIGHSCORES_TABLE:
-        ret = highscores_table_loop();
+        ret = highscores_table_loop(&game->controls);
         if (ret == HIGHSCORES_TABLE_LOOP_MENU)
             transition_menu(game);
         break;

@@ -12,14 +12,16 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "tet_conf.h"
+#include "vector.h"
+#include "input.h"
+#include "hs_table.h"
 #include "common.h"
 #include "idlist.h"
-#include "vector.h"
 #include "text.h"
 #include "field.h"
 #include "painter.h"
 #include "engine.h"
-#include "tet_conf.h"
 
 static struct idlist *handleWindowEvents(sfRenderWindow *window)
 {
@@ -77,6 +79,22 @@ int main()
         .fld = &fld,
         .nxt = &nxt,
         .texts = NULL,
+        .input_name = {
+            .id = -1,
+            .attr = INPUT_ATTR_INVISIBLE,
+            .fontsize = 20,
+            .nbytes = 0,
+            .pos = { .x = 30, .y = 200 },
+        },
+        .highscores = {
+            .id = -1,
+            .attr = HS_TABLE_ATTR_INVISIBLE,
+            .nentries = 0,
+            .fontsize = 20,
+            .name_cell_size = { .x = 300, .y = 25 },
+            .score_cell_size = { .x = 100, .y = 25 },
+            .pos = { .x = 30, .y = 80 },
+        },
     };
 
     srand(time(NULL));
@@ -87,6 +105,8 @@ int main()
     game.controls.repPushDown = sfClock_create();
     game.controls.repKeyLeft = sfClock_create();
     game.controls.repKeyRight = sfClock_create();
+
+    hs_table_load_from_json_file(&game.highscores, "dat/highscores.json");
 
     painter_load_font("dat/arial.ttf");
 
@@ -120,6 +140,10 @@ int main()
     field_fill_random(&fld);
     painter_update_field(fld.id, &fld);
     painter_update_field(nxt.id, &nxt);
+
+    game.input_name.id = painter_register_input(&game.input_name);
+    painter_update_input(game.input_name.id, &game.input_name);
+    game.highscores.id = painter_register_hs_table(&game.highscores);
 
     texts = load_texts_from_json("dat/texts.json");
     if (texts == NULL) {

@@ -67,6 +67,15 @@
 #define NXT_POS     (struct vector2i){.x = 250 + 10 + 30, .y = 300}
 #define NXT_SIZE    (struct vector2ui){.x = NXT_SIZE_X, .y = NXT_SIZE_Y}
 
+#define CFG_NAME_MAX 40
+#define CFG_HS_TABLE_SIZE 15
+#define CFG_HIGHSCORES_FNAME "dat/highscores.json"
+#define CFG_TEXTS_FNAME "dat/texts.json"
+
+
+_Static_assert(CFG_HS_TABLE_SIZE > 0, "CFG_HS_TABLE_SIZE must be > 0");
+_Static_assert(CFG_NAME_MAX > 0, "CFG_NAME must be > 0");
+
 /*
  * 22..........
  * 21..........
