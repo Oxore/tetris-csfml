@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "tet_conf.h"
+#include "config.h"
 #include "vector.h"
 #include "text.h"
 #include "field.h"

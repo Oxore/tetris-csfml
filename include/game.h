@@ -48,3 +48,6 @@ struct game {
     struct input input_name;
     struct hs_table highscores;
 };
+
+void transition_init(struct game *game);
+void main_loop(struct game *game, const struct idlist *events);

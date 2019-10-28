@@ -34,16 +34,15 @@
 #include <SFML/Window/Keyboard.h>
 #include <SFML/Graphics/RenderWindow.h>
 
-#include "tet_conf.h"
+#include "config.h"
 #include "vector.h"
 #include "input.h"
 #include "hs_table.h"
-#include "common.h"
+#include "game.h"
 #include "idlist.h"
 #include "text.h"
 #include "field.h"
 #include "painter.h"
-#include "engine.h"
 
 static int level_move_latency[] = {
     L00LATENCY,

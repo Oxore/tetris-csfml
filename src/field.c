@@ -4,15 +4,8 @@
 
 #include "vector.h"
 #include "field.h"
-#include "tet_conf.h"
-
-extern char arrShapeL[4][4];
-extern char arrShapeRL[4][4];
-extern char arrShapeZ[4][4];
-extern char arrShapeS[4][4];
-extern char arrShapeB[4][4];
-extern char arrShapeI[4][4];
-extern char arrShapeT[4][4];
+#include "config.h"
+#include "shape_maps.h"
 
 static void rotate_shape_left(struct shape *shape);
 static void rotate_shape_right(struct shape *shape);

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "tet_conf.h"
+#include "config.h"
 #include "vector.h"
 #include "input.h"
 

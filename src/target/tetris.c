@@ -12,16 +12,15 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "tet_conf.h"
+#include "config.h"
 #include "vector.h"
 #include "input.h"
 #include "hs_table.h"
-#include "common.h"
+#include "game.h"
 #include "idlist.h"
 #include "text.h"
 #include "field.h"
 #include "painter.h"
-#include "engine.h"
 
 static struct idlist *handleWindowEvents(sfRenderWindow *window)
 {

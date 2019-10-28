@@ -6,7 +6,7 @@
 #include "cJSON.h"
 
 #include "vector.h"
-#include "tet_conf.h"
+#include "config.h"
 #include "hs_table.h"
 
 static int store_data_to_file(const char *fname, const char *data,
