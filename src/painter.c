@@ -19,14 +19,14 @@
 #include "idlist.h"
 
 static sfColor shape_color_map[] = {
-    UIBGCOLOR,
-    LCOLOR,
-    RLCOLOR,
-    ZCOLOR,
-    SCOLOR,
-    BCOLOR,
-    ICOLOR,
-    TCOLOR,
+    CFG_UI_BG_COLOR,
+    CFG_SHAPE_L_COLOR,
+    CFG_SHAPE_RL_COLOR,
+    CFG_SHAPE_Z_COLOR,
+    CFG_SHAPE_S_COLOR,
+    CFG_SHAPE_B_COLOR,
+    CFG_SHAPE_I_COLOR,
+    CFG_SHAPE_T_COLOR,
 };
 
 enum t {
@@ -116,14 +116,14 @@ size_t painter_register_field(const struct field *fld)
         for (size_t i = 0; i < f->size.x; i++) {
             f->p[j][i] = sfRectangleShape_create();
             sfVector2f cell_pos;
-            cell_pos.x = fld->pos.x + (i * (CELL_SIZE.x + 2 * OUT_THICK));
-            cell_pos.y = fld->pos.y - (j * (CELL_SIZE.y + 2 * OUT_THICK));
+            cell_pos.x = fld->pos.x + (i * (CFG_CELL_SIZE_X + 2 * CFG_OUT_THICK));
+            cell_pos.y = fld->pos.y - (j * (CFG_CELL_SIZE_Y + 2 * CFG_OUT_THICK));
             sfRectangleShape_setPosition(f->p[j][i], cell_pos);
-            sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UIBGCOLOR);
-            sfRectangleShape_setSize(f->p[j][i], CELL_SIZE);
+            sfRectangleShape_setFillColor(f->p[j][i], (sfColor)CFG_UI_BG_COLOR);
+            sfRectangleShape_setSize(f->p[j][i], CFG_CELL_SIZE);
             sfRectangleShape_setOutlineColor(f->p[j][i],
-                    (sfColor)UIFGACTIVECOLOR);
-            sfRectangleShape_setOutlineThickness(f->p[j][i], OUT_THICK);
+                    (sfColor)CFG_UI_FGACTIVE_COLOR);
+            sfRectangleShape_setOutlineThickness(f->p[j][i], CFG_OUT_THICK);
         }
     }
 
@@ -141,30 +141,33 @@ void painter_update_field(size_t id, const struct field *fld)
     for (size_t j = 0; j < fld->size.y; j++) {
         for (size_t i = 0; i < fld->size.x; i++) {
             sfVector2f cell_pos;
-            cell_pos.x = fld->pos.x + (i * (CELL_SIZE.x + 2 * OUT_THICK));
-            cell_pos.y = fld->pos.y - (j * (CELL_SIZE.y + 2 * OUT_THICK));
+            cell_pos.x
+                = fld->pos.x + (i * (CFG_CELL_SIZE_X + 2 * CFG_OUT_THICK));
+            cell_pos.y
+                = fld->pos.y - (j * (CFG_CELL_SIZE_Y + 2 * CFG_OUT_THICK));
             sfRectangleShape_setPosition(f->p[j][i], cell_pos);
             if (fld->c[j][i].a) {
                 sfRectangleShape_setFillColor(f->p[j][i],
                         shape_color_map[fld->c[j][i].color]);
                 sfRectangleShape_setOutlineColor(f->p[j][i],
-                        (sfColor)UIFGACTIVECOLOR);
+                        (sfColor)CFG_UI_FGACTIVE_COLOR);
             } else if (f->attr & FLD_ATTR_HIDE_EMPTY_CELLS) {
                 sfRectangleShape_setFillColor(f->p[j][i],
-                        (sfColor)UITRANSPARENT);
+                        (sfColor)CFG_UI_TRANSPARENT);
                 sfRectangleShape_setOutlineColor(f->p[j][i],
-                        (sfColor)UITRANSPARENT);
+                        (sfColor)CFG_UI_TRANSPARENT);
             } else {
-                sfRectangleShape_setFillColor(f->p[j][i], (sfColor)UIBGCOLOR);
+                sfRectangleShape_setFillColor(f->p[j][i],
+                        (sfColor)CFG_UI_BG_COLOR);
                 sfRectangleShape_setOutlineColor(f->p[j][i],
-                        (sfColor)UIFGINACTIVECOLOR);
+                        (sfColor)CFG_UI_FGINACTIVE_COLOR);
             }
         }
     }
 
     for (size_t s = 0; s < fld->shape_cnt; ++s) {
         sfColor fill_color = shape_color_map[fld->shape[s].t];
-        sfColor outline_color = (sfColor)UIFGACTIVECOLOR;
+        sfColor outline_color = (sfColor)CFG_UI_FGACTIVE_COLOR;
 
         if (fld->shape[s].attr && SHP_ATTR_GHOST) {
             fill_color.a = 100;
@@ -279,7 +282,7 @@ size_t painter_register_input(const struct input *input)
     return last->id;
 }
 
-static inline void sfText_setUnicodeStringFromUtf8(sfText *sf_text,
+static inline void set_utf8_to_sfText(sfText *sf_text,
         const char *text, size_t size)
 {
     assert(text);
@@ -291,8 +294,8 @@ static inline void sfText_setUnicodeStringFromUtf8(sfText *sf_text,
     sfText_setUnicodeString(sf_text, buf);
 }
 
-static inline void sfText_setUnicodeStringFromSizeT(sfText *sf_text,
-        size_t value)
+static inline void set_uint_to_sfText(sfText *sf_text,
+        unsigned value)
 {
     assert(sf_text);
 
@@ -300,7 +303,7 @@ static inline void sfText_setUnicodeStringFromSizeT(sfText *sf_text,
     sfUint32 buf[128] = {0};
     char buf_utf8[128] = {0};
 
-    snprintf(buf_utf8, sizeof(buf_utf8), "%zd", value);
+    snprintf(buf_utf8, sizeof(buf_utf8), "%d", value);
     buf[sizeof(buf)/sizeof(*buf) - 1] = 0;
 
     utf8to32_strncpy_s((int32_t *)buf, sizeof(buf), buf_utf8, sizeof(buf_utf8));
@@ -320,7 +323,7 @@ static void painter_update_hs_table_drawable(struct hs_table_drawable *hstdrwbl,
         };
         sfText_setPosition(hstdrwbl->lines[i].score, pos);
         sfText_setCharacterSize(hstdrwbl->lines[i].score, hs_table->fontsize);
-        sfText_setUnicodeStringFromSizeT(hstdrwbl->lines[i].score,
+        set_uint_to_sfText(hstdrwbl->lines[i].score,
                 hs_table->entries[i].score);
 
         pos = (sfVector2f){
@@ -329,7 +332,7 @@ static void painter_update_hs_table_drawable(struct hs_table_drawable *hstdrwbl,
         };
         sfText_setPosition(hstdrwbl->lines[i].name, pos);
         sfText_setCharacterSize(hstdrwbl->lines[i].name, hs_table->fontsize);
-        sfText_setUnicodeStringFromUtf8(hstdrwbl->lines[i].name,
+        set_utf8_to_sfText(hstdrwbl->lines[i].name,
                 hs_table->entries[i].name, CFG_NAME_MAX);
     }
 
@@ -450,7 +453,7 @@ static void draw_drawable(void *obj)
 
 void painter_draw()
 {
-    sfRenderWindow_clear(window, (sfColor)UIBGCOLOR);
+    sfRenderWindow_clear(window, (sfColor)CFG_UI_BG_COLOR);
 
     LIST_FOREACH(drawables, drawable) {
         draw_drawable(drawable->obj);

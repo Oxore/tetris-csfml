@@ -45,44 +45,44 @@
 #include "painter.h"
 
 static int level_move_latency[] = {
-    L00LATENCY,
-    L01LATENCY,
-    L02LATENCY,
-    L03LATENCY,
-    L04LATENCY,
-    L05LATENCY,
-    L06LATENCY,
-    L07LATENCY,
-    L08LATENCY,
-    L09LATENCY,
-    L10LATENCY,
-    L11LATENCY,
-    L12LATENCY,
-    L13LATENCY,
-    L14LATENCY,
-    L15LATENCY,
-    L16LATENCY,
-    L17LATENCY,
-    L18LATENCY,
-    L19LATENCY,
-    L20LATENCY,
-    L21LATENCY,
-    L22LATENCY,
-    L23LATENCY,
-    L24LATENCY,
-    L25LATENCY,
-    L26LATENCY,
-    L27LATENCY,
-    L28LATENCY,
-    L29LATENCY
+    CFG_L00_CLOCK_PERIOD,
+    CFG_L01_CLOCK_PERIOD,
+    CFG_L02_CLOCK_PERIOD,
+    CFG_L03_CLOCK_PERIOD,
+    CFG_L04_CLOCK_PERIOD,
+    CFG_L05_CLOCK_PERIOD,
+    CFG_L06_CLOCK_PERIOD,
+    CFG_L07_CLOCK_PERIOD,
+    CFG_L08_CLOCK_PERIOD,
+    CFG_L09_CLOCK_PERIOD,
+    CFG_L10_CLOCK_PERIOD,
+    CFG_L11_CLOCK_PERIOD,
+    CFG_L12_CLOCK_PERIOD,
+    CFG_L13_CLOCK_PERIOD,
+    CFG_L14_CLOCK_PERIOD,
+    CFG_L15_CLOCK_PERIOD,
+    CFG_L16_CLOCK_PERIOD,
+    CFG_L17_CLOCK_PERIOD,
+    CFG_L18_CLOCK_PERIOD,
+    CFG_L19_CLOCK_PERIOD,
+    CFG_L20_CLOCK_PERIOD,
+    CFG_L21_CLOCK_PERIOD,
+    CFG_L22_CLOCK_PERIOD,
+    CFG_L23_CLOCK_PERIOD,
+    CFG_L24_CLOCK_PERIOD,
+    CFG_L25_CLOCK_PERIOD,
+    CFG_L26_CLOCK_PERIOD,
+    CFG_L27_CLOCK_PERIOD,
+    CFG_L28_CLOCK_PERIOD,
+    CFG_L29_CLOCK_PERIOD
 };
 
-static int rmlines_score[] = {
+static unsigned int reward_for_rows[] = {
     0,
-    RM_1LINES_SCORE,
-    RM_2LINES_SCORE,
-    RM_3LINES_SCORE,
-    RM_4LINES_SCORE
+    CFG_REWARD_FOR_1_ROW,
+    CFG_REWARD_FOR_2_ROW,
+    CFG_REWARD_FOR_3_ROW,
+    CFG_REWARD_FOR_4_ROW
 };
 
 static void render_score_value(struct game *game, void *obj)
@@ -92,7 +92,7 @@ static void render_score_value(struct game *game, void *obj)
         if (!text->text)
             text->text = calloc(BUFSIZ, sizeof(char));
         char *a = calloc(BUFSIZ, sizeof(char));
-        sprintf(a, "%d", game->scoreCurrent);
+        sprintf(a, "%d", game->score);
         strncpy(text->text, a, BUFSIZ - 1);
         free(a);
     }
@@ -111,7 +111,7 @@ static void render_level_value(struct game *game, void *obj)
     }
 }
 
-static int get_level_latency(size_t level)
+static int get_level_tick_period(size_t level)
 {
     if (level > 29)
         return level_move_latency[29];
@@ -121,10 +121,10 @@ static int get_level_latency(size_t level)
 
 static void level_up(struct game *game)
 {
-    while (game->lines >= LEVELUP_LINES) {
+    while (game->rows >= CFG_ROWS_FOR_LEVELUP) {
         game->level++;
-        game->lines -= LEVELUP_LINES;
-        game->moveLatency = get_level_latency(game->level);
+        game->rows -= CFG_ROWS_FOR_LEVELUP;
+        game->tick_period = get_level_tick_period(game->level);
     }
 }
 
@@ -257,10 +257,10 @@ static void update_highscores_text(void *obj)
 static void transition_menu(struct game *game)
 {
     game->state = GS_MAIN_MENU;
-    game->scoreCurrent = 0;
+    game->score = 0;
     game->level = 1;
-    game->moveLatency = get_level_latency(game->level);
-    game->lines = 0;
+    game->tick_period = get_level_tick_period(game->level);
+    game->rows = 0;
 
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
@@ -325,7 +325,7 @@ static void transition_highscores_table(struct game *game)
     painter_update_input(game->input_name.id, &game->input_name);
 
     hs_table_insert(&game->highscores, game->input_name.text,
-            (size_t)game->scoreCurrent);
+            (size_t)game->score);
     hs_table_save_to_json_file(&game->highscores, CFG_HIGHSCORES_FNAME);
 
     input_clear(&game->input_name);
@@ -345,7 +345,7 @@ static void transition_game_over_wait(struct game *game)
 {
     game->state = GS_GAME_OVER_WAIT;
 
-    sfClock_restart(game->over_wait_tick);
+    sfClock_restart(game->game_over_wait_clock);
 
     struct idlist *texts = game->texts;
 
@@ -388,9 +388,9 @@ static void transition_put_shape(struct game *game)
     struct field *nxt = game->nxt;
 
     field_put_shape(fld, &fld->shape[ACTIVE_SHAPE_INDEX]);
-    int removedLines = field_rm_lines(fld);
-    game->lines += removedLines;
-    game->scoreCurrent += rmlines_score[removedLines] * game->level;
+    size_t num_rows_removed = field_rm_rows(fld);
+    game->rows += num_rows_removed;
+    game->score += reward_for_rows[num_rows_removed] * game->level;
     fld->shape[ACTIVE_SHAPE_INDEX].t = nxt->shape[0].t;
     field_reset_walking_shape(fld, 1);
     project_ghost_shape(fld, 1, 0);
@@ -405,12 +405,12 @@ static void transition_put_shape(struct game *game)
 static void transition_pause(struct game *game)
 {
     game->state = GS_PAUSED;
-    int elapsed = sfClock_getElapsedTime(game->gameTick).microseconds;
-    if (game->moveLatency - elapsed >= 0)
-        game->moveLatency -= elapsed;
+    int elapsed = sfClock_getElapsedTime(game->game_clock).microseconds;
+    if (game->tick_period - elapsed >= 0)
+        game->tick_period -= elapsed;
     else
-        game->moveLatency = get_level_latency(game->level);
-    sfClock_restart(game->gameTick);
+        game->tick_period = get_level_tick_period(game->level);
+    sfClock_restart(game->game_clock);
 
     struct idlist *texts = game->texts;
 
@@ -423,7 +423,7 @@ static void transition_pause(struct game *game)
 static void transition_unpause(struct game *game)
 {
     game->state = GS_STARTED;
-    sfClock_restart(game->gameTick);
+    sfClock_restart(game->game_clock);
 
     struct idlist *texts = game->texts;
 
@@ -437,20 +437,21 @@ static void transition_unpause(struct game *game)
 #define GAME_TICK_GAME_OVER 2
 static int game_tick(struct game *game)
 {
-    sfClock_restart(game->gameTick);
+    sfClock_restart(game->game_clock);
 
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
-    game->moveLatency = get_level_latency(game->level);
+    game->tick_period = get_level_tick_period(game->level);
 
     if (field_move_shape_down(fld, 1)) {
         project_ghost_shape(fld, 1, 0);
-        sfClock_restart(game->putTick);
+        sfClock_restart(game->put_clock);
     }
 
-    if (sfClock_getElapsedTime(game->putTick).microseconds >= PUT_LATENCY) {
-        sfClock_restart(game->putTick);
+    if (sfClock_getElapsedTime(game->put_clock).microseconds
+     >= CFG_PUT_CLOCK_PERIOD) {
+        sfClock_restart(game->put_clock);
         if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
             return GAME_TICK_GAME_OVER;
         else
@@ -476,7 +477,7 @@ static void signal_up(struct game *game)
 
     field_rotate_shape_clockwise(fld, 1);
     project_ghost_shape(fld, 1, 0);
-    sfClock_restart(game->putTick);
+    sfClock_restart(game->put_clock);
 }
 
 static void signal_down(struct game *game)
@@ -485,8 +486,8 @@ static void signal_down(struct game *game)
 
     if (field_move_shape_down(fld, 1)) {
         project_ghost_shape(fld, 1, 0);
-        sfClock_restart(game->gameTick);
-        game->scoreCurrent++;
+        sfClock_restart(game->game_clock);
+        game->score++;
     }
 }
 
@@ -496,7 +497,7 @@ static void signal_left(struct game *game)
 
     if (field_move_shape_left(fld, 1)) {
         project_ghost_shape(fld, 1, 0);
-        sfClock_restart(game->putTick);
+        sfClock_restart(game->put_clock);
     }
 }
 
@@ -506,7 +507,7 @@ static void signal_right(struct game *game)
 
     if (field_move_shape_right(fld, 1)) {
         project_ghost_shape(fld, 1, 0);
-        sfClock_restart(game->putTick);
+        sfClock_restart(game->put_clock);
     }
 }
 
@@ -549,10 +550,10 @@ static int game_keys(struct controls *ctl)
         if (!(ctl->keys & DOWN)) {
             ctl->keys |= DOWN;
             ret |= DOWN;
-            sfClock_restart(ctl->repPushDown);
+            sfClock_restart(ctl->down_repeat_clock);
         } else {
-            if (sfClock_getElapsedTime(ctl->repPushDown).microseconds
-             >= moveRepeatLatency2)
+            if (sfClock_getElapsedTime(ctl->down_repeat_clock).microseconds
+             >= CFG_REPEAT_LATENCY)
                 ctl->keys &= ~DOWN;
         }
     } else {
@@ -565,16 +566,16 @@ static int game_keys(struct controls *ctl)
         if (!(ctl->keys & LEFT)) {
             ctl->keys |= LEFT;
             ret |= LEFT;
-            sfClock_restart(ctl->repKeyLeft);
+            sfClock_restart(ctl->left_repeat_clock);
         } else if (!(ctl->keys & LEFTHOLD)) {
-            if (sfClock_getElapsedTime(ctl->repKeyLeft).microseconds
-             >= moveRepeatLatency1) {
+            if (sfClock_getElapsedTime(ctl->left_repeat_clock).microseconds
+             >= CFG_PREREPEAT_LATENCY) {
                 ctl->keys |= LEFTHOLD;
                 ctl->keys &= ~LEFT;
             }
         } else {
-            if (sfClock_getElapsedTime(ctl->repKeyLeft).microseconds
-             >= moveRepeatLatency2)
+            if (sfClock_getElapsedTime(ctl->left_repeat_clock).microseconds
+             >= CFG_REPEAT_LATENCY)
                 ctl->keys &= ~LEFT;
         }
     } else {
@@ -588,16 +589,16 @@ static int game_keys(struct controls *ctl)
         if (!(ctl->keys & RIGHT)) {
             ctl->keys |= RIGHT;
             ret |= RIGHT;
-            sfClock_restart(ctl->repKeyRight);
+            sfClock_restart(ctl->right_repeat_clock);
         } else if (!(ctl->keys & RIGHTHOLD)) {
-            if (sfClock_getElapsedTime(ctl->repKeyRight).microseconds
-             >= moveRepeatLatency1) {
+            if (sfClock_getElapsedTime(ctl->right_repeat_clock).microseconds
+             >= CFG_PREREPEAT_LATENCY) {
                 ctl->keys |= RIGHTHOLD;
                 ctl->keys &= ~RIGHT;
             }
         } else {
-            if (sfClock_getElapsedTime(ctl->repKeyRight).microseconds
-             >= moveRepeatLatency2)
+            if (sfClock_getElapsedTime(ctl->right_repeat_clock).microseconds
+             >= CFG_REPEAT_LATENCY)
                 ctl->keys &= ~RIGHT;
         }
     } else {
@@ -631,7 +632,7 @@ static void menu_tick(struct game *game)
 {
     struct field *fld = game->fld;
 
-    sfClock_restart(game->mTick);
+    sfClock_restart(game->menu_clock);
     field_fill_random(fld);
     painter_update_field(fld->id, fld);
 }
@@ -681,7 +682,7 @@ static void transition_game_start(struct game *game)
 
     painter_update_field(fld->id, fld);
     painter_update_field(nxt->id, nxt);
-    sfClock_restart(game->gameTick);
+    sfClock_restart(game->game_clock);
 }
 
 #define MENU_LOOP_GAME_START 1
@@ -689,7 +690,8 @@ static int menu_loop(struct game *game)
 {
     int ret = 0;
 
-    if (sfClock_getElapsedTime(game->mTick).microseconds >= basicLatency)
+    if (sfClock_getElapsedTime(game->menu_clock).microseconds
+     >= CFG_MENU_CLOCK_PERIOD)
         menu_tick(game);
 
     if (sfKeyboard_isKeyPressed(sfKeyS)) {
@@ -718,7 +720,7 @@ static int game_loop(struct game *game)
 
     if (ret_keys & PAUSE) {
         ret = GAME_LOOP_PAUSE;
-        sfClock_restart(game->putTick);
+        sfClock_restart(game->put_clock);
     }
 
     if (ret_keys & UP) {
@@ -733,10 +735,10 @@ static int game_loop(struct game *game)
         struct field *fld = game->fld;
 
         while (field_move_shape_down(fld, 1))
-            game->scoreCurrent++;
+            game->score++;
 
-        sfClock_restart(game->gameTick);
-        sfClock_restart(game->putTick);
+        sfClock_restart(game->game_clock);
+        sfClock_restart(game->put_clock);
 
         if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
             return GAME_LOOP_GAME_OVER;
@@ -752,7 +754,8 @@ static int game_loop(struct game *game)
         signal_right(game);
     }
 
-    if (sfClock_getElapsedTime(game->gameTick).microseconds >= game->moveLatency) {
+    if (sfClock_getElapsedTime(game->game_clock).microseconds
+     >= game->tick_period) {
         switch (game_tick(game)) {
         case GAME_TICK_PUT_SHAPE:
             transition_put_shape(game);
@@ -784,7 +787,8 @@ static int game_loop(struct game *game)
 #define GAME_OVER_WAIT_LOOP_GAME_OVER 1
 static int game_over_wait_loop(struct game *game)
 {
-    if (sfClock_getElapsedTime(game->over_wait_tick).microseconds > GAMEOVERWAIT)
+    if (sfClock_getElapsedTime(game->game_over_wait_clock).microseconds
+     > CFG_GAMEOVER_SHOWTIME_PERIOD)
         return GAME_OVER_WAIT_LOOP_GAME_OVER;
 
     return 0;
@@ -857,7 +861,7 @@ static int pause_loop(struct game *game)
 {
     int ret = pause_keys(&game->controls);
     if (ret & PAUSE) {
-        sfClock_restart(game->putTick);
+        sfClock_restart(game->put_clock);
         return PAUSE_LOOP_UNPAUSE;
     }
     return 0;

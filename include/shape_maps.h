@@ -1,7 +1,7 @@
-extern char arrShapeL[4][4];
-extern char arrShapeRL[4][4];
-extern char arrShapeZ[4][4];
-extern char arrShapeS[4][4];
-extern char arrShapeB[4][4];
-extern char arrShapeI[4][4];
-extern char arrShapeT[4][4];
+extern char shape_L[4][4];
+extern char shape_RL[4][4];
+extern char shape_Z[4][4];
+extern char shape_S[4][4];
+extern char shape_B[4][4];
+extern char shape_I[4][4];
+extern char shape_T[4][4];

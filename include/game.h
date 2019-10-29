@@ -24,21 +24,22 @@ enum game_state {
 
 struct controls {
     uint32_t keys;         // bitmap of keys pressed
-    sfClock *repPushDown;  // repeat latency when hold Down arrow
-    sfClock *repKeyLeft;   // repeat latency when hold Left arrow
-    sfClock *repKeyRight;  // repeat latency when hold Right arrow
+    sfClock *down_repeat_clock;  // repeat latency when hold Down arrow
+    sfClock *left_repeat_clock;   // repeat latency when hold Left arrow
+    sfClock *right_repeat_clock;  // repeat latency when hold Right arrow
 };
 
 struct game {
     enum game_state state;
     size_t      level;
-    int         scoreCurrent;
-    int         moveLatency;
-    int         lines;
-    sfClock    *gameTick;
-    sfClock    *over_wait_tick;
-    sfClock    *putTick;
-    sfClock    *mTick;
+    unsigned    score;
+    int         tick_period;
+    size_t      rows;
+    sfClock    *game_clock;
+    sfClock    *game_over_wait_clock;
+    sfClock    *put_clock;
+    sfClock    *menu_clock;
+
     struct controls controls;
 
     struct field *fld;

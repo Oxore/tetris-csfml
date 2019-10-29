@@ -22,7 +22,7 @@
 #include "field.h"
 #include "painter.h"
 
-static struct idlist *handleWindowEvents(sfRenderWindow *window)
+static struct idlist *handle_window_events(sfRenderWindow *window)
 {
     sfEvent event;
     struct idlist *events = NULL;
@@ -61,19 +61,19 @@ int main()
     struct field fld, nxt;
     struct game game = {
         .state = GS_MAIN_MENU,
-        .scoreCurrent = 0,
+        .score = 0,
         .level = 1,
-        .moveLatency = L00LATENCY,
-        .lines = 0,
-        .gameTick = NULL,
-        .over_wait_tick = NULL,
-        .putTick = NULL,
-        .mTick = NULL,
+        .tick_period = CFG_L00_CLOCK_PERIOD,
+        .rows = 0,
+        .game_clock = NULL,
+        .game_over_wait_clock = NULL,
+        .put_clock = NULL,
+        .menu_clock = NULL,
         .controls = {
             .keys = 0,
-            .repPushDown = NULL,
-            .repKeyLeft = NULL,
-            .repKeyRight = NULL,
+            .down_repeat_clock = NULL,
+            .left_repeat_clock = NULL,
+            .right_repeat_clock = NULL,
         },
         .fld = &fld,
         .nxt = &nxt,
@@ -97,36 +97,36 @@ int main()
     };
 
     srand(time(NULL));
-    game.gameTick = sfClock_create();
-    game.over_wait_tick = sfClock_create();
-    game.putTick = sfClock_create();
-    game.mTick = sfClock_create();
-    game.controls.repPushDown = sfClock_create();
-    game.controls.repKeyLeft = sfClock_create();
-    game.controls.repKeyRight = sfClock_create();
+    game.game_clock = sfClock_create();
+    game.game_over_wait_clock = sfClock_create();
+    game.put_clock = sfClock_create();
+    game.menu_clock = sfClock_create();
+    game.controls.down_repeat_clock = sfClock_create();
+    game.controls.left_repeat_clock = sfClock_create();
+    game.controls.right_repeat_clock = sfClock_create();
 
     hs_table_load_from_json_file(&game.highscores, "dat/highscores.json");
 
     painter_load_font("dat/arial.ttf");
 
     sfVideoMode mode = (sfVideoMode){450, 570, 32};
-    window = sfRenderWindow_create(mode, windowName_conf, sfResize | sfClose,
-                                                                        NULL);
+    window = sfRenderWindow_create(mode, CFG_WIN_NAME, sfResize | sfClose,
+            NULL);
     if (!window)
         exit(EXIT_FAILURE);
     sfRenderWindow_setFramerateLimit(window, 60);
     painter_set_window(window);
 
-    fld.pos = FLD_POS;
-    fld.size = (struct vector2ui){.x = FLD_SIZE_X, .y = FLD_SIZE_Y};
-    fld.bound = (struct vector2ui){.x = FLD_BOUND_X, .y = FLD_BOUND_Y};
+    fld.pos = CFG_FLD_POS;
+    fld.size = (struct vector2ui){.x = CFG_FLD_SIZE_X, .y = CFG_FLD_SIZE_Y};
+    fld.bound = (struct vector2ui){.x = CFG_FLD_BOUND_X, .y = CFG_FLD_BOUND_Y};
     fld.shape_cnt = 2;
     field_init(&fld);
     fld.shape[0].attr |= SHP_ATTR_GHOST;
 
-    nxt.pos = NXT_POS;
-    nxt.size = NXT_SIZE;
-    nxt.bound = NXT_SIZE;
+    nxt.pos = CFG_NXT_POS;
+    nxt.size = CFG_NXT_SIZE;
+    nxt.bound = CFG_NXT_SIZE;
     nxt.shape_cnt = 3;
     nxt.attr |= FLD_ATTR_HIDE_EMPTY_CELLS | FLD_ATTR_INVISIBLE;
     field_init(&nxt);
@@ -157,7 +157,7 @@ int main()
 
     transition_init(&game);
     while (sfRenderWindow_isOpen(window)) {
-        struct idlist *events = handleWindowEvents(window);
+        struct idlist *events = handle_window_events(window);
         main_loop(&game, events);
         LIST_FOREACH(events, event)
             free(event->obj);
@@ -181,13 +181,13 @@ cleanup_load_texts:
     }
     painter_destroy_font();
 
-    sfClock_destroy(game.gameTick);
-    sfClock_destroy(game.over_wait_tick);
-    sfClock_destroy(game.putTick);
-    sfClock_destroy(game.mTick);
-    sfClock_destroy(game.controls.repPushDown);
-    sfClock_destroy(game.controls.repKeyLeft);
-    sfClock_destroy(game.controls.repKeyRight);
+    sfClock_destroy(game.game_clock);
+    sfClock_destroy(game.game_over_wait_clock);
+    sfClock_destroy(game.put_clock);
+    sfClock_destroy(game.menu_clock);
+    sfClock_destroy(game.controls.down_repeat_clock);
+    sfClock_destroy(game.controls.left_repeat_clock);
+    sfClock_destroy(game.controls.right_repeat_clock);
 
     return EXIT_SUCCESS;
 }

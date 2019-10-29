@@ -58,7 +58,7 @@ int     field_move_shape_left(struct field *fld, size_t index);
 int     field_move_shape_right(struct field *fld, size_t index);
 void    field_put_shape(struct field *fld, struct shape *shape);
 void    field_reset_walking_shape(struct field *fld, size_t index);
-int     field_rm_lines(struct field *fld);
+int     field_rm_rows(struct field *fld);
 int     field_shape_collision(struct field *fld, struct shape *shape);
 int     field_shape_out_of_bounds(struct field *fld, struct shape *shape);
 

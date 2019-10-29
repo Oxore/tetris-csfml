@@ -1,76 +1,120 @@
-#define windowName_conf   "Tetris CSFML" // Window name
-#define OUT_THICK         1
-#define UITRANSPARENT     {0,   0,   0,   0  } // Field background
-#define UIBGCOLOR         {26,  26,  26,  255} // Field background
-#define UIFGINACTIVECOLOR {55,  59,  65,  255} // Field inactive cell outline
-#define UIFGACTIVECOLOR   {40,  42,  46,  255} // Field active cell outline
-#define LCOLOR            {222, 147, 95,  255} // Orange color of L shape
-#define RLCOLOR           {95,  129, 157, 255}
-#define ZCOLOR            {165, 66,  66,  255}
-#define SCOLOR            {140, 148, 64,  255}
-#define BCOLOR            {197, 200, 198, 255}
-#define ICOLOR            {94,  141, 135, 255}
-#define TCOLOR            {133, 103, 143, 255}
+#define CFG_WIN_NAME            "Tetris CSFML" // Window name
 
-#define GAMEOVERWAIT        700000 // 0.7 second
-#define moveRepeatLatency1 150000 // microseconds, only for left-right arrows,
-                                  // first repeat move when long push
-#define moveRepeatLatency2  30000 // microseconds, for Left, Right and Down
-                                  // arrows, the rest repeat move when long push
-#define basicLatency      500000
-#define L00LATENCY        800000
-#define L01LATENCY        716667
-#define L02LATENCY        633334
-#define L03LATENCY        550000
-#define L04LATENCY        466667
-#define L05LATENCY        383334
-#define L06LATENCY        300000
-#define L07LATENCY        216667
-#define L08LATENCY        133334
-#define L09LATENCY        100000
-#define L10LATENCY         83334
-#define L11LATENCY    L10LATENCY
-#define L12LATENCY    L10LATENCY
-#define L13LATENCY         66667
-#define L14LATENCY    L13LATENCY
-#define L15LATENCY    L13LATENCY
-#define L16LATENCY         50000
-#define L17LATENCY    L16LATENCY
-#define L18LATENCY    L16LATENCY
-#define L19LATENCY         33334
-#define L20LATENCY    L19LATENCY
-#define L21LATENCY    L19LATENCY
-#define L22LATENCY    L19LATENCY
-#define L23LATENCY    L19LATENCY
-#define L24LATENCY    L19LATENCY
-#define L25LATENCY    L19LATENCY
-#define L26LATENCY    L19LATENCY
-#define L27LATENCY    L19LATENCY
-#define L28LATENCY    L19LATENCY
-#define L29LATENCY         16667
-#define PUT_LATENCY       300000
-#define RM_1LINES_SCORE 40
-#define RM_2LINES_SCORE 100
-#define RM_3LINES_SCORE 300
-#define RM_4LINES_SCORE 1200
-#define LEVELUP_LINES   10
+// Ouline thickness of cells
+#define CFG_OUT_THICK           1
+// Field transparent background color
+#define CFG_UI_TRANSPARENT      {0,   0,   0,   0  }
+// Field background color
+#define CFG_UI_BG_COLOR         {26,  26,  26,  255}
+// Field inactive cell outline color
+#define CFG_UI_FGINACTIVE_COLOR {55,  59,  65,  255}
+// Field active cell outline color
+#define CFG_UI_FGACTIVE_COLOR   {40,  42,  46,  255}
 
-#define FLD_SIZE_Y  22
-#define FLD_SIZE_X  10
-#define FLD_BOUND_Y FLD_SIZE_Y + 4
-#define FLD_BOUND_X FLD_SIZE_X
-#define FLD_POS     (struct vector2i){.x = 10, .y = 10+550-24}
-#define CELL_SIZE   (sfVector2f){.x = 23, .y = 23}
+// Colors for shapes
+#define CFG_SHAPE_L_COLOR       {222, 147, 95,  255}
+#define CFG_SHAPE_RL_COLOR      {95,  129, 157, 255}
+#define CFG_SHAPE_Z_COLOR       {165, 66,  66,  255}
+#define CFG_SHAPE_S_COLOR       {140, 148, 64,  255}
+#define CFG_SHAPE_B_COLOR       {197, 200, 198, 255}
+#define CFG_SHAPE_I_COLOR       {94,  141, 135, 255}
+#define CFG_SHAPE_T_COLOR       {133, 103, 143, 255}
 
-#define NXT_SIZE_Y  8
-#define NXT_SIZE_X  4
-#define NXT_POS     (struct vector2i){.x = 250 + 10 + 30, .y = 300}
-#define NXT_SIZE    (struct vector2ui){.x = NXT_SIZE_X, .y = NXT_SIZE_Y}
+// All latencies and clock periods are set in microseconds
 
-#define CFG_NAME_MAX 40
-#define CFG_HS_TABLE_SIZE 15
-#define CFG_HIGHSCORES_FNAME "dat/highscores.json"
-#define CFG_TEXTS_FNAME "dat/texts.json"
+// Time period used to unconditionally show you the "Game over" text
+#define CFG_GAMEOVER_SHOWTIME_PERIOD    700000
+// Latency between pushing left/right key and starting fast repeat
+#define CFG_PREREPEAT_LATENCY           150000
+// Latency for repeating action of left/right/down key
+#define CFG_REPEAT_LATENCY              30000
+
+// The clock period for menu animation
+#define CFG_MENU_CLOCK_PERIOD    500000
+// The minimum time between the shape has reached the floor and has merged, when
+// player still can rotate and move it as he/she wish
+#define CFG_PUT_CLOCK_PERIOD     300000
+
+// The time used by shape for stepping downwards.
+#define CFG_L00_CLOCK_PERIOD     800000
+#define CFG_L01_CLOCK_PERIOD     716667
+#define CFG_L02_CLOCK_PERIOD     633334
+#define CFG_L03_CLOCK_PERIOD     550000
+#define CFG_L04_CLOCK_PERIOD     466667
+#define CFG_L05_CLOCK_PERIOD     383334
+#define CFG_L06_CLOCK_PERIOD     300000
+#define CFG_L07_CLOCK_PERIOD     216667
+#define CFG_L08_CLOCK_PERIOD     133334
+#define CFG_L09_CLOCK_PERIOD     100000
+#define CFG_L10_CLOCK_PERIOD     83334
+#define CFG_L11_CLOCK_PERIOD     CFG_L10_CLOCK_PERIOD
+#define CFG_L12_CLOCK_PERIOD     CFG_L10_CLOCK_PERIOD
+#define CFG_L13_CLOCK_PERIOD     66667
+#define CFG_L14_CLOCK_PERIOD     CFG_L13_CLOCK_PERIOD
+#define CFG_L15_CLOCK_PERIOD     CFG_L13_CLOCK_PERIOD
+#define CFG_L16_CLOCK_PERIOD     50000
+#define CFG_L17_CLOCK_PERIOD     CFG_L16_CLOCK_PERIOD
+#define CFG_L18_CLOCK_PERIOD     CFG_L16_CLOCK_PERIOD
+#define CFG_L19_CLOCK_PERIOD     33334
+#define CFG_L20_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L21_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L22_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L23_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L24_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L25_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L26_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L27_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L28_CLOCK_PERIOD     CFG_L19_CLOCK_PERIOD
+#define CFG_L29_CLOCK_PERIOD     16667
+
+// Reward for 1, 2, 3 or 4 rows removing simultaneously
+#define CFG_REWARD_FOR_1_ROW     40
+#define CFG_REWARD_FOR_2_ROW     100
+#define CFG_REWARD_FOR_3_ROW     300
+#define CFG_REWARD_FOR_4_ROW     1200
+// Number of rows required for remove to level up
+#define CFG_ROWS_FOR_LEVELUP    10
+
+// The main field size, in cells
+#define CFG_FLD_SIZE_Y  22
+#define CFG_FLD_SIZE_X  10
+#define CFG_FLD_BOUND_Y (CFG_FLD_SIZE_Y + 4)
+#define CFG_FLD_BOUND_X CFG_FLD_SIZE_X
+// The main field position, in pixels
+#define CFG_FLD_POS_X   10
+#define CFG_FLD_POS_Y   (10 + 550 - 24)
+#define CFG_FLD_POS     (struct vector2i){\
+                            .x = CFG_FLD_POS_X,\
+                            .y = CFG_FLD_POS_Y,}
+
+// Any field cell dimensions, in pixels
+#define CFG_CELL_SIZE_X 23
+#define CFG_CELL_SIZE_Y 23
+#define CFG_CELL_SIZE   (sfVector2f){\
+                            .x = CFG_CELL_SIZE_X,\
+                            .y = CFG_CELL_SIZE_Y,}
+
+// "Next shape" field position, in pixels
+#define CFG_NXT_POS_X   (250 + 10 + 30)
+#define CFG_NXT_POS_Y   300
+#define CFG_NXT_POS     (struct vector2i){\
+                            .x = CFG_NXT_POS_X,\
+                            .y = CFG_NXT_POS_Y,}
+// "Next shape" field size, in cells
+#define CFG_NXT_SIZE_Y  8
+#define CFG_NXT_SIZE_X  4
+#define CFG_NXT_SIZE    (struct vector2ui){\
+                            .x = CFG_NXT_SIZE_X,\
+                            .y = CFG_NXT_SIZE_Y,}
+
+// Maximum bytes for player name
+#define CFG_NAME_MAX            40
+// Number of entries in highscores table
+#define CFG_HS_TABLE_SIZE       15
+// Name of file containing highscores data
+#define CFG_HIGHSCORES_FNAME    "dat/highscores.json"
+// Name of file containing game texts
+#define CFG_TEXTS_FNAME         "dat/texts.json"
 
 
 _Static_assert(CFG_HS_TABLE_SIZE > 0, "CFG_HS_TABLE_SIZE must be > 0");

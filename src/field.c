@@ -70,25 +70,25 @@ void shape_load(struct shape *shape)
 {
     switch (shape->t) { // Copy cell active/inactive state
         case 1 :
-            memcpy(&shape->c[0][0], &arrShapeL[0][0], sizeof(char)*4*4);
+            memcpy(&shape->c[0][0], &shape_L[0][0], sizeof(char)*4*4);
             break;
         case 2 :
-            memcpy(&shape->c[0][0], &arrShapeRL[0][0], sizeof(char)*4*4);
+            memcpy(&shape->c[0][0], &shape_RL[0][0], sizeof(char)*4*4);
             break;
         case 3 :
-            memcpy(&shape->c[0][0], &arrShapeZ[0][0], sizeof(char)*4*4);
+            memcpy(&shape->c[0][0], &shape_Z[0][0], sizeof(char)*4*4);
             break;
         case 4 :
-            memcpy(&shape->c[0][0], &arrShapeS[0][0], sizeof(char)*4*4);
+            memcpy(&shape->c[0][0], &shape_S[0][0], sizeof(char)*4*4);
             break;
         case 5 :
-            memcpy(&shape->c[0][0], &arrShapeB[0][0], sizeof(char)*4*4);
+            memcpy(&shape->c[0][0], &shape_B[0][0], sizeof(char)*4*4);
             break;
         case 6 :
-            memcpy(&shape->c[0][0], &arrShapeI[0][0], sizeof(char)*4*4);
+            memcpy(&shape->c[0][0], &shape_I[0][0], sizeof(char)*4*4);
             break;
         case 7 :
-            memcpy(&shape->c[0][0], &arrShapeT[0][0], sizeof(char)*4*4);
+            memcpy(&shape->c[0][0], &shape_T[0][0], sizeof(char)*4*4);
             break;
     }
 }
@@ -253,16 +253,16 @@ int field_move_shape_right(struct field *fld, size_t index)
     return -1;
 }
 
-int field_rm_lines(struct field *fld)
+int field_rm_rows(struct field *fld)
 {
-    size_t lines = 0;
+    size_t rows = 0;
     for (size_t j = 0; j < fld->bound.y; j++) {
         size_t cells = 0;
         for (size_t i = 0; i < fld->bound.x; i++)
             if (fld->c[j][i].a)
                 ++cells;
         if (cells == fld->bound.x) {
-            ++lines;
+            ++rows;
             for (size_t n = j; n < fld->bound.y - 1; n++)
                 for (size_t m = 0; m < fld->bound.x; m++) {
                     fld->c[n][m].a = fld->c[n + 1][m].a;
@@ -271,5 +271,5 @@ int field_rm_lines(struct field *fld)
             --j;
         }
     }
-    return lines;
+    return rows;
 }
