@@ -65,7 +65,7 @@ Windows compilation flow currently is unsupported, but sometimes I put Windows b
 - [x] Hard drop
 - [x] Phantom shape
 - [x] Game Over screen
-- Table of records
+- [x] Table of records
 - Settings menu with external `config.yml` file which allows
   - Change key bindings
   - Change colorscheme and define new
