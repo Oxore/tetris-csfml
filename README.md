@@ -12,7 +12,6 @@ __Dependencies__
 
 - `SFML` - Graphics and controls
 - `CSFML` - C SFML bindings
-- `libyaml` - YAML parser
 - [`munit`](https://github.com/nemequ/munit) - Testing framework (submodule)
 - [`libf8`](https://github.com/Oxore/libf8) - Unicode helper functions (submodule)
 
