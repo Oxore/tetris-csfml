@@ -216,7 +216,8 @@ static void painter_update_text_drawable(struct text_drawable *t,
     sfText_setCharacterSize(t->text, txt->size);
     sfVector2f pos = (sfVector2f){.x = txt->pos.x, .y = txt->pos.y};
     sfText_setPosition(t->text, pos);
-    if (t->text) {
+
+    if (t->text && txt->text) {
         sfUint32 buf[BUFSIZ];
         buf[sizeof(buf)/sizeof(*buf) - 1] = 0;
         utf8to32_strcpy_s((int32_t *)buf, sizeof(buf), txt->text);
@@ -244,9 +245,13 @@ size_t painter_register_text(const struct text *txt)
 
 void painter_update_text(size_t id, const struct text *txt)
 {
+    assert(txt);
+    assert(txt->text);
+
     struct idlist *node = list_get(drawables, id);
-    if (node)
+    if (node && txt)
         painter_update_text_drawable(node->obj, txt);
+
 }
 
 static void painter_update_input_drawable(struct input_drawable *idrwbl,

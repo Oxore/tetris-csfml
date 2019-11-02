@@ -1,7 +1,7 @@
 /*
  * tetris.c
  *
- * The main file. Here all the resources are initialized, run and destroyed.
+ * The main file. Here all the resources are initialized, ran and destroyed.
  *
  * */
 

@@ -1,8 +1,8 @@
 /*
- * engine.c
+ * game.c
  *
- * Engine module - business logic. A couple of functions are exposed to use in
- * the main tetris module (tetris.c), see engine.h.
+ * Game module - business logic. A couple of functions are exposed to use in
+ * the main tetris module (tetris.c), see game.h.
  *
  * The game has simple state machine:
  * legend: [transition]--> STATE -->[transition]--> STATE
@@ -14,9 +14,13 @@
  *             V    |                  V  V                      |
  * +-[menu]-> MENU ----[game_start]--> GAME -->[game_over_wait]----+
  * |                |                  |  |                      | |
- * |                +----[put_shape]---+  +-->[pause]--> PAUSE --+ |
+ * |                +----[put_shape]---+  +---[pause]--> PAUSE --+ |
  * |                                                               |
- * +----- GAME_OVER <-----[game_over]<----- GAME_OVER_WAIT <-------+
+ * |    +-- GAME_OVER <---[game_over]------ GAME_OVER_WAIT <-------+
+ * |    |
+ * |    +---[input_name]--> INPUT_NAME --------+
+ * |                                           |
+ * +-- HIGHSCORES_TABLE <--[highscores_table]--+
  *
  * Transitions between states are implemented in a distinct functions. Each
  * transition function name starts with "transition_". State functions has names
@@ -88,26 +92,20 @@ static unsigned int reward_for_rows[] = {
 static void render_score_value(struct game *game, void *obj)
 {
     struct text *text = obj;
-    if (!strcmp(text->type, "score.value")) {
+    if (!strcmp(text->type, "score_value")) {
         if (!text->text)
             text->text = calloc(BUFSIZ, sizeof(char));
-        char *a = calloc(BUFSIZ, sizeof(char));
-        sprintf(a, "%d", game->score);
-        strncpy(text->text, a, BUFSIZ - 1);
-        free(a);
+        snprintf(text->text, BUFSIZ - 1, "%d", game->score);
     }
 }
 
 static void render_level_value(struct game *game, void *obj)
 {
     struct text *text = obj;
-    if (!strcmp(text->type, "level.value")) {
+    if (!strcmp(text->type, "level_value")) {
         if (!text->text)
             text->text = calloc(BUFSIZ, sizeof(char));
-        char *a = calloc(BUFSIZ, sizeof(char));
-        sprintf(a, "%ld", game->level);
-        strncpy(text->text, a, BUFSIZ - 1);
-        free(a);
+        snprintf(text->text, BUFSIZ - 1, "%ld", game->level);
     }
 }
 
@@ -128,39 +126,53 @@ static void level_up(struct game *game)
     }
 }
 
-static void hide_menu_text(void *obj)
+static void show_menu_title_text(void *obj)
 {
     struct text *text = obj;
-    if (!strcmp(text->scene, "menu"))
-        text->attr |= TXT_ATTR_INVISIBLE;
-}
-
-static void show_menu_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "menu"))
+    if (!strcmp(text->scene, "menu") && !strcmp(text->type, "title"))
         text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
-static void hide_game_text(void *obj)
+static void show_menu_press_key_text(void *obj)
 {
     struct text *text = obj;
-    if (!strcmp(text->scene, "game"))
-        text->attr |= TXT_ATTR_INVISIBLE;
-}
-
-static void show_game_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "game"))
+    if (!strcmp(text->scene, "menu") && !strcmp(text->type, "press_key"))
         text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
-static void hide_pause_text(void *obj)
+static void show_game_score_text(void *obj)
 {
     struct text *text = obj;
-    if (!strcmp(text->scene, "game") && !strcmp(text->type, "pause"))
-        text->attr |= TXT_ATTR_INVISIBLE;
+    if (!strcmp(text->scene, "game") && !strcmp(text->type, "score"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void show_game_score_value_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game") && !strcmp(text->type, "score_value"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void show_game_level_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game") && !strcmp(text->type, "level"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void show_game_level_value_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game") && !strcmp(text->type, "level_value"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
+}
+
+static void show_game_next_shape_text(void *obj)
+{
+    struct text *text = obj;
+    if (!strcmp(text->scene, "game") && !strcmp(text->type, "next_shape"))
+        text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
 static void show_pause_text(void *obj)
@@ -168,13 +180,6 @@ static void show_pause_text(void *obj)
     struct text *text = obj;
     if (!strcmp(text->scene, "game") && !strcmp(text->type, "pause"))
         text->attr &= ~TXT_ATTR_INVISIBLE;
-}
-
-static void hide_game_over_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "game_over"))
-        text->attr |= TXT_ATTR_INVISIBLE;
 }
 
 static void show_game_over_title_text(void *obj)
@@ -198,13 +203,6 @@ static void show_input_name_text(void *obj)
         text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
-static void hide_input_name_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "input_name"))
-        text->attr |= TXT_ATTR_INVISIBLE;
-}
-
 static void show_highscores_text(void *obj)
 {
     struct text *text = obj;
@@ -212,46 +210,14 @@ static void show_highscores_text(void *obj)
         text->attr &= ~TXT_ATTR_INVISIBLE;
 }
 
-static void hide_highscores_text(void *obj)
+static inline void hide_text(void *obj)
 {
-    struct text *text = obj;
-    if (!strcmp(text->scene, "highscores"))
-        text->attr |= TXT_ATTR_INVISIBLE;
+    ((struct text *)obj)->attr |= TXT_ATTR_INVISIBLE;
 }
 
-static void update_game_over_text(void *obj)
+static inline void update_text(void *obj)
 {
-    struct text *text = obj;
-    if (!strcmp(text->scene, "game_over"))
-        painter_update_text(text->id, text);
-}
-
-static void update_menu_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "menu"))
-        painter_update_text(text->id, text);
-}
-
-static void update_game_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "game"))
-        painter_update_text(text->id, text);
-}
-
-static void update_input_name_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "input_name"))
-        painter_update_text(text->id, text);
-}
-
-static void update_highscores_text(void *obj)
-{
-    struct text *text = obj;
-    if (!strcmp(text->scene, "highscores"))
-        painter_update_text(text->id, text);
+    painter_update_text(((struct text *)obj)->id, (struct text *)obj);
 }
 
 static void transition_menu(struct game *game)
@@ -276,14 +242,10 @@ static void transition_menu(struct game *game)
     painter_update_field(fld->id, fld);
 
     LIST_FOREACH(texts, text) {
-        hide_game_over_text(text->obj);
-        show_menu_text(text->obj);
-        hide_game_text(text->obj);
-        hide_highscores_text(text->obj);
-        update_game_over_text(text->obj);
-        update_menu_text(text->obj);
-        update_game_text(text->obj);
-        update_highscores_text(text->obj);
+        hide_text(text->obj);
+        show_menu_title_text(text->obj);
+        show_menu_press_key_text(text->obj);
+        update_text(text->obj);
     }
 
     game->highscores.attr |= HS_TABLE_ATTR_INVISIBLE;
@@ -298,16 +260,9 @@ static void transition_highscores_input(struct game *game)
     painter_update_field(game->fld->id, game->fld);
 
     LIST_FOREACH(game->texts, text) {
-        hide_game_over_text(text->obj);
-        hide_menu_text(text->obj);
-        hide_game_text(text->obj);
+        hide_text(text->obj);
         show_input_name_text(text->obj);
-        hide_highscores_text(text->obj);
-        update_game_over_text(text->obj);
-        update_menu_text(text->obj);
-        update_game_text(text->obj);
-        update_input_name_text(text->obj);
-        update_highscores_text(text->obj);
+        update_text(text->obj);
     }
 
     game->state = GS_HIGHSCORES_INPUT;
@@ -334,10 +289,9 @@ static void transition_highscores_table(struct game *game)
     painter_update_hs_table(game->highscores.id, &game->highscores);
 
     LIST_FOREACH(game->texts, text) {
-        hide_input_name_text(text->obj);
+        hide_text(text->obj);
         show_highscores_text(text->obj);
-        update_input_name_text(text->obj);
-        update_highscores_text(text->obj);
+        update_text(text->obj);
     }
 }
 
@@ -350,8 +304,14 @@ static void transition_game_over_wait(struct game *game)
     struct idlist *texts = game->texts;
 
     LIST_FOREACH(texts, text) {
+        hide_text(text->obj);
+        show_game_score_text(text->obj);
+        show_game_score_value_text(text->obj);
+        show_game_level_text(text->obj);
+        show_game_level_value_text(text->obj);
+        show_game_next_shape_text(text->obj);
         show_game_over_title_text(text->obj);
-        update_game_over_text(text->obj);
+        update_text(text->obj);
     }
 }
 
@@ -362,8 +322,15 @@ static void transition_game_over(struct game *game)
     struct idlist *texts = game->texts;
 
     LIST_FOREACH(texts, text) {
+        hide_text(text->obj);
+        show_game_score_text(text->obj);
+        show_game_score_value_text(text->obj);
+        show_game_level_text(text->obj);
+        show_game_level_value_text(text->obj);
+        show_game_next_shape_text(text->obj);
+        show_game_over_title_text(text->obj);
         show_game_over_press_any_key_text(text->obj);
-        update_game_over_text(text->obj);
+        update_text(text->obj);
     }
 }
 
@@ -415,8 +382,14 @@ static void transition_pause(struct game *game)
     struct idlist *texts = game->texts;
 
     LIST_FOREACH(texts, text) {
+        hide_text(text->obj);
         show_pause_text(text->obj);
-        update_game_text(text->obj);
+        show_game_score_text(text->obj);
+        show_game_score_value_text(text->obj);
+        show_game_level_text(text->obj);
+        show_game_level_value_text(text->obj);
+        show_game_next_shape_text(text->obj);
+        update_text(text->obj);
     }
 }
 
@@ -428,7 +401,13 @@ static void transition_unpause(struct game *game)
     struct idlist *texts = game->texts;
 
     LIST_FOREACH(texts, text) {
-        hide_pause_text(text->obj);
+        hide_text(text->obj);
+        show_game_score_text(text->obj);
+        show_game_score_value_text(text->obj);
+        show_game_level_text(text->obj);
+        show_game_level_value_text(text->obj);
+        show_game_next_shape_text(text->obj);
+        update_text(text->obj);
     }
 }
 
@@ -642,16 +621,12 @@ void transition_init(struct game *game)
     struct idlist *texts = game->texts;
 
     LIST_FOREACH(texts, text) {
-        show_menu_text(text->obj);
-        hide_game_text(text->obj);
-        hide_game_over_text(text->obj);
-        hide_input_name_text(text->obj);
-        hide_highscores_text(text->obj);
-        update_menu_text(text->obj);
-        update_game_text(text->obj);
-        update_game_over_text(text->obj);
-        update_input_name_text(text->obj);
-        update_highscores_text(text->obj);
+        hide_text(text->obj);
+        show_menu_title_text(text->obj);
+        show_menu_press_key_text(text->obj);
+        render_score_value(game, text->obj);
+        render_level_value(game, text->obj);
+        update_text(text->obj);
     }
 }
 
@@ -673,11 +648,15 @@ static void transition_game_start(struct game *game)
     struct idlist *texts = game->texts;
 
     LIST_FOREACH(texts, text) {
-        hide_menu_text(text->obj);
-        show_game_text(text->obj);
-        hide_pause_text(text->obj);
-        update_menu_text(text->obj);
-        update_game_text(text->obj);
+        hide_text(text->obj);
+        show_game_score_text(text->obj);
+        show_game_score_value_text(text->obj);
+        show_game_level_text(text->obj);
+        show_game_level_value_text(text->obj);
+        show_game_next_shape_text(text->obj);
+        render_score_value(game, text->obj);
+        render_level_value(game, text->obj);
+        update_text(text->obj);
     }
 
     painter_update_field(fld->id, fld);
@@ -776,7 +755,7 @@ static int game_loop(struct game *game)
     LIST_FOREACH(texts, text) {
         render_score_value(game, text->obj);
         render_level_value(game, text->obj);
-        update_game_text(text->obj);
+        update_text(text->obj);
     }
     painter_update_field(fld->id, fld);
     painter_update_field(nxt->id, nxt);

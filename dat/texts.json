@@ -1,6 +1,6 @@
 [
   {
-    "type" : "score.value",
+    "type" : "score_value",
     "scene" : "game",
     "font" : "Arial",
     "size" : 20,
@@ -17,7 +17,7 @@
     "y" : 10
   },
   {
-    "type" : "level.value",
+    "type" : "level_value",
     "scene" : "game",
     "font" : "Arial",
     "size" : 20,
@@ -34,7 +34,7 @@
     "y" : 44
   },
   {
-    "type" : "",
+    "type" : "next_shape",
     "scene" : "game",
     "text" : "Next Shape: ",
     "font" : "Arial",
@@ -43,7 +43,7 @@
     "y" : 80
   },
   {
-    "type" : "",
+    "type" : "title",
     "scene" : "menu",
     "text" : "TETRIS",
     "font" : "Arial",
@@ -52,7 +52,7 @@
     "y" : 100
   },
   {
-    "type" : "",
+    "type" : "press_key",
     "scene" : "menu",
     "text" : "Press \"S\" to start",
     "font" : "Arial",
