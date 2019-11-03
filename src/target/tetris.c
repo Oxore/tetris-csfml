@@ -58,7 +58,7 @@ int main()
     sfRenderWindow *window;
 
     struct idlist  *texts;
-    struct field fld, nxt;
+    struct field fld = {0}, nxt = {0};
     struct game game = {
         .state = GS_MAIN_MENU,
         .score = 0,
