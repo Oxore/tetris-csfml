@@ -55,7 +55,6 @@ LDFLAGS_TETRIS+=$(LDFLAGS)
 LDFLAGS_TETRIS+=-lcsfml-graphics
 LDFLAGS_TETRIS+=-lcsfml-window
 LDFLAGS_TETRIS+=-lcsfml-system
-LDFLAGS_TETRIS+=-lyaml
 
 LDFLAGS_TEST+=$(LDFLAGS)
 

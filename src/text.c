@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <yaml.h>
 #include <cJSON.h>
 
 #include "idlist.h"

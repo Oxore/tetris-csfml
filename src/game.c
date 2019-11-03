@@ -106,7 +106,7 @@ static void render_level_value(struct game *game, void *obj)
     if (!strcmp(text->type, "level_value")) {
         if (!text->text)
             text->text = calloc(BUFSIZ, sizeof(char));
-        snprintf(text->text, BUFSIZ - 1, "%ld", game->level);
+        snprintf(text->text, BUFSIZ - 1, "%zd", game->level);
     }
 }
 
