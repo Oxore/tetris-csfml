@@ -75,6 +75,7 @@ int main()
             .left_repeat_clock = NULL,
             .right_repeat_clock = NULL,
         },
+        .config = &g_config,
         .fld = &fld,
         .nxt = &nxt,
         .texts = NULL,
@@ -105,7 +106,8 @@ int main()
     game.controls.left_repeat_clock = sfClock_create();
     game.controls.right_repeat_clock = sfClock_create();
 
-    hs_table_load_from_json_file(&game.highscores, "dat/highscores.json");
+    hs_table_load_from_json_file(&game.highscores, CFG_HIGHSCORES_FNAME);
+    config_load_from_json_file(&g_config, CFG_CONFIG_FNAME);
 
     painter_load_font("dat/arial.ttf");
 

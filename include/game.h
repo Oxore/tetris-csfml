@@ -12,15 +12,16 @@ enum game_state {
 };
 
 // Bits in bitmap of keys
-#define RIGHT     (1 << 0)
-#define UP        (1 << 1)
-#define DOWN      (1 << 2)
+#define ROTRIGHT  (1 << 0)
+#define ROTLEFT   (1 << 1)
+#define RIGHT     (1 << 2)
 #define LEFT      (1 << 3)
-#define RIGHTHOLD (1 << 4)
-#define HARDDROP  (1 << 5)
-#define PAUSE     (1 << 6)
-#define LEFTHOLD  (1 << 7)
-#define GAMEOVER  (1 << 8)
+#define DOWN      (1 << 4)
+#define RIGHTHOLD (1 << 5)
+#define HARDDROP  (1 << 6)
+#define PAUSE     (1 << 7)
+#define LEFTHOLD  (1 << 8)
+#define GAMEOVER  (1 << 9)
 
 struct controls {
     uint32_t keys;         // bitmap of keys pressed
@@ -31,6 +32,7 @@ struct controls {
 
 struct game {
     enum game_state state;
+
     size_t      level;
     unsigned    score;
     int         tick_period;
@@ -41,6 +43,8 @@ struct game {
     sfClock    *menu_clock;
 
     struct controls controls;
+
+    struct config *config;
 
     struct field *fld;
     struct field *nxt;

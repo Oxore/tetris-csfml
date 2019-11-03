@@ -87,40 +87,9 @@
                             .x = CFG_FLD_POS_X,\
                             .y = CFG_FLD_POS_Y,}
 
-// Any field cell dimensions, in pixels
-#define CFG_CELL_SIZE_X 23
-#define CFG_CELL_SIZE_Y 23
-#define CFG_CELL_SIZE   (sfVector2f){\
-                            .x = CFG_CELL_SIZE_X,\
-                            .y = CFG_CELL_SIZE_Y,}
-
-// "Next shape" field position, in pixels
-#define CFG_NXT_POS_X   (250 + 10 + 30)
-#define CFG_NXT_POS_Y   300
-#define CFG_NXT_POS     (struct vector2i){\
-                            .x = CFG_NXT_POS_X,\
-                            .y = CFG_NXT_POS_Y,}
-// "Next shape" field size, in cells
-#define CFG_NXT_SIZE_Y  8
-#define CFG_NXT_SIZE_X  4
-#define CFG_NXT_SIZE    (struct vector2ui){\
-                            .x = CFG_NXT_SIZE_X,\
-                            .y = CFG_NXT_SIZE_Y,}
-
-// Maximum bytes for player name
-#define CFG_NAME_MAX            40
-// Number of entries in highscores table
-#define CFG_HS_TABLE_SIZE       15
-// Name of file containing highscores data
-#define CFG_HIGHSCORES_FNAME    "dat/highscores.json"
-// Name of file containing game texts
-#define CFG_TEXTS_FNAME         "dat/texts.json"
-
-
-_Static_assert(CFG_HS_TABLE_SIZE > 0, "CFG_HS_TABLE_SIZE must be > 0");
-_Static_assert(CFG_NAME_MAX > 0, "CFG_NAME must be > 0");
-
 /*
+ * Field configuration:
+ *
  * 22..........
  * 21..........
  * 20..........
@@ -146,46 +115,59 @@ _Static_assert(CFG_NAME_MAX > 0, "CFG_NAME must be > 0");
  *  0..#.#.###.
  *   0123456789
  *
- *  L
- *  ..#. .#.. .... ##..
- *  ###. .#.. ###. .#..
- *  .... .##. #... .#..
- *  .... .... .... ....
- *
- *  RL
- *  #... .##. .... .#..
- *  ###. .#.. ###. .#..
- *  .... .#.. ..#. ##..
- *  .... .... .... ....
- *
- *  Z
- *  ##.. ..#. .... .#..
- *  .##. .##. ##.. ##..
- *  .... .#.. .##. #...
- *  .... .... .... ....
- *
- *  S
- *  .##. .#.. .... #...
- *  ##.. .##. .##. ##..
- *  .... ..#. ##.. .#..
- *  .... .... .... ....
- *
- *  Brick
- *  ##.. ##.. ##.. ##..
- *  ##.. ##.. ##.. ##..
- *  .... .... .... ....
- *  .... .... .... ....
- *
- *  I
- *  .#.. .... .#.. ....
- *  .#.. #### .#.. ####
- *  .#.. .... .#.. ....
- *  .#.. .... .#.. ....
- *
- *  T
- *  .#.. .#.. .... .#..
- *  ###. .##. ###. ##..
- *  .... .#.. .#.. .#..
- *  .... .... .... ....
  */
 
+// Any field cell dimensions, in pixels
+#define CFG_CELL_SIZE_X 23
+#define CFG_CELL_SIZE_Y 23
+#define CFG_CELL_SIZE   (sfVector2f){\
+                            .x = CFG_CELL_SIZE_X,\
+                            .y = CFG_CELL_SIZE_Y,}
+
+// "Next shape" field position, in pixels
+#define CFG_NXT_POS_X   (250 + 10 + 30)
+#define CFG_NXT_POS_Y   300
+#define CFG_NXT_POS     (struct vector2i){\
+                            .x = CFG_NXT_POS_X,\
+                            .y = CFG_NXT_POS_Y,}
+// "Next shape" field size, in cells
+#define CFG_NXT_SIZE_Y  8
+#define CFG_NXT_SIZE_X  4
+#define CFG_NXT_SIZE    (struct vector2ui){\
+                            .x = CFG_NXT_SIZE_X,\
+                            .y = CFG_NXT_SIZE_Y,}
+
+// Maximum bytes for player name
+#define CFG_NAME_MAX            40
+// Number of entries in highscores table
+#define CFG_HS_TABLE_SIZE       15
+// Name of file containing configuration parameters
+#define CFG_CONFIG_FNAME        "config.json"
+// Name of file containing highscores data
+#define CFG_HIGHSCORES_FNAME    "dat/highscores.json"
+// Name of file containing game texts
+#define CFG_TEXTS_FNAME         "dat/texts.json"
+
+
+_Static_assert(CFG_HS_TABLE_SIZE > 0, "CFG_HS_TABLE_SIZE must be > 0");
+_Static_assert(CFG_NAME_MAX > 0, "CFG_NAME must be > 0");
+
+
+struct config_keys {
+    int rotate_left;
+    int rotate_right;
+    int move_left;
+    int move_right;
+    int move_down;
+    int drop;
+    int pause;
+    int start;
+};
+
+struct config {
+    struct config_keys keys;
+};
+
+extern struct config g_config;
+
+int config_load_from_json_file(struct config *config, const char *fname);

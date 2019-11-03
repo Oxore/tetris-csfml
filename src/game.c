@@ -35,8 +35,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SFML/System/Clock.h>
-#include <SFML/Window/Keyboard.h>
 #include <SFML/Graphics/RenderWindow.h>
+
+#include "media.h"
 
 #include "config.h"
 #include "vector.h"
@@ -450,11 +451,20 @@ static int game_tick(struct game *game)
     return GAME_TICK_STEP;
 }
 
-static void signal_up(struct game *game)
+static void signal_rotate_right(struct game *game)
 {
     struct field *fld = game->fld;
 
     field_rotate_shape_clockwise(fld, 1);
+    project_ghost_shape(fld, 1, 0);
+    sfClock_restart(game->put_clock);
+}
+
+static void signal_rotate_left(struct game *game)
+{
+    struct field *fld = game->fld;
+
+    field_rotate_shape_counter_clockwise(fld, 1);
     project_ghost_shape(fld, 1, 0);
     sfClock_restart(game->put_clock);
 }
@@ -490,12 +500,12 @@ static void signal_right(struct game *game)
     }
 }
 
-static int game_keys(struct controls *ctl)
+static uint32_t game_keys(struct controls *ctl, struct config *config)
 {
-    int ret = 0;
+    uint32_t ret = 0;
 
     /* PAUSE */
-    if (sfKeyboard_isKeyPressed(sfKeyP)) {
+    if (media_is_key_pressed(config->keys.pause)) {
         if (!(ctl->keys & PAUSE)) {
             ctl->keys |= PAUSE;
             ret |= PAUSE;
@@ -504,18 +514,28 @@ static int game_keys(struct controls *ctl)
         ctl->keys &= ~PAUSE;
     }
 
-    /* UP */
-    if (sfKeyboard_isKeyPressed(sfKeyUp)) {
-        if (!(ctl->keys & UP)) {
-            ctl->keys |= UP;
-            ret |= UP;
+    /* ROTRIGHT */
+    if (media_is_key_pressed(config->keys.rotate_right)) {
+        if (!(ctl->keys & ROTRIGHT)) {
+            ctl->keys |= ROTRIGHT;
+            ret |= ROTRIGHT;
         }
     } else {
-        ctl->keys = ctl->keys & ~UP;
+        ctl->keys = ctl->keys & ~ROTRIGHT;
+    }
+
+    /* ROTLEFT */
+    if (media_is_key_pressed(config->keys.rotate_left)) {
+        if (!(ctl->keys & ROTLEFT)) {
+            ctl->keys |= ROTLEFT;
+            ret |= ROTLEFT;
+        }
+    } else {
+        ctl->keys = ctl->keys & ~ROTLEFT;
     }
 
     /* HARDDROP */
-    if (sfKeyboard_isKeyPressed(sfKeySpace)) {
+    if (media_is_key_pressed(config->keys.drop)) {
         if (!(ctl->keys & HARDDROP)) {
             ctl->keys |= HARDDROP;
             ret |= HARDDROP;
@@ -525,7 +545,7 @@ static int game_keys(struct controls *ctl)
     }
 
     /* DOWN */
-    if (sfKeyboard_isKeyPressed(sfKeyDown)) {
+    if (media_is_key_pressed(config->keys.move_down)) {
         if (!(ctl->keys & DOWN)) {
             ctl->keys |= DOWN;
             ret |= DOWN;
@@ -540,8 +560,8 @@ static int game_keys(struct controls *ctl)
     }
 
     /* LEFT */
-    if (sfKeyboard_isKeyPressed(sfKeyLeft)
-     && !sfKeyboard_isKeyPressed(sfKeyRight)) {
+    if (media_is_key_pressed(config->keys.move_left)
+     && !media_is_key_pressed(config->keys.move_right)) {
         if (!(ctl->keys & LEFT)) {
             ctl->keys |= LEFT;
             ret |= LEFT;
@@ -563,8 +583,8 @@ static int game_keys(struct controls *ctl)
     }
 
     /* RIGHT */
-    if (sfKeyboard_isKeyPressed(sfKeyRight)
-     && !sfKeyboard_isKeyPressed(sfKeyLeft)) {
+    if (media_is_key_pressed(config->keys.move_right)
+     && !media_is_key_pressed(config->keys.move_left)) {
         if (!(ctl->keys & RIGHT)) {
             ctl->keys |= RIGHT;
             ret |= RIGHT;
@@ -588,14 +608,14 @@ static int game_keys(struct controls *ctl)
     return ret;
 }
 
-static int pause_keys(struct controls *ctl)
+static uint32_t pause_keys(struct controls *ctl, struct config *config)
 {
     // TODO: merge with game_keys
 
-    int ret = 0;
+    uint32_t ret = 0;
 
     /* PAUSE */
-    if (sfKeyboard_isKeyPressed(sfKeyP)) {
+    if (media_is_key_pressed(config->keys.pause)) {
         if (!(ctl->keys & PAUSE)) {
             ctl->keys |= PAUSE;
             ret |= PAUSE;
@@ -673,7 +693,7 @@ static int menu_loop(struct game *game)
      >= CFG_MENU_CLOCK_PERIOD)
         menu_tick(game);
 
-    if (sfKeyboard_isKeyPressed(sfKeyS)) {
+    if (media_is_key_pressed(game->config->keys.start)) {
         if (!(game->controls.keys & GAMEOVER)) {
             ret = MENU_LOOP_GAME_START;
         }
@@ -695,15 +715,19 @@ static int game_loop(struct game *game)
     // TODO: Elaborate on precedence of timers and ctl->keys checking
     // Here should be only one return statement - at the end of the function
 
-    int ret_keys = game_keys(&game->controls);
+    uint32_t ret_keys = game_keys(&game->controls, game->config);
 
     if (ret_keys & PAUSE) {
         ret = GAME_LOOP_PAUSE;
         sfClock_restart(game->put_clock);
     }
 
-    if (ret_keys & UP) {
-        signal_up(game);
+    if (ret_keys & ROTRIGHT) {
+        signal_rotate_right(game);
+    }
+
+    if (ret_keys & ROTLEFT) {
+        signal_rotate_left(game);
     }
 
     if (ret_keys & DOWN) {
@@ -778,8 +802,8 @@ static int game_over_loop(struct controls *ctl)
 {
     int anykey = 0;
 
-    for (int keycode = sfKeyUnknown; keycode < sfKeyCount; keycode++)
-        if (sfKeyboard_isKeyPressed(keycode))
+    for (int keycode = KEY_UNKNOWN; keycode < KEY_COUNT; keycode++)
+        if (media_is_key_pressed(keycode))
             anykey = 1;
 
     if (anykey) {
@@ -821,9 +845,9 @@ static int highscores_input_loop(struct game *game, const struct idlist *events)
 }
 
 #define HIGHSCORES_TABLE_LOOP_MENU 1
-static int highscores_table_loop(struct controls *ctl)
+static int highscores_table_loop(struct controls *ctl, struct config *config)
 {
-    if (sfKeyboard_isKeyPressed(sfKeyS)) {
+    if (media_is_key_pressed(config->keys.start)) {
         if (!(ctl->keys & GAMEOVER)) {
             ctl->keys |= GAMEOVER;
             return HIGHSCORES_TABLE_LOOP_MENU;
@@ -838,7 +862,7 @@ static int highscores_table_loop(struct controls *ctl)
 #define PAUSE_LOOP_UNPAUSE 1
 static int pause_loop(struct game *game)
 {
-    int ret = pause_keys(&game->controls);
+    uint32_t ret = pause_keys(&game->controls, game->config);
     if (ret & PAUSE) {
         sfClock_restart(game->put_clock);
         return PAUSE_LOOP_UNPAUSE;
@@ -883,7 +907,7 @@ void main_loop(struct game *game, const struct idlist *events)
         break;
 
     case GS_HIGHSCORES_TABLE:
-        ret = highscores_table_loop(&game->controls);
+        ret = highscores_table_loop(&game->controls, game->config);
         if (ret == HIGHSCORES_TABLE_LOOP_MENU)
             transition_menu(game);
         break;

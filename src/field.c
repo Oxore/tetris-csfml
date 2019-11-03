@@ -223,6 +223,15 @@ void field_rotate_shape_clockwise(struct field *fld, size_t index)
             rotate_shape_left(shape);
 }
 
+void field_rotate_shape_counter_clockwise(struct field *fld, size_t index)
+{
+    struct shape *shape = &fld->shape[index];
+    rotate_shape_left(shape);
+    if (field_shape_collision(fld, shape))
+        if (!wall_kick(fld, shape))
+            rotate_shape_right(shape);
+}
+
 int field_move_shape_down(struct field *fld, size_t index)
 {
     fld->shape[index].y--;

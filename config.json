@@ -1,0 +1,12 @@
+{
+  "keys": {
+    "rotate_right": "key_up",
+    "rotate_left": "key_right_control",
+    "move_down": "key_down",
+    "move_left": "key_left",
+    "move_right": "key_right",
+    "drop": "key_space",
+    "pause": "key_p",
+    "start": "key_s"
+  }
+}

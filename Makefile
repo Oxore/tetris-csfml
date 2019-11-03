@@ -14,7 +14,9 @@ endif
 SRC:=src
 BUILD:=build
 TARGET:=$(BUILD)/target
+MEDIA:=media
 SOURCES:=$(wildcard $(SRC)/*.c)
+SOURCES+=$(wildcard $(SRC)/$(MEDIA)/*.c)
 OBJECTS:=$(SOURCES:$(SRC)/%.c=$(BUILD)/%.c.o)
 DEPENDS:=$(OBJECTS:.o=.d)
 
@@ -79,7 +81,10 @@ $(TARGET_TEST): $(TARGET)/$(TARGET_TEST).c.o $(MUNIT)/munit.c.o
 	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TEST)
 
 $(DEPENDS): | $(BUILD)/ $(TARGET)/
-$(OBJECTS): | $(BUILD)/ $(TARGET)/
+$(OBJECTS): | $(BUILD)/ $(TARGET)/ $(BUILD)/$(MEDIA)/
+
+$(BUILD)/$(MEDIA)/:
+	$(Q) mkdir -p $@
 
 $(BUILD)/:
 	$(Q) mkdir -p $@

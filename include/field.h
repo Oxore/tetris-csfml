@@ -53,6 +53,7 @@ void    field_deinit(struct field *fld);
 void    field_fill_random(struct field *fld);
 void    field_clear(struct field *fld);
 void    field_rotate_shape_clockwise(struct field *fld, size_t index);
+void    field_rotate_shape_counter_clockwise(struct field *fld, size_t index);
 int     field_move_shape_down(struct field *fld, size_t index);
 int     field_move_shape_left(struct field *fld, size_t index);
 int     field_move_shape_right(struct field *fld, size_t index);

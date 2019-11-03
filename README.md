@@ -23,6 +23,8 @@ make
 ```
 File named "tetris" is the final binary. Run it. Hit *S* to start game.
 
+Default key bindings:
+
 - `S` - start a game.
 - `Left arrow` - move shape left.
 - `Right arrow` - move shape right.
@@ -65,11 +67,16 @@ Windows compilation flow currently is unsupported, but sometimes I put Windows b
 - [x] Phantom shape
 - [x] Game Over screen
 - [x] Table of records
-- Settings menu with external `config.yml` file which allows
-  - Change key bindings
-  - Change colorscheme and define new
-  - Number of levels
+- [ ] Settings menu with external `config.json` file which allows
+  - [ ] Change key bindings
+    - [x] Support in config file
+    - Support in menu
+  - Change colorscheme and define new one
+  - Levels customization (probably useless feature)
+    - Select and deselect (skip) specific levels
+    - Customize levels' speed
 - [x] Three next shapes
 - [x] Pause
 - Look with sprites and shaders
 - Interprocess communication interface for control from other process (I want to connect machine learning algorithm and make it play and learn)
+- Port on SDL
