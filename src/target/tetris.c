@@ -55,25 +55,59 @@ static void register_text(void *obj)
 
 int main()
 {
-    sfRenderWindow *window;
-
+    int ret = EXIT_SUCCESS;
     struct idlist  *texts;
-    struct field fld = {0}, nxt = {0};
+    struct field fld = {
+        .id = SIZE_MAX,
+        .attr = 0,
+        .pos = CFG_FLD_POS,
+        .size = {
+            .x = CFG_FLD_SIZE_X,
+            .y = CFG_FLD_SIZE_Y,
+        },
+        .bound = {
+            .x = CFG_FLD_BOUND_X,
+            .y = CFG_FLD_BOUND_Y,
+        },
+        .c = NULL,
+        .shape_cnt = 2,
+        .shape = NULL,
+    };
+
+    field_init(&fld);
+    fld.shape[0].attr |= SHP_ATTR_GHOST;
+
+    struct field nxt = {
+        .id = SIZE_MAX,
+        .attr = FLD_ATTR_HIDE_EMPTY_CELLS | FLD_ATTR_INVISIBLE,
+        .pos = CFG_NXT_POS,
+        .size = CFG_NXT_SIZE,
+        .bound = CFG_NXT_SIZE,
+        .c = NULL,
+        .shape_cnt = 3,
+        .shape = NULL,
+    };
+
+    field_init(&nxt);
+    nxt.shape[0].y = 4;
+    nxt.shape[1].y = 1;
+    nxt.shape[2].y = -2;
+
     struct game game = {
         .state = GS_MAIN_MENU,
         .score = 0,
         .level = 1,
         .tick_period = CFG_L00_CLOCK_PERIOD,
         .rows = 0,
-        .game_clock = NULL,
-        .game_over_wait_clock = NULL,
-        .put_clock = NULL,
-        .menu_clock = NULL,
+        .game_clock = sfClock_create(),
+        .game_over_wait_clock = sfClock_create(),
+        .put_clock = sfClock_create(),
+        .menu_clock = sfClock_create(),
         .controls = {
             .keys = 0,
-            .down_repeat_clock = NULL,
-            .left_repeat_clock = NULL,
-            .right_repeat_clock = NULL,
+            .down_repeat_clock = sfClock_create(),
+            .left_repeat_clock = sfClock_create(),
+            .right_repeat_clock = sfClock_create(),
         },
         .config = &g_config,
         .fld = &fld,
@@ -98,13 +132,6 @@ int main()
     };
 
     srand(time(NULL));
-    game.game_clock = sfClock_create();
-    game.game_over_wait_clock = sfClock_create();
-    game.put_clock = sfClock_create();
-    game.menu_clock = sfClock_create();
-    game.controls.down_repeat_clock = sfClock_create();
-    game.controls.left_repeat_clock = sfClock_create();
-    game.controls.right_repeat_clock = sfClock_create();
 
     hs_table_load_from_json_file(&game.highscores, CFG_HIGHSCORES_FNAME);
     config_load_from_json_file(&g_config, CFG_CONFIG_FNAME);
@@ -112,29 +139,18 @@ int main()
     painter_load_font("dat/arial.ttf");
 
     sfVideoMode mode = (sfVideoMode){450, 570, 32};
-    window = sfRenderWindow_create(mode, CFG_WIN_NAME, sfResize | sfClose,
+    sfRenderWindow *window = sfRenderWindow_create(
+            mode,
+            CFG_WIN_NAME,
+            sfResize | sfClose,
             NULL);
-    if (!window)
-        exit(EXIT_FAILURE);
+    if (!window) {
+        ret = EXIT_FAILURE;
+        goto cleanup_create_window;
+    }
+
     sfRenderWindow_setFramerateLimit(window, 60);
     painter_set_window(window);
-
-    fld.pos = CFG_FLD_POS;
-    fld.size = (struct vector2ui){.x = CFG_FLD_SIZE_X, .y = CFG_FLD_SIZE_Y};
-    fld.bound = (struct vector2ui){.x = CFG_FLD_BOUND_X, .y = CFG_FLD_BOUND_Y};
-    fld.shape_cnt = 2;
-    field_init(&fld);
-    fld.shape[0].attr |= SHP_ATTR_GHOST;
-
-    nxt.pos = CFG_NXT_POS;
-    nxt.size = CFG_NXT_SIZE;
-    nxt.bound = CFG_NXT_SIZE;
-    nxt.shape_cnt = 3;
-    nxt.attr |= FLD_ATTR_HIDE_EMPTY_CELLS | FLD_ATTR_INVISIBLE;
-    field_init(&nxt);
-    nxt.shape[0].y = 4;
-    nxt.shape[1].y = 1;
-    nxt.shape[2].y = -2;
 
     fld.id = painter_register_field(&fld);
     nxt.id = painter_register_field(&nxt);
@@ -148,6 +164,7 @@ int main()
 
     texts = load_texts_from_json("dat/texts.json");
     if (texts == NULL) {
+        ret = EXIT_FAILURE;
         goto cleanup_load_texts;
     }
 
@@ -174,13 +191,13 @@ int main()
 
 cleanup_load_texts:
     painter_destroy_drawables();
-    field_deinit(&fld);
-    field_deinit(&nxt);
 
     if (window) {
         sfRenderWindow_destroy(window);
         window = 0;
     }
+
+cleanup_create_window:
     painter_destroy_font();
 
     sfClock_destroy(game.game_clock);
@@ -191,5 +208,8 @@ cleanup_load_texts:
     sfClock_destroy(game.controls.left_repeat_clock);
     sfClock_destroy(game.controls.right_repeat_clock);
 
-    return EXIT_SUCCESS;
+    field_deinit(&fld);
+    field_deinit(&nxt);
+
+    return ret;
 }

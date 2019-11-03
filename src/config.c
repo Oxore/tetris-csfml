@@ -221,6 +221,7 @@ static int keys_load_from_cjson(struct config_keys *keys, cJSON *keys_jo)
 
 int config_load_from_json_file(struct config *config, const char *filename)
 {
+    int ret = 0;
     struct cJSON_Hooks hooks = (struct cJSON_Hooks){
         .malloc_fn = malloc,
         .free_fn = free,
@@ -233,6 +234,8 @@ int config_load_from_json_file(struct config *config, const char *filename)
     }
 
     cJSON *json_data = cJSON_Parse(data);
+    free(data);
+
     if (json_data == NULL) {
         fprintf(stderr, "Error parsing json file \"%s\"\n", filename);
         return -1;
@@ -242,11 +245,10 @@ int config_load_from_json_file(struct config *config, const char *filename)
         cJSON *keys_jo = cJSON_GetObjectItemCaseSensitive(json_data, "keys");
         if (keys_load_from_cjson(&config->keys, keys_jo) == -1) {
             fprintf(stderr, "invalid keys configuration\n");
-            return -1;
+            ret = -1;
         }
     }
 
-    free(data);
     cJSON_Delete(json_data);
-    return 0;
+    return ret;
 }
