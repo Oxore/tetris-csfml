@@ -1,6 +1,8 @@
 Q=@
 QQ=@
 
+LD=$(CC)
+
 TARGET_TETRIS:=tetris
 TARGET_TEST:=test
 CJSON:=deps/cJSON
@@ -48,7 +50,6 @@ CFLAGS+=$(EXTRA_CFLAGS)
 
 ifdef PREFIX
 	LDFLAGS+=-L$(PREFIX)/lib
-	LDFLAGS+=-Wl,-rpath=$(PREFIX)/lib
 endif
 LDFLAGS+=$(COMMON)
 LDFLAGS+=$(EXTRA_LDFLAGS)
@@ -83,8 +84,15 @@ ifdef SFML_STATIC
 			LDFLAGS+=-framework AppKit
 			LDFLAGS+=-framework IOKit
 			LDFLAGS+=-framework Carbon
+			LDFLAGS+=-lfreetype
+			LDFLAGS+=-lc++
+			LDFLAGS+=-ObjC
 		endif
 	endif # ($(OS),Windows_NT)
+else # SFML_STATIC
+	ifdef PREFIX
+		LDFLAGS+=-Wl,-rpath=$(PREFIX)/lib
+	endif
 endif # SFML_STATIC
 
 LDFLAGS_TETRIS+=-lcsfml-graphics
@@ -109,11 +117,11 @@ pg:
 $(TARGET_TETRIS): $(OBJECTS) $(TARGET)/$(TARGET_TETRIS).c.o $(LIBF8)/libf8.a \
 	$(CJSON)/cJSON.o
 	$(QQ) echo "  LD      $@"
-	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TETRIS)
+	$(Q) $(LD) -o $@ $^ $(LDFLAGS_TETRIS)
 
 $(TARGET_TEST): $(TARGET)/$(TARGET_TEST).c.o $(MUNIT)/munit.c.o
 	$(QQ) echo "  LD      $@"
-	$(Q) $(CC) -o $@ $^ $(LDFLAGS_TEST)
+	$(Q) $(LD) -o $@ $^ $(LDFLAGS_TEST)
 
 $(DEPENDS): | $(BUILD)/ $(TARGET)/
 $(OBJECTS): | $(BUILD)/ $(TARGET)/ $(BUILD)/$(MEDIA)/

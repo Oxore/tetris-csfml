@@ -1,14 +1,76 @@
-
 language: c
-os: osx
+os: linux
 
-before_script:
-    - git submodule update --init --recursive
-    - HOMEBREW_NO_AUTO_UPDATE=1 brew install csfml
-
-script:
-    - make Q=
-    - ./test
+env:
+  - PFX=$TRAVIS_BUILD_DIR/deps/prefix
 
 compiler:
-    - gcc
+  - gcc
+  - clang
+
+# Get Archlinux environment
+script:
+  - "curl -s https://raw.githubusercontent.com/mikkeloscar/arch-travis/master/arch-travis.sh | bash"
+
+archlinux:
+  packages:
+    - cmake
+    - xorg
+    - openal
+    - libvorbis
+    - flac
+  script:
+    - mkdir -p $PFX deps/SFML/build deps/CSFML/build
+    - pushd deps/SFML/build
+        && cmake
+          -DBUILD_SHARED_LIBS=OFF
+          -DCMAKE_INSTALL_PREFIX=$PFX
+          -DSFML_MISC_INSTALL_PREFIX=$PFX
+          -DSFML_DEPENDENCIES_INSTALL_PREFIX=$PFX
+          ..
+        && make install
+        && popd
+    - pushd deps/CSFML/build
+        && cmake
+          -DBUILD_SHARED_LIBS=OFF
+          -DCSFML_LINK_SFML_STATICALLY=TRUE
+          -DCMAKE_PREFIX_PATH=$PFX -DCMAKE_INSTALL_PREFIX=$PFX
+          ..
+        && make install
+        && popd
+    - make PREFIX=$PFX SFML_STATIC=y Q=
+
+jobs:
+  include:
+    - os: osx
+      compiler: clang
+      before_script:
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew install csfml
+      script:
+        - make Q=
+    - os: osx
+      compiler: clang
+      env:
+        - PFX=$TRAVIS_BUILD_DIR/deps/prefix
+      before_script:
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew install freetype
+      script:
+        - mkdir -p $PFX deps/SFML/build deps/CSFML/build
+        - pushd deps/SFML/build
+            && cmake
+              -DBUILD_SHARED_LIBS=OFF
+              -DCMAKE_INSTALL_PREFIX=$PFX
+              -DSFML_MISC_INSTALL_PREFIX=$PFX
+              -DSFML_DEPENDENCIES_INSTALL_PREFIX=$PFX
+              ..
+            && make install
+            && popd
+        - pushd deps/CSFML/build
+            && cmake
+              -DBUILD_SHARED_LIBS=OFF
+              -DCSFML_LINK_SFML_STATICALLY=TRUE
+              -DCMAKE_PREFIX_PATH=$PFX -DCMAKE_INSTALL_PREFIX=$PFX
+              ..
+            && make install
+            && popd
+        - make PREFIX=$PFX SFML_STATIC=y Q=
