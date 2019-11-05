@@ -4,3 +4,9 @@
 [submodule "deps/libf8"]
 	path = deps/libf8
 	url = https://github.com/Oxore/libf8.git
+[submodule "deps/SFML"]
+	path = deps/SFML
+	url = https://github.com/SFML/SFML.git
+[submodule "deps/CSFML"]
+	path = deps/CSFML
+	url = https://github.com/SFML/CSFML.git
