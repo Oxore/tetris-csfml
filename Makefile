@@ -21,7 +21,7 @@ OBJECTS:=$(SOURCES:$(SRC)/%.c=$(BUILD)/%.c.o)
 DEPENDS:=$(OBJECTS:.o=.d)
 
 ifdef PREFIX
-INCLUDE+=$(PREFIX)/include
+	INCLUDE+=$(PREFIX)/include
 endif
 INCLUDE+=include
 INCLUDE+=$(CJSON)
@@ -44,17 +44,53 @@ CFLAGS+=-fms-extensions
 CFLAGS+=-g3
 CFLAGS+=-Og
 CFLAGS+=-MD
+CFLAGS+=$(EXTRA_CFLAGS)
 
 ifdef PREFIX
-LDFLAGS+=-L$(PREFIX)/lib
-LDFLAGS+=-Wl,-rpath=$(PREFIX)/lib
+	LDFLAGS+=-L$(PREFIX)/lib
+	LDFLAGS+=-Wl,-rpath=$(PREFIX)/lib
 endif
 LDFLAGS+=$(COMMON)
+LDFLAGS+=$(EXTRA_LDFLAGS)
 
-LDFLAGS_TETRIS+=$(LDFLAGS)
+ifdef SFML_STATIC
+	LDFLAGS+=-lsfml-graphics-s
+	LDFLAGS+=-lsfml-window-s
+	LDFLAGS+=-lsfml-system-s
+	ifeq ($(OS),Windows_NT)
+		LDFLAGS+=-static
+		LDFLAGS+=-static-libgcc
+		LDFLAGS+=-static-libstdc++
+		LDFLAGS+=-lopengl32
+		LDFLAGS+=-lgdi32
+		LDFLAGS+=-lwinmm
+		LDFLAGS+=-mwindows
+	else
+		UNAME_S:=$(shell uname -s)
+		ifeq ($(UNAME_S),Linux)
+			LDFLAGS+=-pthread
+			LDFLAGS+=-lstdc++
+			LDFLAGS+=-lm
+			LDFLAGS+=-lfreetype
+			LDFLAGS+=-lX11
+			LDFLAGS+=-lXrandr
+			LDFLAGS+=-ldl
+			LDFLAGS+=-lGL
+			LDFLAGS+=-ludev
+		endif
+		ifeq ($(UNAME_S),Darwin)
+			LDFLAGS+=-framework OpenGL
+			LDFLAGS+=-framework AppKit
+			LDFLAGS+=-framework IOKit
+			LDFLAGS+=-framework Carbon
+		endif
+	endif # ($(OS),Windows_NT)
+endif # SFML_STATIC
+
 LDFLAGS_TETRIS+=-lcsfml-graphics
 LDFLAGS_TETRIS+=-lcsfml-window
 LDFLAGS_TETRIS+=-lcsfml-system
+LDFLAGS_TETRIS+=$(LDFLAGS)
 
 LDFLAGS_TEST+=$(LDFLAGS)
 
