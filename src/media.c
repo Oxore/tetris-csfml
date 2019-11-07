@@ -6,5 +6,8 @@
 
 bool media_is_key_pressed(enum key_id key)
 {
+    if (key == KEY_UNKNOWN)
+        return false;
+
     return sfKeyboard_isKeyPressed(csfml_keymap[key]);
 }

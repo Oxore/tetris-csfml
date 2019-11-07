@@ -822,22 +822,19 @@ static int game_over_loop(struct controls *ctl)
 static int highscores_input_loop(struct game *game, const struct idlist *events)
 {
 #define UTF32_BACKSPACE L'\b'
-#define UTF32_RETURN    L'\r'
+    if (media_is_key_pressed(KEY_ENTER))
+        return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
 
     LIST_FOREACH_CONST(events, event) {
         const sfEvent *e = (sfEvent *)event->obj;
         if (e->type == sfEvtTextEntered) {
             int32_t c = e->text.unicode;
-            if (c == UTF32_RETURN) {
-                return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
-            } else {
-                if (c == UTF32_BACKSPACE)
-                    input_rm_last_char(&game->input_name);
-                else
-                    input_append_utf32char(&game->input_name, c);
+            if (c == UTF32_BACKSPACE)
+                input_rm_last_char(&game->input_name);
+            else
+                input_append_utf32char(&game->input_name, c);
 
-                painter_update_input(game->input_name.id, &game->input_name);
-            }
+            painter_update_input(game->input_name.id, &game->input_name);
         }
     }
 
