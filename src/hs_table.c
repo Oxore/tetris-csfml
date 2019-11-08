@@ -91,17 +91,21 @@ void hs_table_insert(struct hs_table *table, const char *name, size_t score)
     assert(table);
     assert(name);
     assert(sizeof(table->entries));
-
-    struct entry *e = &table->entries[table->nentries];
+    assert(table->nentries <= sizeof(table->entries)/sizeof(*table->entries));
 
     if (table->nentries < sizeof(table->entries)/sizeof(*table->entries))
         table->nentries++;
-    else if (e->score > score)
+
+    assert(table->nentries != 0);
+
+    struct entry *last = &table->entries[table->nentries - 1];
+
+    if (last->score > score)
         return;
 
-    e->score = score;
-    strncpy(e->name, name, sizeof(e->name) - 1);
-    e->name[sizeof(e->name) - 1] = 0;
+    last->score = score;
+    strncpy(last->name, name, sizeof(last->name) - 1);
+    last->name[sizeof(last->name) - 1] = 0;
 
     hs_table_sort(table);
 }
