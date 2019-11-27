@@ -1,5 +1,6 @@
 ## Tetris CSFML
 [![Build Status](https://travis-ci.org/Oxore/tetris-csfml.svg?branch=master)](https://travis-ci.org/Oxore/tetris-csfml)
+[![Build status](https://ci.appveyor.com/api/projects/status/bnxbfbwamn1pp5ut?svg=true)](https://ci.appveyor.com/project/Oxore/tetris-csfml)
 ![WTFPL](http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl-badge-2.png "WTFPL")
 
 This is unfinished tetris project written in pure C with CSFML library. It is under development. Basically I am learning some techniques and patterns for C and trying to use them here.

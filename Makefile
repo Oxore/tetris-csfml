@@ -59,9 +59,12 @@ ifdef SFML_STATIC
 	LDFLAGS+=-lsfml-window-s
 	LDFLAGS+=-lsfml-system-s
 	ifeq ($(OS),Windows_NT)
+		CFLAGS+=-DCSFML_STATIC
+		LDFLAGS+=-lstdc++
 		LDFLAGS+=-static
 		LDFLAGS+=-static-libgcc
 		LDFLAGS+=-static-libstdc++
+		LDFLAGS+=-lfreetype
 		LDFLAGS+=-lopengl32
 		LDFLAGS+=-lgdi32
 		LDFLAGS+=-lwinmm

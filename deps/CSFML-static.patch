@@ -1,0 +1,104 @@
+diff --git a/cmake/Macros.cmake b/cmake/Macros.cmake
+index 9941767..b0b3082 100644
+--- a/cmake/Macros.cmake
++++ b/cmake/Macros.cmake
+@@ -18,17 +18,24 @@ macro(csfml_add_library target)
+     set_target_properties(${target} PROPERTIES DEFINE_SYMBOL ${NAME_UPPER}_EXPORTS)
+ 
+     if(SFML_OS_WINDOWS)
+-        # include the major version number in Windows shared library names (but not import library names)
+         set_target_properties(${target} PROPERTIES DEBUG_POSTFIX -d)
+-        set_target_properties(${target} PROPERTIES SUFFIX "-${VERSION_MAJOR}${CMAKE_SHARED_LIBRARY_SUFFIX}")
++        if (BUILD_SHARED_LIBS)
++            # include the major version number in Windows shared library names (but not import library names)
++            set_target_properties(${target} PROPERTIES SUFFIX "-${VERSION_MAJOR}${CMAKE_SHARED_LIBRARY_SUFFIX}")
++        else()
++            # do not use __declspec(dllimport) or __declspec(dllexport)
++            set_target_properties(${target} PROPERTIES COMPILE_DEFINITIONS "CSFML_STATIC")
++        endif()
+     else()
+         set_target_properties(${target} PROPERTIES DEBUG_POSTFIX -d)
+     endif()
+     if (SFML_OS_WINDOWS AND SFML_COMPILER_GCC)
+-        # on Windows/gcc get rid of "lib" prefix for shared libraries,
+-        # and transform the ".dll.a" suffix into ".a" for import libraries
+-        set_target_properties(${target} PROPERTIES PREFIX "")
+-        set_target_properties(${target} PROPERTIES IMPORT_SUFFIX ".a")
++        if (BUILD_SHARED_LIBS)
++            # on Windows/gcc get rid of "lib" prefix for shared libraries,
++            # and transform the ".dll.a" suffix into ".a" for import libraries
++            set_target_properties(${target} PROPERTIES PREFIX "")
++            set_target_properties(${target} PROPERTIES IMPORT_SUFFIX ".a")
++        endif()
+     endif()
+ 
+     # set the version and soversion of the target (for compatible systems -- mostly Linuxes)
+diff --git a/include/SFML/Config.h b/include/SFML/Config.h
+index cb2b0fb..d728618 100644
+--- a/include/SFML/Config.h
++++ b/include/SFML/Config.h
+@@ -78,36 +78,46 @@
+ ////////////////////////////////////////////////////////////
+ // Define helpers to create portable import / export macros for each module
+ ////////////////////////////////////////////////////////////
+-#if defined(CSFML_SYSTEM_WINDOWS)
++#if !defined(CSFML_STATIC)
+ 
+-    // Windows compilers need specific (and different) keywords for export and import
+-    #define CSFML_API_EXPORT extern "C" __declspec(dllexport)
+-    #define CSFML_API_IMPORT CSFML_EXTERN_C __declspec(dllimport)
++    #if defined(CSFML_SYSTEM_WINDOWS)
+ 
+-    // For Visual C++ compilers, we also need to turn off this annoying C4251 warning
+-    #ifdef _MSC_VER
++        // Windows compilers need specific (and different) keywords for export and import
++        #define CSFML_API_EXPORT extern "C" __declspec(dllexport)
++        #define CSFML_API_IMPORT CSFML_EXTERN_C __declspec(dllimport)
+ 
+-        #pragma warning(disable : 4251)
++        // For Visual C++ compilers, we also need to turn off this annoying C4251 warning
++        #ifdef _MSC_VER
+ 
+-    #endif
++            #pragma warning(disable : 4251)
++
++        #endif
++
++    #else // Linux, FreeBSD, Mac OS X
+ 
+-#else // Linux, FreeBSD, Mac OS X
++        #if __GNUC__ >= 4
+ 
+-    #if __GNUC__ >= 4
++            // GCC 4 has special keywords for showing/hidding symbols,
++            // the same keyword is used for both importing and exporting
++            #define CSFML_API_EXPORT extern "C" __attribute__ ((__visibility__ ("default")))
++            #define CSFML_API_IMPORT CSFML_EXTERN_C __attribute__ ((__visibility__ ("default")))
+ 
+-        // GCC 4 has special keywords for showing/hidding symbols,
+-        // the same keyword is used for both importing and exporting
+-        #define CSFML_API_EXPORT extern "C" __attribute__ ((__visibility__ ("default")))
+-        #define CSFML_API_IMPORT CSFML_EXTERN_C __attribute__ ((__visibility__ ("default")))
++        #else
+ 
+-    #else
++            // GCC < 4 has no mechanism to explicitely hide symbols, everything's exported
++            #define CSFML_API_EXPORT extern "C"
++            #define CSFML_API_IMPORT CSFML_EXTERN_C
+ 
+-        // GCC < 4 has no mechanism to explicitely hide symbols, everything's exported
+-        #define CSFML_API_EXPORT extern "C"
+-        #define CSFML_API_IMPORT CSFML_EXTERN_C
++        #endif
+ 
+     #endif
+ 
++#else
++
++    // Static build doesn't need special import/export attributes, just extern
++    #define CSFML_API_EXPORT extern "C"
++    #define CSFML_API_IMPORT CSFML_EXTERN_C
++
+ #endif
+ 
+ ////////////////////////////////////////////////////////////

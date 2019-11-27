@@ -1,0 +1,47 @@
+version: build-{build}
+image: Visual Studio 2015
+
+environment:
+  matrix:
+  - COMPILER: msys2
+    PLATFORM: x64
+    MSYS2_ARCH: x86_64
+    MSYS2_DIR: msys64
+    MSYSTEM: MINGW64
+
+build_script:
+- cmd: >-
+    git submodule update --init --recursive
+
+    if %APPVEYOR_REPO_TAG%==true (set ARTIFACT_NAME=%APPVEYOR_REPO_TAG_NAME%) else (set ARTIFACT_NAME=%APPVEYOR_REPO_BRANCH%-%APPVEYOR_REPO_COMMIT%)
+
+    set "PATH=C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%"
+
+    bash -lc "pacman -S --needed --noconfirm pacman-mirrors"
+
+    bash -lc 'pacman -Syu --noconfirm make gcc'
+
+    bash -lc 'pwd'
+
+    bash -c 'pwd'
+
+    bash scripts/appveyor-build-static.bash
+
+    ls -lash
+
+    7z a tetris-%ARTIFACT_NAME%.zip tetris.exe config.json dat
+
+test: off
+
+artifacts:
+- path: '*.zip'
+  name: 'Tetris CSFML'
+
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: rXNrVy5ahskIG6PHPp/j29mXKV/b09M6dpDGygt5tZ07hb718mgRO4iHKmYZSC6/
+  artifact: /.*\.zip/
+  draft: true
+  on:
+    APPVEYOR_REPO_TAG: true
