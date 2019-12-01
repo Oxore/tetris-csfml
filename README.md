@@ -1,4 +1,4 @@
-## Tetris CSFML
+# Tetris CSFML
 [![Build Status](https://travis-ci.org/Oxore/tetris-csfml.svg?branch=master)](https://travis-ci.org/Oxore/tetris-csfml)
 [![Build status](https://ci.appveyor.com/api/projects/status/bnxbfbwamn1pp5ut?svg=true)](https://ci.appveyor.com/project/Oxore/tetris-csfml)
 ![WTFPL](http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl-badge-2.png "WTFPL")
@@ -9,20 +9,22 @@ This is unfinished tetris project written in pure C with CSFML library. It is un
 
 ![In game](https://i.imgur.com/UmZGEOD.png "In game")
 
-__Dependencies__
+## Dependencies
 
-- `SFML` - Graphics and controls
-- `CSFML` - C SFML bindings
+- [`SFML`](https://github.com/SFML/sfml) - Graphics and controls (submodule)
+- [`CSFML`](https://github.com/SFML/csfml) - C SFML bindings (submodule)
 - [`munit`](https://github.com/nemequ/munit) - Testing framework (submodule)
 - [`libf8`](https://github.com/Oxore/libf8) - Unicode helper functions (submodule)
 
-__Compilation and use__
+## Compilation and usage
 
-Compilation:
-```
-make
-```
-File named "tetris" is the final binary. Run it. Hit *S* to start game.
+Compilation process currently is a terrible thing, because I am suffering from
+and struggling with my love to `make` and it's ugliness, `cmake` limitations and
+CSFML slow-pace development. See `.travis.yml` for building instructions on
+Linux or OSX and `.appveyor.yml` and `scripts/appveyor-build-static.bash` for
+building instructions on Windows. For Windows though you can take already built
+[artifacts](https://ci.appveyor.com/project/Oxore/tetris-csfml/build/artifacts)
+from Appveyor.
 
 Default key bindings:
 
@@ -33,32 +35,17 @@ Default key bindings:
 - `Space` - hard drop.
 - `P` - pause.
 
-Force exclude producing test binary:
-```
-make NOTEST=1
-```
+## Windows
 
-Clean:
-```
-make clean
-```
+The [Appveyor CI/CD](https://ci.appveyor.com/project/Oxore/tetris-csfml)
+performs build on every commit and keep build artifacts for 6 months.
 
-__Compilation with libs in prefix__
+Every new version (on every new git tag) is automatically deployed to the
+[repo releases](https://github.com/Oxore/tetris-csfml/releases) by Appveyor
+CI/CD as a draft and author adds a description and submits the release.
 
-Probably your package manager does not have `SFML` and/or `CSFML` in repos.
-You can build them in prefix and then specify `PREFIX` path when running `make`:
-```
-make PREFIX=$(pwd)/deps/prefix
-```
 
-It is better to use absolute path, so you can then put produced `tetris` binary to any other place and have prefix location unchanged.
-
-__Windows__
-
-Look at the [repo releases](https://github.com/Oxore/tetris-csfml/releases)!
-Windows compilation flow currently is unsupported, but sometimes I put Windows binary releases there.
-
-### TODO:
+## TODO:
 
 - Add screenshots and gameplay gif
 - [x] Levels speed and scores calibration
