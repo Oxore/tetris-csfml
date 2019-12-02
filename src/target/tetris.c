@@ -103,6 +103,7 @@ int main()
         .game_over_wait_clock = sfClock_create(),
         .put_clock = sfClock_create(),
         .menu_clock = sfClock_create(),
+        .window = NULL,
         .controls = {
             .keys = 0,
             .down_repeat_clock = sfClock_create(),
@@ -151,6 +152,7 @@ int main()
 
     sfRenderWindow_setFramerateLimit(window, 60);
     painter_set_window(window);
+    game.window = window;
 
     fld.id = painter_register_field(&fld);
     nxt.id = painter_register_field(&nxt);

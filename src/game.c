@@ -712,49 +712,52 @@ static int game_loop(struct game *game)
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
-    // TODO: Elaborate on precedence of timers and ctl->keys checking
-    // Here should be only one return statement - at the end of the function
+    if (media_is_window_focused(game->window)) {
 
-    uint32_t ret_keys = game_keys(&game->controls, game->config);
+        // TODO: Elaborate on precedence of timers and ctl->keys checking
+        // Here should be only one return statement - at the end of the function
 
-    if (ret_keys & PAUSE) {
-        ret = GAME_LOOP_PAUSE;
-        sfClock_restart(game->put_clock);
-    }
+        uint32_t ret_keys = game_keys(&game->controls, game->config);
 
-    if (ret_keys & ROTRIGHT) {
-        signal_rotate_right(game);
-    }
+        if (ret_keys & PAUSE) {
+            ret = GAME_LOOP_PAUSE;
+            sfClock_restart(game->put_clock);
+        }
 
-    if (ret_keys & ROTLEFT) {
-        signal_rotate_left(game);
-    }
+        if (ret_keys & ROTRIGHT) {
+            signal_rotate_right(game);
+        }
 
-    if (ret_keys & DOWN) {
-        signal_down(game);
-    }
+        if (ret_keys & ROTLEFT) {
+            signal_rotate_left(game);
+        }
 
-    if (ret_keys & HARDDROP) {
-        struct field *fld = game->fld;
+        if (ret_keys & DOWN) {
+            signal_down(game);
+        }
 
-        while (field_move_shape_down(fld, 1))
-            game->score++;
+        if (ret_keys & HARDDROP) {
+            struct field *fld = game->fld;
 
-        sfClock_restart(game->game_clock);
-        sfClock_restart(game->put_clock);
+            while (field_move_shape_down(fld, 1))
+                game->score++;
 
-        if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
-            return GAME_LOOP_GAME_OVER;
-        else
-            transition_put_shape(game);
-    }
+            sfClock_restart(game->game_clock);
+            sfClock_restart(game->put_clock);
 
-    if (ret_keys & LEFT) {
-        signal_left(game);
-    }
+            if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
+                return GAME_LOOP_GAME_OVER;
+            else
+                transition_put_shape(game);
+        }
 
-    if (ret_keys & RIGHT) {
-        signal_right(game);
+        if (ret_keys & LEFT) {
+            signal_left(game);
+        }
+
+        if (ret_keys & RIGHT) {
+            signal_right(game);
+        }
     }
 
     if (sfClock_getElapsedTime(game->game_clock).microseconds
@@ -859,11 +862,14 @@ static int highscores_table_loop(struct controls *ctl, struct config *config)
 #define PAUSE_LOOP_UNPAUSE 1
 static int pause_loop(struct game *game)
 {
-    uint32_t ret = pause_keys(&game->controls, game->config);
-    if (ret & PAUSE) {
-        sfClock_restart(game->put_clock);
-        return PAUSE_LOOP_UNPAUSE;
+    if (media_is_window_focused(game->window)) {
+        uint32_t ret = pause_keys(&game->controls, game->config);
+        if (ret & PAUSE) {
+            sfClock_restart(game->put_clock);
+            return PAUSE_LOOP_UNPAUSE;
+        }
     }
+
     return 0;
 }
 

@@ -1,5 +1,6 @@
 struct field;
 struct idlist;
+typedef void media_window_t;
 
 enum game_state {
     GS_MAIN_MENU,
@@ -41,6 +42,8 @@ struct game {
     sfClock    *game_over_wait_clock;
     sfClock    *put_clock;
     sfClock    *menu_clock;
+
+    media_window_t *window;
 
     struct controls controls;
 
