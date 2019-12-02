@@ -608,25 +608,6 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     return ret;
 }
 
-static uint32_t pause_keys(struct controls *ctl, struct config *config)
-{
-    // TODO: merge with game_keys
-
-    uint32_t ret = 0;
-
-    /* PAUSE */
-    if (media_is_key_pressed(config->keys.pause)) {
-        if (!(ctl->keys & PAUSE)) {
-            ctl->keys |= PAUSE;
-            ret |= PAUSE;
-        }
-    } else {
-        ctl->keys &= ~PAUSE;
-    }
-
-    return ret;
-}
-
 static void menu_tick(struct game *game)
 {
     struct field *fld = game->fld;
@@ -863,7 +844,7 @@ static int highscores_table_loop(struct controls *ctl, struct config *config)
 static int pause_loop(struct game *game)
 {
     if (media_is_window_focused(game->window)) {
-        uint32_t ret = pause_keys(&game->controls, game->config);
+        uint32_t ret = game_keys(&game->controls, game->config);
         if (ret & PAUSE) {
             sfClock_restart(game->put_clock);
             return PAUSE_LOOP_UNPAUSE;
