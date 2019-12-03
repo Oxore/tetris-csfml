@@ -49,6 +49,7 @@
 #include "text.h"
 #include "field.h"
 #include "painter.h"
+#include "input_event.h"
 
 static int level_move_latency[] = {
     CFG_L00_CLOCK_PERIOD,
@@ -804,20 +805,29 @@ static int game_over_loop(struct controls *ctl)
 }
 
 #define HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE 1
-static int highscores_input_loop(struct game *game, const struct idlist *events)
+static int highscores_input_loop(
+        struct game *game,
+        const struct input_event *events)
 {
-#define UTF32_BACKSPACE L'\b'
+#define UTF8_BACKSPACE '\b'
     if (media_is_key_pressed(KEY_ENTER))
         return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
 
-    IDLIST_FOREACH_CONST(events, event) {
-        const sfEvent *e = (sfEvent *)event->obj;
-        if (e->type == sfEvtTextEntered) {
-            int32_t c = e->text.unicode;
-            if (c == UTF32_BACKSPACE)
+    if (!events)
+        return 0;
+
+    const struct input_event *e;
+
+    for (e = events; e->type != INPUT_EVENT_UNDEFINED; e++) {
+        if (e->type == INPUT_EVENT_TEXT_INPUT) {
+            if (e->text.codepoint[0] == UTF8_BACKSPACE) {
                 input_rm_last_char(&game->input_name);
-            else
-                input_append_utf32char(&game->input_name, c);
+            } else {
+                input_append_cstring_n(
+                        &game->input_name,
+                        e->text.codepoint,
+                        sizeof(e->text.codepoint));
+            }
 
             painter_update_input(game->input_name.id, &game->input_name);
         }
@@ -855,7 +865,7 @@ static int pause_loop(struct game *game)
     return 0;
 }
 
-void main_loop(struct game *game, const struct idlist *events)
+void main_loop(struct game *game, const struct input_event *events)
 {
     int ret;
     switch (game->state) {

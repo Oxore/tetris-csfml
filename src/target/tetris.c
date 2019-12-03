@@ -6,11 +6,13 @@
  * */
 
 #include <assert.h>
+#include <f8.h>
 #include <SFML/System/Clock.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "config.h"
@@ -23,24 +25,39 @@
 #include "text.h"
 #include "field.h"
 #include "painter.h"
+#include "input_event.h"
 
-static struct idlist *handle_window_events(sfRenderWindow *window)
+#define MAX_INPUT_EVENTS 256
+
+void handle_window_events(
+        sfRenderWindow *window,
+        struct input_event *events,
+        size_t max_events)
 {
+    size_t i = 0;
     sfEvent event;
-    struct idlist *events = idlist_new();
 
     while (sfRenderWindow_pollEvent(window, &event)) {
         if (event.type == sfEvtClosed) {
             sfRenderWindow_close(window);
+            return;
 
-        } else if (events) {
-            struct idnode *e = idlist_append(events);
-            e->obj = calloc(1, sizeof(sfEvent));
-            assert(e->obj);
-            *(sfEvent *)e->obj = event;
+        } else if (events && max_events && i < max_events - 1) {
+            if (event.type == sfEvtTextEntered) {
+                events[i].type = INPUT_EVENT_TEXT_INPUT;
+                utf32to8_strncpy_s(
+                        events[i].text.codepoint,
+                        sizeof(events[i].text.codepoint),
+                        (int32_t *)&event.text.unicode,
+                        1);
+                i++;
+            }
         }
     }
-    return events;
+
+    assert(i < max_events);
+
+    return;
 }
 
 static void register_text(void *obj)
@@ -175,11 +192,10 @@ int main()
 
     transition_init(&game);
     while (sfRenderWindow_isOpen(window)) {
-        struct idlist *events = handle_window_events(window);
+        struct input_event events[MAX_INPUT_EVENTS] = {0};
+        memset(events, 0, sizeof(events));
+        handle_window_events(window, events, MAX_INPUT_EVENTS);
         main_loop(&game, events);
-        IDLIST_FOREACH(events, event)
-            free(event->obj);
-        idlist_destroy(events);
     }
 
     SLIST_FOREACH(texts, text) {

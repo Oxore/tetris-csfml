@@ -1,8 +1,7 @@
-#include <f8.h>
-#include <string.h>
-
-#include <stdio.h>
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "config.h"
 #include "vector.h"
@@ -31,14 +30,21 @@ void input_clear(struct input *input)
     input->nbytes = 0;
 }
 
-void input_append_utf32char(struct input *input, int32_t c)
+void input_append_cstring_n(struct input *input, const char *str, size_t n)
 {
     assert(input->nbytes < sizeof(input->text));
 
     size_t size = sizeof(input->text);
     size_t *nbytes = &input->nbytes;
-    utf32to8_strncpy_s(&input->text[*nbytes], size - *nbytes, &c, 1);
-    *nbytes = strlen(input->text);
+    size_t appended_len = strlen(str);
+
+    assert(appended_len < n); // c string with terminator must fit
+
+    if (size - *nbytes < appended_len)
+        return;
+
+    strncpy(&input->text[*nbytes], str, n);
+    *nbytes += appended_len;
 }
 
 void input_rm_last_char(struct input *input)

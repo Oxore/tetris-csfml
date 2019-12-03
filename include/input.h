@@ -9,5 +9,5 @@ struct input {
 };
 
 void input_clear(struct input *input);
-void input_append_utf32char(struct input *input, int32_t c);
 void input_rm_last_char(struct input *input);
+void input_append_cstring_n(struct input *input, const char *str, size_t n);
