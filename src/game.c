@@ -507,7 +507,7 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     uint32_t ret = 0;
 
     /* PAUSE */
-    if (media_is_key_pressed(config->keys.pause)) {
+    if (media_key_is_pressed(config->keys.pause)) {
         if (!(ctl->keys & PAUSE)) {
             ctl->keys |= PAUSE;
             ret |= PAUSE;
@@ -517,7 +517,7 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     }
 
     /* ROTRIGHT */
-    if (media_is_key_pressed(config->keys.rotate_right)) {
+    if (media_key_is_pressed(config->keys.rotate_right)) {
         if (!(ctl->keys & ROTRIGHT)) {
             ctl->keys |= ROTRIGHT;
             ret |= ROTRIGHT;
@@ -527,7 +527,7 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     }
 
     /* ROTLEFT */
-    if (media_is_key_pressed(config->keys.rotate_left)) {
+    if (media_key_is_pressed(config->keys.rotate_left)) {
         if (!(ctl->keys & ROTLEFT)) {
             ctl->keys |= ROTLEFT;
             ret |= ROTLEFT;
@@ -537,7 +537,7 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     }
 
     /* HARDDROP */
-    if (media_is_key_pressed(config->keys.drop)) {
+    if (media_key_is_pressed(config->keys.drop)) {
         if (!(ctl->keys & HARDDROP)) {
             ctl->keys |= HARDDROP;
             ret |= HARDDROP;
@@ -547,7 +547,7 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     }
 
     /* DOWN */
-    if (media_is_key_pressed(config->keys.move_down)) {
+    if (media_key_is_pressed(config->keys.move_down)) {
         if (!(ctl->keys & DOWN)) {
             ctl->keys |= DOWN;
             ret |= DOWN;
@@ -562,8 +562,8 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     }
 
     /* LEFT */
-    if (media_is_key_pressed(config->keys.move_left)
-     && !media_is_key_pressed(config->keys.move_right)) {
+    if (media_key_is_pressed(config->keys.move_left)
+     && !media_key_is_pressed(config->keys.move_right)) {
         if (!(ctl->keys & LEFT)) {
             ctl->keys |= LEFT;
             ret |= LEFT;
@@ -585,8 +585,8 @@ static uint32_t game_keys(struct controls *ctl, struct config *config)
     }
 
     /* RIGHT */
-    if (media_is_key_pressed(config->keys.move_right)
-     && !media_is_key_pressed(config->keys.move_left)) {
+    if (media_key_is_pressed(config->keys.move_right)
+     && !media_key_is_pressed(config->keys.move_left)) {
         if (!(ctl->keys & RIGHT)) {
             ctl->keys |= RIGHT;
             ret |= RIGHT;
@@ -676,7 +676,7 @@ static int menu_loop(struct game *game)
      >= CFG_MENU_CLOCK_PERIOD)
         menu_tick(game);
 
-    if (media_is_key_pressed(game->config->keys.start)) {
+    if (media_key_is_pressed(game->config->keys.start)) {
         if (!(game->controls.keys & GAMEOVER)) {
             ret = MENU_LOOP_GAME_START;
         }
@@ -695,7 +695,7 @@ static int game_loop(struct game *game)
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
-    if (media_is_window_focused(game->window)) {
+    if (media_window_is_focused(game->window)) {
 
         // TODO: Elaborate on precedence of timers and ctl->keys checking
         // Here should be only one return statement - at the end of the function
@@ -789,7 +789,7 @@ static int game_over_loop(struct controls *ctl)
     int anykey = 0;
 
     for (int keycode = KEY_UNKNOWN; keycode < KEY_COUNT; keycode++)
-        if (media_is_key_pressed(keycode))
+        if (media_key_is_pressed(keycode))
             anykey = 1;
 
     if (anykey) {
@@ -841,7 +841,7 @@ static int highscores_input_loop(
 #define HIGHSCORES_TABLE_LOOP_MENU 1
 static int highscores_table_loop(struct controls *ctl, struct config *config)
 {
-    if (media_is_key_pressed(config->keys.start)) {
+    if (media_key_is_pressed(config->keys.start)) {
         if (!(ctl->keys & GAMEOVER)) {
             ctl->keys |= GAMEOVER;
             return HIGHSCORES_TABLE_LOOP_MENU;
@@ -856,7 +856,7 @@ static int highscores_table_loop(struct controls *ctl, struct config *config)
 #define PAUSE_LOOP_UNPAUSE 1
 static int pause_loop(struct game *game)
 {
-    if (media_is_window_focused(game->window)) {
+    if (media_window_is_focused(game->window)) {
         uint32_t ret = game_keys(&game->controls, game->config);
         if (ret & PAUSE) {
             sfClock_restart(game->put_clock);

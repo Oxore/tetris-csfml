@@ -6,7 +6,7 @@
 #include "media.h"
 #include "media/csfml.h"
 
-bool media_is_key_pressed(enum key_id key)
+bool media_key_is_pressed(enum key_id key)
 {
     if (key == KEY_UNKNOWN)
         return false;
@@ -14,7 +14,7 @@ bool media_is_key_pressed(enum key_id key)
     return sfKeyboard_isKeyPressed(csfml_keymap[key]);
 }
 
-bool media_is_window_focused(const media_window_t *window)
+bool media_window_is_focused(const media_window_t *window)
 {
     assert(window);
 

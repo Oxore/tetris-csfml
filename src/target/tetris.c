@@ -71,7 +71,7 @@ static void handle_window_events(
     }
 
     for (size_t i = 0; i < NUM_KEYS_TO_POLL && iter < max_events - 1; i++) {
-        if (media_is_key_pressed(keys_to_poll[i].key)) {
+        if (media_key_is_pressed(keys_to_poll[i].key)) {
             events[iter] = (struct input_event){
                 .type = INPUT_EVENT_ACTION,
                 .action.id = keys_to_poll[i].action,

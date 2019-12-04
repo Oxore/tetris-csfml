@@ -104,8 +104,9 @@ enum key_id {
     KEY_COUNT,
 };
 
-// Implementation defined, used only as a pointer
+// Implementation defined types, used only as a pointer
 typedef void media_window_t;
 
-bool media_is_key_pressed(enum key_id);
-bool media_is_window_focused(const media_window_t *window);
+bool media_key_is_pressed(enum key_id);
+
+bool media_window_is_focused(const media_window_t *window);
