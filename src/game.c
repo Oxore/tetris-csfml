@@ -810,9 +810,6 @@ static int highscores_input_loop(
         const struct input_event *events)
 {
 #define UTF8_BACKSPACE '\b'
-    if (media_is_key_pressed(KEY_ENTER))
-        return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
-
     if (!events)
         return 0;
 
@@ -830,6 +827,11 @@ static int highscores_input_loop(
             }
 
             painter_update_input(game->input_name.id, &game->input_name);
+
+        } else if (e->type == INPUT_EVENT_ACTION) {
+            if (e->action.id == ACTION_ID_FINISH_INPUT) {
+                return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
+            }
         }
     }
 

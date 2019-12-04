@@ -8,16 +8,19 @@ struct input_event_text {
     char codepoint[8];
 };
 
-struct input_event_action {
-    uint32_t mask;
+enum action_id {
+    ACTION_ID_UNDEFINED = 0,
+    ACTION_ID_FINISH_INPUT,
 };
 
-union input_event_u {
-    struct input_event_text text;
-    struct input_event_action action;
+struct input_event_action {
+    enum action_id id;
 };
 
 struct input_event {
     enum input_event_type type;
-    union input_event_u;
+    union {
+        struct input_event_text text;
+        struct input_event_action action;
+    };
 };

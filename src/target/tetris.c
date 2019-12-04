@@ -26,15 +26,29 @@
 #include "field.h"
 #include "painter.h"
 #include "input_event.h"
+#include "media.h"
 
 #define MAX_INPUT_EVENTS 256
+#define NUM_KEYS_TO_POLL 1
 
-void handle_window_events(
+struct key_to_poll {
+    enum key_id key;
+    enum action_id action;
+};
+
+static struct key_to_poll keys_to_poll[] = {
+    {
+        .key = KEY_ENTER,
+        .action = ACTION_ID_FINISH_INPUT,
+    },
+};
+
+static void handle_window_events(
         sfRenderWindow *window,
         struct input_event *events,
         size_t max_events)
 {
-    size_t i = 0;
+    size_t iter = 0;
     sfEvent event;
 
     while (sfRenderWindow_pollEvent(window, &event)) {
@@ -42,21 +56,33 @@ void handle_window_events(
             sfRenderWindow_close(window);
             return;
 
-        } else if (events && max_events && i < max_events - 1) {
+        } else if (events && max_events && iter < max_events - 1) {
             if (event.type == sfEvtTextEntered) {
-                events[i].type = INPUT_EVENT_TEXT_INPUT;
+                events[iter].type = INPUT_EVENT_TEXT_INPUT;
                 utf32to8_strncpy_s(
-                        events[i].text.codepoint,
-                        sizeof(events[i].text.codepoint),
+                        events[iter].text.codepoint,
+                        sizeof(events[iter].text.codepoint),
                         (int32_t *)&event.text.unicode,
                         1);
-                i++;
+                iter++;
             }
+        }
+
+    }
+
+    for (size_t i = 0; i < NUM_KEYS_TO_POLL && iter < max_events - 1; i++) {
+        if (media_is_key_pressed(keys_to_poll[i].key)) {
+            events[iter] = (struct input_event){
+                .type = INPUT_EVENT_ACTION,
+                .action.id = keys_to_poll[i].action,
+            };
+            iter++;
         }
     }
 
-    assert(i < max_events);
+    assert(iter < max_events);
 
+    events[iter] = (struct input_event){.type = INPUT_EVENT_UNDEFINED};
     return;
 }
 
