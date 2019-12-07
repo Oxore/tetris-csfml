@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -89,8 +90,9 @@ struct idlist *load_texts_from_json(const char *filename)
         return NULL;
     }
 
-    struct idlist *texts = NULL;
-    struct idlist *texts_node = texts;
+    struct idlist *texts = idlist_new();
+    if (texts == NULL)
+        return NULL;
 
     cJSON *json_data = cJSON_Parse(data);
     if (cJSON_IsArray(json_data)) {
@@ -101,13 +103,11 @@ struct idlist *load_texts_from_json(const char *filename)
 
                 /* Allocate texts node to be filled */
 
-                if (!texts) {
-                    texts_node = texts = list_new();
-                } else {
-                    texts_node = list_append(texts);
-                }
-                texts_node->obj = calloc(1, sizeof(struct text));
-                struct text *text = texts_node->obj;
+                struct text *text = calloc(1, sizeof(struct text));
+
+                /* TODO: maybe NULL from calloc should be handled */
+
+                assert(text);
 
                 /* Fill the node */
 
@@ -118,6 +118,8 @@ struct idlist *load_texts_from_json(const char *filename)
                 text->size = texts_cjson_get_int(item, "size");
                 text->pos.x = texts_cjson_get_int(item, "x");
                 text->pos.y = texts_cjson_get_int(item, "y");
+
+                idlist_append(texts)->obj = text;
             }
         }
     }

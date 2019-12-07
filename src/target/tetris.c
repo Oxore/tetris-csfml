@@ -5,6 +5,7 @@
  *
  * */
 
+#include <assert.h>
 #include <SFML/System/Clock.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <stdbool.h>
@@ -25,22 +26,16 @@
 static struct idlist *handle_window_events(sfRenderWindow *window)
 {
     sfEvent event;
-    struct idlist *events = NULL;
+    struct idlist *events = idlist_new();
 
     while (sfRenderWindow_pollEvent(window, &event)) {
         if (event.type == sfEvtClosed) {
             sfRenderWindow_close(window);
 
-        } else {
-            struct idlist *e = NULL;
-
-            if (events == NULL) {
-                e = events = list_new();
-            } else {
-                e = list_append(events);
-            }
-
+        } else if (events) {
+            struct idnode *e = idlist_append(events);
             e->obj = calloc(1, sizeof(sfEvent));
+            assert(e->obj);
             *(sfEvent *)e->obj = event;
         }
     }
@@ -137,6 +132,7 @@ int main()
     hs_table_load_from_json_file(&game.highscores, CFG_HIGHSCORES_FNAME);
     config_load_from_json_file(&g_config, CFG_CONFIG_FNAME);
 
+    painter_init();
     painter_load_font("dat/arial.ttf");
 
     sfVideoMode mode = (sfVideoMode){450, 570, 32};
@@ -170,7 +166,7 @@ int main()
         goto cleanup_load_texts;
     }
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         register_text(text->obj);
     }
 
@@ -180,16 +176,16 @@ int main()
     while (sfRenderWindow_isOpen(window)) {
         struct idlist *events = handle_window_events(window);
         main_loop(&game, events);
-        LIST_FOREACH(events, event)
+        IDLIST_FOREACH(events, event)
             free(event->obj);
-        list_destroy(events);
+        idlist_destroy(events);
     }
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         text_destroy(text->obj);
     }
 
-    list_destroy(texts);
+    idlist_destroy(texts);
 
 cleanup_load_texts:
     painter_destroy_drawables();
@@ -201,6 +197,7 @@ cleanup_load_texts:
 
 cleanup_create_window:
     painter_destroy_font();
+    painter_deinit();
 
     sfClock_destroy(game.game_clock);
     sfClock_destroy(game.game_over_wait_clock);

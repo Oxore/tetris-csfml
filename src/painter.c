@@ -74,10 +74,25 @@ struct hs_table_drawable {
     size_t attr;
 };
 
-static sfRenderWindow *window;
-static sfFont *font;
+static sfRenderWindow *window = NULL;
+static sfFont *font = NULL;
 
 static struct idlist *drawables = NULL;
+
+void painter_init()
+{
+    if (!drawables)
+        drawables = idlist_new();
+}
+
+void painter_deinit()
+{
+    painter_destroy_all();
+    if (drawables) {
+        idlist_destroy(drawables);
+        drawables = NULL;
+    }
+}
 
 void painter_set_window(sfRenderWindow *w)
 {
@@ -96,25 +111,28 @@ void painter_load_font(const char *filename)
 
 void painter_destroy_font()
 {
-    sfFont_destroy(font);
+    if (font) {
+        sfFont_destroy(font);
+        font = NULL;
+    }
 }
 
 size_t painter_register_field(const struct field *fld)
 {
-    struct idlist *last;
-    if (!drawables)
-        last = drawables = list_new();
-    else
-        last = list_append(drawables);
+    assert(drawables);
 
     struct field_drawable *f = calloc(1, sizeof(struct field_drawable));
+    assert(f);
     f->t = TYPE_FIELD;
     f->size = fld->size;
     f->p = calloc(f->size.y, sizeof(sfRectangleShape **));
+    assert(f->p);
     for (size_t j = 0; j < f->size.y; j++) {
         f->p[j] = calloc(f->size.x, sizeof(sfRectangleShape *));
+        assert(f->p[j]);
         for (size_t i = 0; i < f->size.x; i++) {
             f->p[j][i] = sfRectangleShape_create();
+            assert(f->p[j][i]);
             sfVector2f cell_pos;
             cell_pos.x = fld->pos.x + (i * (CFG_CELL_SIZE_X + 2 * CFG_OUT_THICK));
             cell_pos.y = fld->pos.y - (j * (CFG_CELL_SIZE_Y + 2 * CFG_OUT_THICK));
@@ -127,13 +145,15 @@ size_t painter_register_field(const struct field *fld)
         }
     }
 
+    struct idnode *last = idlist_append(drawables);
+    assert(last);
     last->obj = f;
     return last->id;
 }
 
 void painter_update_field(size_t id, const struct field *fld)
 {
-    struct idlist *node = list_get(drawables, id);
+    struct idnode *node = idlist_get(drawables, id);
     if (!node)
         return;
     struct field_drawable *f = node->obj;
@@ -227,18 +247,18 @@ static void painter_update_text_drawable(struct text_drawable *t,
 
 size_t painter_register_text(const struct text *txt)
 {
-    struct idlist *last;
-    if (!drawables)
-        last = drawables = list_new();
-    else
-        last = list_append(drawables);
+    assert(drawables);
 
     struct text_drawable *t = calloc(1, sizeof(struct text_drawable));
+    assert(t);
     t->t = TYPE_TEXT;
     t->text = sfText_create();
+    assert(t->text);
     sfText_setFont(t->text, font);
     painter_update_text_drawable(t, txt);
 
+    struct idnode *last = idlist_append(drawables);
+    assert(last);
     last->obj = t;
     return last->id;
 }
@@ -247,11 +267,11 @@ void painter_update_text(size_t id, const struct text *txt)
 {
     assert(txt);
     assert(txt->text);
+    assert(drawables);
 
-    struct idlist *node = list_get(drawables, id);
+    struct idnode *node = idlist_get(drawables, id);
     if (node && txt)
         painter_update_text_drawable(node->obj, txt);
-
 }
 
 static void painter_update_input_drawable(struct input_drawable *idrwbl,
@@ -271,18 +291,18 @@ static void painter_update_input_drawable(struct input_drawable *idrwbl,
 
 size_t painter_register_input(const struct input *input)
 {
-    struct idlist *last;
-    if (!drawables)
-        last = drawables = list_new();
-    else
-        last = list_append(drawables);
+    assert(drawables);
 
     struct input_drawable *idrwbl = calloc(1, sizeof(struct input_drawable));
+    assert(idrwbl);
     idrwbl->t = TYPE_INPUT;
     idrwbl->text = sfText_create();
+    assert(idrwbl->text);
     sfText_setFont(idrwbl->text, font);
     painter_update_input_drawable(idrwbl, input);
 
+    struct idnode *last = idlist_append(drawables);
+    assert(last);
     last->obj = idrwbl;
     return last->id;
 }
@@ -340,45 +360,48 @@ static void painter_update_hs_table_drawable(struct hs_table_drawable *hstdrwbl,
         set_utf8_to_sfText(hstdrwbl->lines[i].name,
                 hs_table->entries[i].name, CFG_NAME_MAX);
     }
-
 }
 
 void painter_update_input(size_t id, const struct input *input)
 {
-    struct idlist *node = list_get(drawables, id);
+    struct idnode *node = idlist_get(drawables, id);
     if (node)
         painter_update_input_drawable(node->obj, input);
 }
 
 size_t painter_register_hs_table(const struct hs_table *hs_table)
 {
-    struct idlist *last;
-    if (!drawables)
-        last = drawables = list_new();
-    else
-        last = list_append(drawables);
+    assert(drawables);
 
     struct hs_table_drawable *hstdrwbl
         = calloc(1, sizeof(struct hs_table_drawable));
+    assert(hstdrwbl);
 
     hstdrwbl->t = TYPE_HS_TABLE;
 
     for (size_t i = 0; i < CFG_HS_TABLE_SIZE; i++) {
-        hstdrwbl->lines[i].score = sfText_create();
-        sfText_setFont(hstdrwbl->lines[i].score, font);
-        hstdrwbl->lines[i].name = sfText_create();
-        sfText_setFont(hstdrwbl->lines[i].name, font);
+        sfText *score = sfText_create();
+        assert(score);
+        sfText_setFont(score, font);
+        hstdrwbl->lines[i].score = score;
+
+        sfText *name = sfText_create();
+        assert(name);
+        sfText_setFont(name, font);
+        hstdrwbl->lines[i].name = name;
     }
 
     painter_update_hs_table_drawable(hstdrwbl, hs_table);
 
+    struct idnode *last = idlist_append(drawables);
+    assert(last);
     last->obj = hstdrwbl;
     return last->id;
 }
 
 void painter_update_hs_table(size_t id, const struct hs_table *hs_table)
 {
-    struct idlist *node = list_get(drawables, id);
+    struct idnode *node = idlist_get(drawables, id);
     if (node)
         painter_update_hs_table_drawable(node->obj, hs_table);
 }
@@ -460,7 +483,7 @@ void painter_draw()
 {
     sfRenderWindow_clear(window, (sfColor)CFG_UI_BG_COLOR);
 
-    LIST_FOREACH(drawables, drawable) {
+    IDLIST_FOREACH(drawables, drawable) {
         draw_drawable(drawable->obj);
     }
 
@@ -492,18 +515,21 @@ static void destroy_drawable(void *obj)
 
 void painter_destroy_drawable(size_t id)
 {
-    struct idlist *node = list_get(drawables, id);
+    struct idnode *node = idlist_get(drawables, id);
     destroy_drawable(node->obj);
-    list_rm_node(node);
+    idlist_rm(drawables, node->id);
 }
 
 void painter_destroy_drawables()
 {
-    LIST_FOREACH(drawables, drawable) {
+    if (!drawables)
+        return;
+
+    IDLIST_FOREACH(drawables, drawable) {
         destroy_drawable(drawable->obj);
     }
 
-    list_destroy(drawables);
+    idlist_destroy(drawables);
     drawables = 0;
 }
 

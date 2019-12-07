@@ -242,7 +242,7 @@ static void transition_menu(struct game *game)
     fld->attr &= ~FLD_ATTR_INVISIBLE;
     painter_update_field(fld->id, fld);
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_menu_title_text(text->obj);
         show_menu_press_key_text(text->obj);
@@ -260,7 +260,7 @@ static void transition_highscores_input(struct game *game)
     game->fld->attr |= FLD_ATTR_INVISIBLE;
     painter_update_field(game->fld->id, game->fld);
 
-    LIST_FOREACH(game->texts, text) {
+    IDLIST_FOREACH(game->texts, text) {
         hide_text(text->obj);
         show_input_name_text(text->obj);
         update_text(text->obj);
@@ -289,7 +289,7 @@ static void transition_highscores_table(struct game *game)
     game->highscores.attr &= ~HS_TABLE_ATTR_INVISIBLE;
     painter_update_hs_table(game->highscores.id, &game->highscores);
 
-    LIST_FOREACH(game->texts, text) {
+    IDLIST_FOREACH(game->texts, text) {
         hide_text(text->obj);
         show_highscores_text(text->obj);
         update_text(text->obj);
@@ -304,7 +304,7 @@ static void transition_game_over_wait(struct game *game)
 
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -322,7 +322,7 @@ static void transition_game_over(struct game *game)
 
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -382,7 +382,7 @@ static void transition_pause(struct game *game)
 
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_pause_text(text->obj);
         show_game_score_text(text->obj);
@@ -401,7 +401,7 @@ static void transition_unpause(struct game *game)
 
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -440,7 +440,7 @@ static int game_tick(struct game *game)
 
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         render_score_value(game, text->obj);
         render_level_value(game, text->obj);
     }
@@ -621,7 +621,7 @@ void transition_init(struct game *game)
 {
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_menu_title_text(text->obj);
         show_menu_press_key_text(text->obj);
@@ -648,7 +648,7 @@ static void transition_game_start(struct game *game)
 
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -760,7 +760,7 @@ static int game_loop(struct game *game)
 
     struct idlist *texts = game->texts;
 
-    LIST_FOREACH(texts, text) {
+    IDLIST_FOREACH(texts, text) {
         render_score_value(game, text->obj);
         render_level_value(game, text->obj);
         update_text(text->obj);
@@ -809,7 +809,7 @@ static int highscores_input_loop(struct game *game, const struct idlist *events)
     if (media_is_key_pressed(KEY_ENTER))
         return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
 
-    LIST_FOREACH_CONST(events, event) {
+    IDLIST_FOREACH_CONST(events, event) {
         const sfEvent *e = (sfEvent *)event->obj;
         if (e->type == sfEvtTextEntered) {
             int32_t c = e->text.unicode;

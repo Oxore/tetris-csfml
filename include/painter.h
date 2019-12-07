@@ -7,7 +7,8 @@
  * handle (id) which can be used for updating an object - modifying it's
  * drawable representation. Painter is used as described in following steps:
  *
- * 1. At first assign a window via painter_set_window() function.
+ * 1. At first initialize painter via painter_init() and assign a window via
+ *    painter_set_window() function.
  * 2. Load a font if you are going to draw any text.
  * 3. Register an object (field, text, etc.) using painter_register_*()
  *    function.
@@ -19,9 +20,14 @@
  *    registered each in it's own way, but have unified interface for
  *    destroying - painter_destroy_drawable() function. You can destroy them
  *    all at once using painter_destroy_drawables() function or even destroy
- *    everything that has been allocated by the Painter, even loaded fonts.
+ *    everything that has been allocated by the Painter, even loaded fonts by
+ *    calling painter_destroy_all().
+ * 7. Deinitialize the painter itself by calling painter_deinit().
  *
  * */
+
+void    painter_init();
+void    painter_deinit();
 
 void    painter_set_window(sfRenderWindow *window);
 

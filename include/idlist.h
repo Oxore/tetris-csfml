@@ -7,21 +7,24 @@
  *
  * */
 
-struct idlist {
+struct idnode {
     size_t          id;
     void           *obj;
-    struct idlist  *next;
-    struct idlist  *prev;
+    struct idnode  *next;
 };
 
-struct idlist  *list_new();
-struct idlist  *list_append(struct idlist *list);
-struct idlist  *list_get(const struct idlist *list, size_t id);
-void            list_rm_node(struct idlist *node);
-void            list_destroy(struct idlist *list);
+struct idlist {
+    struct idnode *first;
+};
 
-#define LIST_FOREACH(head, e) \
-    for (struct idlist *e = head; e; e = e->next)
+struct idlist  *idlist_new();
+struct idnode  *idlist_append(struct idlist *list);
+struct idnode  *idlist_get(const struct idlist *list, size_t id);
+void            idlist_rm(struct idlist *list, size_t id);
+void            idlist_destroy(struct idlist *list);
 
-#define LIST_FOREACH_CONST(head, e) \
-    for (const struct idlist *e = head; e; e = e->next)
+#define IDLIST_FOREACH(list, node) \
+    for (struct idnode *node = (list)->first; node; node = node->next)
+
+#define IDLIST_FOREACH_CONST(list, node) \
+    for (const struct idnode *node = (list)->first; node; node = node->next)
