@@ -106,7 +106,13 @@ enum key_id {
 
 // Implementation defined types, used only as a pointer
 typedef void media_window_t;
+typedef struct media_timeout media_timeout_t;
 
 bool media_key_is_pressed(enum key_id);
 
 bool media_window_is_focused(const media_window_t *window);
+
+media_timeout_t *media_timeout_new(uint32_t milliseconds);
+void media_timeout_destroy(media_timeout_t *timeout);
+void media_timeout_reset(media_timeout_t *timeout, uint32_t milliseconds);
+bool media_timeout_is_passed(const media_timeout_t *timeout);

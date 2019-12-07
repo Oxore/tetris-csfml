@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdbool.h>
 #include <SFML/Window/Keyboard.h>
 
