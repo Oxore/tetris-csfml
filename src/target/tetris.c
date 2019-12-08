@@ -25,10 +25,9 @@
 #include "text.h"
 #include "field.h"
 #include "painter.h"
-#include "input_event.h"
+#include "event.h"
 #include "media.h"
 
-#define MAX_INPUT_EVENTS 256
 #define NUM_KEYS_TO_POLL 1
 
 struct key_to_poll {
@@ -45,10 +44,8 @@ static struct key_to_poll keys_to_poll[] = {
 
 static void handle_window_events(
         sfRenderWindow *window,
-        struct input_event *events,
-        size_t max_events)
+        struct events_array *events)
 {
-    size_t iter = 0;
     sfEvent event;
 
     while (sfRenderWindow_pollEvent(window, &event)) {
@@ -56,34 +53,32 @@ static void handle_window_events(
             sfRenderWindow_close(window);
             return;
 
-        } else if (events && max_events && iter < max_events - 1) {
+        } else if (events && !events_array_is_full(events)) {
             if (event.type == sfEvtTextEntered) {
-                events[iter].type = INPUT_EVENT_TEXT_INPUT;
+                struct input_event ie = {.type = INPUT_EVENT_TEXT_INPUT, };
                 utf32to8_strncpy_s(
-                        events[iter].text.codepoint,
-                        sizeof(events[iter].text.codepoint),
+                        ie.text.codepoint,
+                        sizeof(ie.text.codepoint),
                         (int32_t *)&event.text.unicode,
                         1);
-                iter++;
+                events_array_add_input(events, ie);
             }
         }
 
     }
 
-    for (size_t i = 0; i < NUM_KEYS_TO_POLL && iter < max_events - 1; i++) {
+    for (size_t i = 0; i < NUM_KEYS_TO_POLL && !events_array_is_full(events); i++) {
+        if (events_array_is_full(events))
+                break;
+
         if (media_key_is_pressed(keys_to_poll[i].key)) {
-            events[iter] = (struct input_event){
+            struct input_event ie = {
                 .type = INPUT_EVENT_ACTION,
                 .action.id = keys_to_poll[i].action,
             };
-            iter++;
+            events_array_add_input(events, ie);
         }
     }
-
-    assert(iter < max_events);
-
-    events[iter] = (struct input_event){.type = INPUT_EVENT_UNDEFINED};
-    return;
 }
 
 static void register_text(void *obj)
@@ -218,10 +213,10 @@ int main()
 
     transition_init(&game);
     while (sfRenderWindow_isOpen(window)) {
-        struct input_event events[MAX_INPUT_EVENTS] = {0};
-        memset(events, 0, sizeof(events));
-        handle_window_events(window, events, MAX_INPUT_EVENTS);
-        main_loop(&game, events);
+        struct events_array events = {0};
+        memset(&events, 0, sizeof(events));
+        handle_window_events(window, &events);
+        main_loop(&game, &events);
     }
 
     SLIST_FOREACH(texts, text) {

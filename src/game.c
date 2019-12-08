@@ -29,6 +29,7 @@
  *
  * */
 
+#include <assert.h>
 #include <f8.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -49,7 +50,7 @@
 #include "text.h"
 #include "field.h"
 #include "painter.h"
-#include "input_event.h"
+#include "event.h"
 
 static int level_move_latency[] = {
     CFG_L00_CLOCK_PERIOD,
@@ -807,30 +808,32 @@ static int game_over_loop(struct controls *ctl)
 #define HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE 1
 static int highscores_input_loop(
         struct game *game,
-        const struct input_event *events)
+        const struct events_array *events)
 {
 #define UTF8_BACKSPACE '\b'
     if (!events)
         return 0;
 
-    const struct input_event *e;
+    for (size_t i = 0; i < events->ptr; i++) {
+        struct event e = events->events[i];
+        if (e.type == EVENT_INPUT) {
+            const struct input_event ie = e.input;
+            if (ie.type == INPUT_EVENT_TEXT_INPUT) {
+                if (ie.text.codepoint[0] == UTF8_BACKSPACE) {
+                    input_rm_last_char(&game->input_name);
+                } else {
+                    input_append_cstring_n(
+                            &game->input_name,
+                            ie.text.codepoint,
+                            sizeof(ie.text.codepoint));
+                }
 
-    for (e = events; e->type != INPUT_EVENT_UNDEFINED; e++) {
-        if (e->type == INPUT_EVENT_TEXT_INPUT) {
-            if (e->text.codepoint[0] == UTF8_BACKSPACE) {
-                input_rm_last_char(&game->input_name);
-            } else {
-                input_append_cstring_n(
-                        &game->input_name,
-                        e->text.codepoint,
-                        sizeof(e->text.codepoint));
-            }
+                painter_update_input(game->input_name.id, &game->input_name);
 
-            painter_update_input(game->input_name.id, &game->input_name);
-
-        } else if (e->type == INPUT_EVENT_ACTION) {
-            if (e->action.id == ACTION_ID_FINISH_INPUT) {
-                return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
+            } else if (ie.type == INPUT_EVENT_ACTION) {
+                if (ie.action.id == ACTION_ID_FINISH_INPUT) {
+                    return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
+                }
             }
         }
     }
@@ -867,7 +870,7 @@ static int pause_loop(struct game *game)
     return 0;
 }
 
-void main_loop(struct game *game, const struct input_event *events)
+void main_loop(struct game *game, const struct events_array *events)
 {
     int ret;
     switch (game->state) {
