@@ -19,8 +19,15 @@ struct idnode *idlist_append(struct idlist *list)
     if (list->first) {
         struct idnode *last = list->first;
         while (last->next) {
+            if (last->id + 1 < last->next->id) {
+
+                /* Looks like there is empty space between n and n+1 node */
+
+                break;
+            }
             last = last->next;
         }
+        current->next = last->next;
         last->next = current;
         id = last->id + 1;
     } else {
