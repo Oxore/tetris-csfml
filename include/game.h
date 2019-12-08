@@ -1,5 +1,6 @@
 struct field;
 struct idlist;
+struct slist;
 typedef void media_window_t;
 
 enum game_state {
@@ -51,7 +52,7 @@ struct game {
 
     struct field *fld;
     struct field *nxt;
-    struct idlist *texts;
+    struct slist *texts;
 
     struct input input_name;
     struct hs_table highscores;

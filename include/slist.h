@@ -1,8 +1,10 @@
 /*
  * slist.h
  *
- * List - List datatype implementation. Element can be taken only by walking
- * through list until needed element is found.
+ * SList - Singly linked list datatype implementation. Element can be taken only
+ * by walking through list until needed element is found.
+ *
+ * SList is used by the loadable texts.
  *
  * */
 

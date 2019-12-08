@@ -5,7 +5,7 @@
 #include <string.h>
 #include <cJSON.h>
 
-#include "idlist.h"
+#include "slist.h"
 #include "vector.h"
 #include "text.h"
 
@@ -77,7 +77,7 @@ static int texts_cjson_get_int(cJSON *object, const char *key)
     return value;
 }
 
-struct idlist *load_texts_from_json(const char *filename)
+struct slist *load_texts_from_json(const char *filename)
 {
     struct cJSON_Hooks hooks = (struct cJSON_Hooks){
         .malloc_fn = malloc,
@@ -90,7 +90,7 @@ struct idlist *load_texts_from_json(const char *filename)
         return NULL;
     }
 
-    struct idlist *texts = idlist_new();
+    struct slist *texts = slist_new();
     if (texts == NULL)
         return NULL;
 
@@ -119,7 +119,7 @@ struct idlist *load_texts_from_json(const char *filename)
                 text->pos.x = texts_cjson_get_int(item, "x");
                 text->pos.y = texts_cjson_get_int(item, "y");
 
-                idlist_append(texts)->obj = text;
+                slist_append(texts)->obj = text;
             }
         }
     }

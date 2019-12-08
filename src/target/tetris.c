@@ -19,6 +19,7 @@
 #include "hs_table.h"
 #include "game.h"
 #include "idlist.h"
+#include "slist.h"
 #include "text.h"
 #include "field.h"
 #include "painter.h"
@@ -51,7 +52,7 @@ static void register_text(void *obj)
 int main()
 {
     int ret = EXIT_SUCCESS;
-    struct idlist  *texts;
+    struct slist *texts;
     struct field fld = {
         .id = SIZE_MAX,
         .attr = 0,
@@ -166,7 +167,7 @@ int main()
         goto cleanup_load_texts;
     }
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         register_text(text->obj);
     }
 
@@ -181,11 +182,11 @@ int main()
         idlist_destroy(events);
     }
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         text_destroy(text->obj);
     }
 
-    idlist_destroy(texts);
+    slist_destroy(texts);
 
 cleanup_load_texts:
     painter_destroy_drawables();

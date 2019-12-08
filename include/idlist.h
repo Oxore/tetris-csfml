@@ -1,9 +1,10 @@
 /*
  * idlist.h
  *
- * IDList - List datatype implementation. Element can be taken by id only.
+ * IDList - Singly linked list with id's datatype implementation. Element can be
+ * taken by id only.
  *
- * IDList is used by the Painter module and loadable texts.
+ * IDList is used by the Painter module.
  *
  * */
 

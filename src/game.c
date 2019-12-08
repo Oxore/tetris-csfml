@@ -45,6 +45,7 @@
 #include "hs_table.h"
 #include "game.h"
 #include "idlist.h"
+#include "slist.h"
 #include "text.h"
 #include "field.h"
 #include "painter.h"
@@ -231,7 +232,7 @@ static void transition_menu(struct game *game)
 
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
     nxt->attr |= FLD_ATTR_INVISIBLE;
     painter_update_field(nxt->id, nxt);
@@ -242,7 +243,7 @@ static void transition_menu(struct game *game)
     fld->attr &= ~FLD_ATTR_INVISIBLE;
     painter_update_field(fld->id, fld);
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_menu_title_text(text->obj);
         show_menu_press_key_text(text->obj);
@@ -260,7 +261,7 @@ static void transition_highscores_input(struct game *game)
     game->fld->attr |= FLD_ATTR_INVISIBLE;
     painter_update_field(game->fld->id, game->fld);
 
-    IDLIST_FOREACH(game->texts, text) {
+    SLIST_FOREACH(game->texts, text) {
         hide_text(text->obj);
         show_input_name_text(text->obj);
         update_text(text->obj);
@@ -289,7 +290,7 @@ static void transition_highscores_table(struct game *game)
     game->highscores.attr &= ~HS_TABLE_ATTR_INVISIBLE;
     painter_update_hs_table(game->highscores.id, &game->highscores);
 
-    IDLIST_FOREACH(game->texts, text) {
+    SLIST_FOREACH(game->texts, text) {
         hide_text(text->obj);
         show_highscores_text(text->obj);
         update_text(text->obj);
@@ -302,9 +303,9 @@ static void transition_game_over_wait(struct game *game)
 
     sfClock_restart(game->game_over_wait_clock);
 
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -320,9 +321,9 @@ static void transition_game_over(struct game *game)
 {
     game->state = GS_GAME_OVER;
 
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -380,9 +381,9 @@ static void transition_pause(struct game *game)
         game->tick_period = get_level_tick_period(game->level);
     sfClock_restart(game->game_clock);
 
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_pause_text(text->obj);
         show_game_score_text(text->obj);
@@ -399,9 +400,9 @@ static void transition_unpause(struct game *game)
     game->state = GS_STARTED;
     sfClock_restart(game->game_clock);
 
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -438,9 +439,9 @@ static int game_tick(struct game *game)
             return GAME_TICK_PUT_SHAPE;
     }
 
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         render_score_value(game, text->obj);
         render_level_value(game, text->obj);
     }
@@ -619,9 +620,9 @@ static void menu_tick(struct game *game)
 
 void transition_init(struct game *game)
 {
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_menu_title_text(text->obj);
         show_menu_press_key_text(text->obj);
@@ -646,9 +647,9 @@ static void transition_game_start(struct game *game)
         shape_gen_random(&nxt->shape[i]);
     nxt->attr &= ~FLD_ATTR_INVISIBLE;
 
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         hide_text(text->obj);
         show_game_score_text(text->obj);
         show_game_score_value_text(text->obj);
@@ -758,9 +759,9 @@ static int game_loop(struct game *game)
         }
     }
 
-    struct idlist *texts = game->texts;
+    struct slist *texts = game->texts;
 
-    IDLIST_FOREACH(texts, text) {
+    SLIST_FOREACH(texts, text) {
         render_score_value(game, text->obj);
         render_level_value(game, text->obj);
         update_text(text->obj);
