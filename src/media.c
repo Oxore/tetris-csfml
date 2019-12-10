@@ -25,7 +25,10 @@ struct media_timeout {
 
 bool media_key_is_pressed(enum key_id key)
 {
-    if (key == KEY_UNKNOWN)
+    if (key <= KEY_UNKNOWN)
+        return false;
+
+    if (key >= KEY_COUNT)
         return false;
 
     return sfKeyboard_isKeyPressed(csfml_keymap[key]);
@@ -35,7 +38,7 @@ bool media_window_is_focused(const media_window_t *window)
 {
     assert(window);
 
-    return sfWindow_hasFocus(window);
+    return sfWindow_hasFocus(window) == sfTrue ? true : false;
 }
 
 bool media_window_poll_event(

@@ -14,6 +14,15 @@ _Static_assert(
 enum action_id {
     ACTION_ID_UNDEFINED = 0,
     ACTION_ID_FINISH_INPUT,
+    ACTION_ID_ANYKEY_PRESSED,
+    ACTION_ID_START,
+    ACTION_ID_PAUSE,
+    ACTION_ID_ROTATE_LEFT,
+    ACTION_ID_ROTATE_RIGHT,
+    ACTION_ID_MOVE_LEFT,
+    ACTION_ID_MOVE_RIGHT,
+    ACTION_ID_MOVE_DOWN,
+    ACTION_ID_DROP,
 };
 
 /// Input event type regarding to game logic FSM.

@@ -74,6 +74,13 @@ int main()
     nxt.shape[1].y = 1;
     nxt.shape[2].y = -2;
 
+    struct controls controls = {
+        .keys = 0,
+        .down_repeat_clock = sfClock_create(),
+        .left_repeat_clock = sfClock_create(),
+        .right_repeat_clock = sfClock_create(),
+    };
+
     struct game game = {
         .state = GS_MAIN_MENU,
         .score = 0,
@@ -85,12 +92,6 @@ int main()
         .put_clock = sfClock_create(),
         .menu_clock = sfClock_create(),
         .window = NULL,
-        .controls = {
-            .keys = 0,
-            .down_repeat_clock = sfClock_create(),
-            .left_repeat_clock = sfClock_create(),
-            .right_repeat_clock = sfClock_create(),
-        },
         .config = &g_config,
         .fld = &fld,
         .nxt = &nxt,
@@ -162,7 +163,12 @@ int main()
     while (sfRenderWindow_isOpen(window)) {
         struct events_array events = {0};
         memset(&events, 0, sizeof(events));
-        controller_handle_window_events(window, &events);
+        controller_gather_window_events(window, &events);
+        controller_gather_controls_events(
+                window,
+                &g_config,
+                &controls,
+                &events);
         main_loop(&game, &events);
     }
 
@@ -188,9 +194,9 @@ cleanup_create_window:
     sfClock_destroy(game.game_over_wait_clock);
     sfClock_destroy(game.put_clock);
     sfClock_destroy(game.menu_clock);
-    sfClock_destroy(game.controls.down_repeat_clock);
-    sfClock_destroy(game.controls.left_repeat_clock);
-    sfClock_destroy(game.controls.right_repeat_clock);
+    sfClock_destroy(controls.down_repeat_clock);
+    sfClock_destroy(controls.left_repeat_clock);
+    sfClock_destroy(controls.right_repeat_clock);
 
     field_deinit(&fld);
     field_deinit(&nxt);

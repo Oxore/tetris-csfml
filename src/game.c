@@ -503,114 +503,6 @@ static void signal_right(struct game *game)
     }
 }
 
-static uint32_t game_keys(struct controls *ctl, struct config *config)
-{
-    uint32_t ret = 0;
-
-    /* PAUSE */
-    if (media_key_is_pressed(config->keys.pause)) {
-        if (!(ctl->keys & PAUSE)) {
-            ctl->keys |= PAUSE;
-            ret |= PAUSE;
-        }
-    } else {
-        ctl->keys &= ~PAUSE;
-    }
-
-    /* ROTRIGHT */
-    if (media_key_is_pressed(config->keys.rotate_right)) {
-        if (!(ctl->keys & ROTRIGHT)) {
-            ctl->keys |= ROTRIGHT;
-            ret |= ROTRIGHT;
-        }
-    } else {
-        ctl->keys = ctl->keys & ~ROTRIGHT;
-    }
-
-    /* ROTLEFT */
-    if (media_key_is_pressed(config->keys.rotate_left)) {
-        if (!(ctl->keys & ROTLEFT)) {
-            ctl->keys |= ROTLEFT;
-            ret |= ROTLEFT;
-        }
-    } else {
-        ctl->keys = ctl->keys & ~ROTLEFT;
-    }
-
-    /* HARDDROP */
-    if (media_key_is_pressed(config->keys.drop)) {
-        if (!(ctl->keys & HARDDROP)) {
-            ctl->keys |= HARDDROP;
-            ret |= HARDDROP;
-        }
-    } else {
-        ctl->keys &= ~HARDDROP;
-    }
-
-    /* DOWN */
-    if (media_key_is_pressed(config->keys.move_down)) {
-        if (!(ctl->keys & DOWN)) {
-            ctl->keys |= DOWN;
-            ret |= DOWN;
-            sfClock_restart(ctl->down_repeat_clock);
-        } else {
-            if (sfClock_getElapsedTime(ctl->down_repeat_clock).microseconds
-             >= CFG_REPEAT_LATENCY)
-                ctl->keys &= ~DOWN;
-        }
-    } else {
-        ctl->keys &= ~DOWN;
-    }
-
-    /* LEFT */
-    if (media_key_is_pressed(config->keys.move_left)
-     && !media_key_is_pressed(config->keys.move_right)) {
-        if (!(ctl->keys & LEFT)) {
-            ctl->keys |= LEFT;
-            ret |= LEFT;
-            sfClock_restart(ctl->left_repeat_clock);
-        } else if (!(ctl->keys & LEFTHOLD)) {
-            if (sfClock_getElapsedTime(ctl->left_repeat_clock).microseconds
-             >= CFG_PREREPEAT_LATENCY) {
-                ctl->keys |= LEFTHOLD;
-                ctl->keys &= ~LEFT;
-            }
-        } else {
-            if (sfClock_getElapsedTime(ctl->left_repeat_clock).microseconds
-             >= CFG_REPEAT_LATENCY)
-                ctl->keys &= ~LEFT;
-        }
-    } else {
-        ctl->keys &= ~LEFT;
-        ctl->keys &= ~LEFTHOLD;
-    }
-
-    /* RIGHT */
-    if (media_key_is_pressed(config->keys.move_right)
-     && !media_key_is_pressed(config->keys.move_left)) {
-        if (!(ctl->keys & RIGHT)) {
-            ctl->keys |= RIGHT;
-            ret |= RIGHT;
-            sfClock_restart(ctl->right_repeat_clock);
-        } else if (!(ctl->keys & RIGHTHOLD)) {
-            if (sfClock_getElapsedTime(ctl->right_repeat_clock).microseconds
-             >= CFG_PREREPEAT_LATENCY) {
-                ctl->keys |= RIGHTHOLD;
-                ctl->keys &= ~RIGHT;
-            }
-        } else {
-            if (sfClock_getElapsedTime(ctl->right_repeat_clock).microseconds
-             >= CFG_REPEAT_LATENCY)
-                ctl->keys &= ~RIGHT;
-        }
-    } else {
-        ctl->keys &= ~RIGHT;
-        ctl->keys &= ~RIGHTHOLD;
-    }
-
-    return ret;
-}
-
 static void menu_tick(struct game *game)
 {
     struct field *fld = game->fld;
@@ -669,78 +561,93 @@ static void transition_game_start(struct game *game)
 }
 
 #define MENU_LOOP_GAME_START 1
-static int menu_loop(struct game *game)
+static int menu_loop(struct game *game, const struct events_array *events)
 {
-    int ret = 0;
-
     if (sfClock_getElapsedTime(game->menu_clock).microseconds
      >= CFG_MENU_CLOCK_PERIOD)
         menu_tick(game);
 
-    if (media_key_is_pressed(game->config->keys.start)) {
-        if (!(game->controls.keys & GAMEOVER)) {
-            ret = MENU_LOOP_GAME_START;
+    if (events == NULL)
+        return 0;
+
+    for (size_t i = 0; i < events->ptr; i++) {
+        struct event e = events->events[i];
+        if (e.type == EVENT_INPUT) {
+            const struct input_event ie = e.input;
+            if (ie.type == INPUT_EVENT_ACTION) {
+                if (ie.action.id == ACTION_ID_START) {
+                    return MENU_LOOP_GAME_START;
+                }
+            }
         }
-    } else {
-        game->controls.keys = 0;
     }
 
-    return ret;
+    return 0;
 }
 
 #define GAME_LOOP_PAUSE 1
 #define GAME_LOOP_GAME_OVER 2
-static int game_loop(struct game *game)
+static int game_loop(struct game *game, const struct events_array *events)
 {
     int ret = 0;
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
-    if (media_window_is_focused(game->window)) {
 
-        // TODO: Elaborate on precedence of timers and ctl->keys checking
-        // Here should be only one return statement - at the end of the function
+    if (events != NULL) {
+        for (size_t i = 0; i < events->ptr; i++) {
+            struct event e = events->events[i];
+            if (e.type == EVENT_INPUT) {
+                const struct input_event ie = e.input;
+                if (ie.type == INPUT_EVENT_ACTION) {
+                    // TODO: Elaborate on precedence of timers and ctl->keys
+                    // checking Here should be only one return statement - at
+                    // the end of the function
 
-        uint32_t ret_keys = game_keys(&game->controls, game->config);
+                    if (ie.action.id == ACTION_ID_PAUSE) {
+                        ret = GAME_LOOP_PAUSE;
+                        sfClock_restart(game->put_clock);
+                    }
 
-        if (ret_keys & PAUSE) {
-            ret = GAME_LOOP_PAUSE;
-            sfClock_restart(game->put_clock);
-        }
+                    if (ie.action.id == ACTION_ID_ROTATE_RIGHT) {
+                        signal_rotate_right(game);
+                    }
 
-        if (ret_keys & ROTRIGHT) {
-            signal_rotate_right(game);
-        }
+                    if (ie.action.id == ACTION_ID_ROTATE_LEFT) {
+                        signal_rotate_left(game);
+                    }
 
-        if (ret_keys & ROTLEFT) {
-            signal_rotate_left(game);
-        }
+                    if (ie.action.id == ACTION_ID_MOVE_DOWN) {
+                        signal_down(game);
+                    }
 
-        if (ret_keys & DOWN) {
-            signal_down(game);
-        }
+                    if (ie.action.id == ACTION_ID_DROP) {
+                        struct field *fld = game->fld;
 
-        if (ret_keys & HARDDROP) {
-            struct field *fld = game->fld;
+                        while (field_move_shape_down(fld, 1))
+                            game->score++;
 
-            while (field_move_shape_down(fld, 1))
-                game->score++;
+                        sfClock_restart(game->game_clock);
+                        sfClock_restart(game->put_clock);
 
-            sfClock_restart(game->game_clock);
-            sfClock_restart(game->put_clock);
+                        if (field_shape_out_of_bounds(
+                                    fld,
+                                    &fld->shape[ACTIVE_SHAPE_INDEX])) {
+                            return GAME_LOOP_GAME_OVER;
+                        } else {
+                            transition_put_shape(game);
+                        }
+                    }
 
-            if (field_shape_out_of_bounds(fld, &fld->shape[ACTIVE_SHAPE_INDEX]))
-                return GAME_LOOP_GAME_OVER;
-            else
-                transition_put_shape(game);
-        }
+                    if (ie.action.id == ACTION_ID_MOVE_LEFT) {
+                        signal_left(game);
+                    }
 
-        if (ret_keys & LEFT) {
-            signal_left(game);
-        }
-
-        if (ret_keys & RIGHT) {
-            signal_right(game);
+                    if (ie.action.id == ACTION_ID_MOVE_RIGHT) {
+                        signal_right(game);
+                    }
+                }
+            }
         }
     }
 
@@ -785,21 +692,21 @@ static int game_over_wait_loop(struct game *game)
 }
 
 #define GAME_OVER_LOOP_HIGHSCORES_INPUT 1
-static int game_over_loop(struct controls *ctl)
+static int game_over_loop(const struct events_array *events)
 {
-    int anykey = 0;
+    if (events == NULL)
+        return 0;
 
-    for (int keycode = KEY_UNKNOWN; keycode < KEY_COUNT; keycode++)
-        if (media_key_is_pressed(keycode))
-            anykey = 1;
-
-    if (anykey) {
-        if (!(ctl->keys & GAMEOVER)) {
-            ctl->keys |= GAMEOVER;
-            return GAME_OVER_LOOP_HIGHSCORES_INPUT;
+    for (size_t i = 0; i < events->ptr; i++) {
+        struct event e = events->events[i];
+        if (e.type == EVENT_INPUT) {
+            const struct input_event ie = e.input;
+            if (ie.type == INPUT_EVENT_ACTION) {
+                if (ie.action.id == ACTION_ID_ANYKEY_PRESSED) {
+                    return GAME_OVER_LOOP_HIGHSCORES_INPUT;
+                }
+            }
         }
-    } else {
-        ctl->keys &= ~GAMEOVER;
     }
 
     return 0;
@@ -842,28 +749,41 @@ static int highscores_input_loop(
 }
 
 #define HIGHSCORES_TABLE_LOOP_MENU 1
-static int highscores_table_loop(struct controls *ctl, struct config *config)
+static int highscores_table_loop(const struct events_array *events)
 {
-    if (media_key_is_pressed(config->keys.start)) {
-        if (!(ctl->keys & GAMEOVER)) {
-            ctl->keys |= GAMEOVER;
-            return HIGHSCORES_TABLE_LOOP_MENU;
+    if (events == NULL)
+        return 0;
+
+    for (size_t i = 0; i < events->ptr; i++) {
+        struct event e = events->events[i];
+        if (e.type == EVENT_INPUT) {
+            const struct input_event ie = e.input;
+            if (ie.type == INPUT_EVENT_ACTION) {
+                if (ie.action.id == ACTION_ID_START) {
+                    return HIGHSCORES_TABLE_LOOP_MENU;
+                }
+            }
         }
-    } else {
-        ctl->keys &= ~GAMEOVER;
     }
 
     return 0;
 }
 
 #define PAUSE_LOOP_UNPAUSE 1
-static int pause_loop(struct game *game)
+static int pause_loop(const struct events_array *events)
 {
-    if (media_window_is_focused(game->window)) {
-        uint32_t ret = game_keys(&game->controls, game->config);
-        if (ret & PAUSE) {
-            sfClock_restart(game->put_clock);
-            return PAUSE_LOOP_UNPAUSE;
+    if (events == NULL)
+        return 0;
+
+    for (size_t i = 0; i < events->ptr; i++) {
+        struct event e = events->events[i];
+        if (e.type == EVENT_INPUT) {
+            const struct input_event ie = e.input;
+            if (ie.type == INPUT_EVENT_ACTION) {
+                if (ie.action.id == ACTION_ID_PAUSE) {
+                    return PAUSE_LOOP_UNPAUSE;
+                }
+            }
         }
     }
 
@@ -875,7 +795,7 @@ void main_loop(struct game *game, const struct events_array *events)
     int ret;
     switch (game->state) {
     case GS_STARTED:
-        ret = game_loop(game);
+        ret = game_loop(game, events);
         if (ret == GAME_LOOP_GAME_OVER)
             transition_game_over_wait(game);
         else if (ret == GAME_LOOP_PAUSE)
@@ -883,13 +803,13 @@ void main_loop(struct game *game, const struct events_array *events)
         break;
 
     case GS_PAUSED:
-        ret = pause_loop(game);
+        ret = pause_loop(events);
         if (ret == PAUSE_LOOP_UNPAUSE)
             transition_unpause(game);
         break;
 
     case GS_GAME_OVER:
-        ret = game_over_loop(&game->controls);
+        ret = game_over_loop(events);
         if (ret == GAME_OVER_LOOP_HIGHSCORES_INPUT)
             transition_highscores_input(game);
         break;
@@ -907,14 +827,14 @@ void main_loop(struct game *game, const struct events_array *events)
         break;
 
     case GS_HIGHSCORES_TABLE:
-        ret = highscores_table_loop(&game->controls, game->config);
+        ret = highscores_table_loop(events);
         if (ret == HIGHSCORES_TABLE_LOOP_MENU)
             transition_menu(game);
         break;
 
     case GS_MAIN_MENU:
     default:
-        ret = menu_loop(game);
+        ret = menu_loop(game, events);
         if (ret == MENU_LOOP_GAME_START)
             transition_game_start(game);
         break;

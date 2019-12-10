@@ -14,25 +14,6 @@ enum game_state {
     GS_PAUSED
 };
 
-// Bits in bitmap of keys
-#define ROTRIGHT  (1 << 0)
-#define ROTLEFT   (1 << 1)
-#define RIGHT     (1 << 2)
-#define LEFT      (1 << 3)
-#define DOWN      (1 << 4)
-#define RIGHTHOLD (1 << 5)
-#define HARDDROP  (1 << 6)
-#define PAUSE     (1 << 7)
-#define LEFTHOLD  (1 << 8)
-#define GAMEOVER  (1 << 9)
-
-struct controls {
-    uint32_t keys;         // bitmap of keys pressed
-    sfClock *down_repeat_clock;  // repeat latency when hold Down arrow
-    sfClock *left_repeat_clock;   // repeat latency when hold Left arrow
-    sfClock *right_repeat_clock;  // repeat latency when hold Right arrow
-};
-
 struct game {
     enum game_state state;
 
@@ -46,8 +27,6 @@ struct game {
     sfClock    *menu_clock;
 
     media_window_t *window;
-
-    struct controls controls;
 
     struct config *config;
 
