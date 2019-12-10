@@ -1,6 +1,11 @@
+/* Cumbersome CSFML platform abstraction logic parts.
+ * */
+
+#include <f8.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <SFML/Window/Keyboard.h>
+#include <SFML/Window/Event.h>
 
 #include "media.h"
 #include "media/csfml.h"
@@ -117,3 +122,29 @@ sfKeyCode csfml_keymap[] = {
     [KEY_F15]           = sfKeyF15,
     [KEY_PAUSE]         = sfKeyPause,
 };
+
+struct media_event csfml_sfevent_to_media_event(sfEvent sf_event)
+{
+    struct media_event event = {0};
+    switch (sf_event.type) {
+    default:
+        break;
+
+    case sfEvtClosed:
+        event = (struct media_event){ .type = MEDIA_EVENT_WINDOW_CLOSED, };
+        break;
+
+    case sfEvtTextEntered:
+        event = (struct media_event) {
+            .type = MEDIA_EVENT_TEXT_ENTERED,
+        };
+        utf32to8_strncpy_s(
+                event.text.codepoint,
+                sizeof(event.text.codepoint),
+                (int32_t *)&sf_event.text.unicode,
+                1);
+        break;
+    };
+
+    return event;
+}

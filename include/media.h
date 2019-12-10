@@ -104,13 +104,34 @@ enum key_id {
     KEY_COUNT,
 };
 
+enum media_event_type {
+    MEDIA_EVENT_UNDEFINED = 0,
+    MEDIA_EVENT_WINDOW_CLOSED,
+    MEDIA_EVENT_TEXT_ENTERED,
+};
+
+struct media_event_text {
+    char codepoint[8];
+};
+
+struct media_event {
+    enum media_event_type type;
+    union {
+        struct media_event_text text;
+    };
+};
+
 // Implementation defined types, used only as a pointer
 typedef void media_window_t;
 typedef struct media_timeout media_timeout_t;
+typedef struct media_event media_event_t;
 
 bool media_key_is_pressed(enum key_id);
 
 bool media_window_is_focused(const media_window_t *window);
+bool media_window_poll_event(
+        const media_window_t *window,
+        media_event_t *event);
 
 media_timeout_t *media_timeout_new(uint32_t milliseconds);
 void media_timeout_destroy(media_timeout_t *timeout);

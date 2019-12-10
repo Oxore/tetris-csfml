@@ -1,10 +1,19 @@
+/* Here is a place for implementations of functions from media.h. All #ifdefs
+ * for separating different supported platforms must be in this file only.
+ *
+ * If you think that implementation need some cumbersome logic related to the
+ * media platform being abstracted, then putting some details to
+ * media/<platform>.c should be considered.
+ *
+ * Currently CSFML platform only is supported.
+ * */
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <SFML/System/Clock.h>
-#include <SFML/Window/Keyboard.h>
-#include <SFML/Window/Window.h>
+#include <SFML/Graphics/RenderWindow.h>
 
 #include "media.h"
 #include "media/csfml.h"
@@ -27,6 +36,20 @@ bool media_window_is_focused(const media_window_t *window)
     assert(window);
 
     return sfWindow_hasFocus(window);
+}
+
+bool media_window_poll_event(
+        const media_window_t *window,
+        struct media_event *event)
+{
+    sfEvent sf_event = {0};
+    bool have_event = (sfTrue == sfRenderWindow_pollEvent(
+                (sfRenderWindow *)window,
+                &sf_event));
+    if (have_event && window != NULL) {
+        *event = csfml_sfevent_to_media_event(sf_event);
+    }
+    return have_event;
 }
 
 media_timeout_t *media_timeout_new(uint32_t milliseconds)

@@ -6,7 +6,6 @@
  * */
 
 #include <assert.h>
-#include <f8.h>
 #include <SFML/System/Clock.h>
 #include <SFML/Graphics/RenderWindow.h>
 #include <stdbool.h>
@@ -27,59 +26,7 @@
 #include "painter.h"
 #include "event.h"
 #include "media.h"
-
-#define NUM_KEYS_TO_POLL 1
-
-struct key_to_poll {
-    enum key_id key;
-    enum action_id action;
-};
-
-static struct key_to_poll keys_to_poll[] = {
-    {
-        .key = KEY_ENTER,
-        .action = ACTION_ID_FINISH_INPUT,
-    },
-};
-
-static void handle_window_events(
-        sfRenderWindow *window,
-        struct events_array *events)
-{
-    sfEvent event;
-
-    while (sfRenderWindow_pollEvent(window, &event)) {
-        if (event.type == sfEvtClosed) {
-            sfRenderWindow_close(window);
-            return;
-
-        } else if (events && !events_array_is_full(events)) {
-            if (event.type == sfEvtTextEntered) {
-                struct input_event ie = {.type = INPUT_EVENT_TEXT_INPUT, };
-                utf32to8_strncpy_s(
-                        ie.text.codepoint,
-                        sizeof(ie.text.codepoint),
-                        (int32_t *)&event.text.unicode,
-                        1);
-                events_array_add_input(events, ie);
-            }
-        }
-
-    }
-
-    for (size_t i = 0; i < NUM_KEYS_TO_POLL && !events_array_is_full(events); i++) {
-        if (events_array_is_full(events))
-                break;
-
-        if (media_key_is_pressed(keys_to_poll[i].key)) {
-            struct input_event ie = {
-                .type = INPUT_EVENT_ACTION,
-                .action.id = keys_to_poll[i].action,
-            };
-            events_array_add_input(events, ie);
-        }
-    }
-}
+#include "controller.h"
 
 static void register_text(void *obj)
 {
@@ -215,7 +162,7 @@ int main()
     while (sfRenderWindow_isOpen(window)) {
         struct events_array events = {0};
         memset(&events, 0, sizeof(events));
-        handle_window_events(window, &events);
+        controller_handle_window_events(window, &events);
         main_loop(&game, &events);
     }
 
