@@ -25,9 +25,9 @@
 // Time period used to unconditionally show you the "Game over" text
 #define CFG_GAMEOVER_SHOWTIME_PERIOD    700000
 // Latency between pushing left/right key and starting fast repeat
-#define CFG_PREREPEAT_LATENCY           150000
+#define CFG_PREREPEAT_LATENCY_MS        150
 // Latency for repeating action of left/right/down key
-#define CFG_REPEAT_LATENCY              30000
+#define CFG_REPEAT_LATENCY_MS           30
 
 // The clock period for menu animation
 #define CFG_MENU_CLOCK_PERIOD    500000

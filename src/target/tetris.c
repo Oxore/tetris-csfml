@@ -76,9 +76,9 @@ int main()
 
     struct controls controls = {
         .keys = 0,
-        .down_repeat_clock = sfClock_create(),
-        .left_repeat_clock = sfClock_create(),
-        .right_repeat_clock = sfClock_create(),
+        .down_repeat_timeout = media_timeout_new(0),
+        .left_repeat_timeout = media_timeout_new(0),
+        .right_repeat_timeout = media_timeout_new(0),
     };
 
     struct game game = {
@@ -194,9 +194,9 @@ cleanup_create_window:
     sfClock_destroy(game.game_over_wait_clock);
     sfClock_destroy(game.put_clock);
     sfClock_destroy(game.menu_clock);
-    sfClock_destroy(controls.down_repeat_clock);
-    sfClock_destroy(controls.left_repeat_clock);
-    sfClock_destroy(controls.right_repeat_clock);
+    media_timeout_destroy(controls.down_repeat_timeout);
+    media_timeout_destroy(controls.left_repeat_timeout);
+    media_timeout_destroy(controls.right_repeat_timeout);
 
     field_deinit(&fld);
     field_deinit(&nxt);

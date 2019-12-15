@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <SFML/Graphics/RenderWindow.h>
-#include <SFML/System/Clock.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -140,11 +139,11 @@ static uint32_t handle_game_keys(
         if (!(ctl->keys & DOWN)) {
             ctl->keys |= DOWN;
             ret |= DOWN;
-            sfClock_restart(ctl->down_repeat_clock);
+            media_timeout_reset(ctl->down_repeat_timeout, CFG_REPEAT_LATENCY_MS);
         } else {
-            if (sfClock_getElapsedTime(ctl->down_repeat_clock).microseconds
-             >= CFG_REPEAT_LATENCY)
+            if (media_timeout_is_passed(ctl->down_repeat_timeout)) {
                 ctl->keys &= ~DOWN;
+            }
         }
     } else {
         ctl->keys &= ~DOWN;
@@ -156,17 +155,21 @@ static uint32_t handle_game_keys(
         if (!(ctl->keys & LEFT)) {
             ctl->keys |= LEFT;
             ret |= LEFT;
-            sfClock_restart(ctl->left_repeat_clock);
+            media_timeout_reset(
+                    ctl->left_repeat_timeout,
+                    CFG_PREREPEAT_LATENCY_MS);
         } else if (!(ctl->keys & LEFTHOLD)) {
-            if (sfClock_getElapsedTime(ctl->left_repeat_clock).microseconds
-             >= CFG_PREREPEAT_LATENCY) {
+            if (media_timeout_is_passed(ctl->left_repeat_timeout)) {
                 ctl->keys |= LEFTHOLD;
-                ctl->keys &= ~LEFT;
+                media_timeout_reset(
+                        ctl->left_repeat_timeout,
+                        CFG_REPEAT_LATENCY_MS);
             }
         } else {
-            if (sfClock_getElapsedTime(ctl->left_repeat_clock).microseconds
-             >= CFG_REPEAT_LATENCY)
-                ctl->keys &= ~LEFT;
+            if (media_timeout_is_passed(ctl->left_repeat_timeout)) {
+                ctl->keys &= ~LEFTHOLD;
+                ret |= LEFT;
+            }
         }
     } else {
         ctl->keys &= ~LEFT;
@@ -179,17 +182,21 @@ static uint32_t handle_game_keys(
         if (!(ctl->keys & RIGHT)) {
             ctl->keys |= RIGHT;
             ret |= RIGHT;
-            sfClock_restart(ctl->right_repeat_clock);
+            media_timeout_reset(
+                    ctl->right_repeat_timeout,
+                    CFG_PREREPEAT_LATENCY_MS);
         } else if (!(ctl->keys & RIGHTHOLD)) {
-            if (sfClock_getElapsedTime(ctl->right_repeat_clock).microseconds
-             >= CFG_PREREPEAT_LATENCY) {
+            if (media_timeout_is_passed(ctl->right_repeat_timeout)) {
                 ctl->keys |= RIGHTHOLD;
-                ctl->keys &= ~RIGHT;
+                media_timeout_reset(
+                        ctl->right_repeat_timeout,
+                        CFG_REPEAT_LATENCY_MS);
             }
         } else {
-            if (sfClock_getElapsedTime(ctl->right_repeat_clock).microseconds
-             >= CFG_REPEAT_LATENCY)
-                ctl->keys &= ~RIGHT;
+            if (media_timeout_is_passed(ctl->right_repeat_timeout)) {
+                ctl->keys &= ~RIGHTHOLD;
+                ret |= RIGHT;
+            }
         }
     } else {
         ctl->keys &= ~RIGHT;

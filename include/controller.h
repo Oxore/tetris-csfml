@@ -1,8 +1,8 @@
 struct controls {
-    uint32_t keys;         // bitmap of keys pressed
-    sfClock *down_repeat_clock;  // repeat latency when hold Down arrow
-    sfClock *left_repeat_clock;   // repeat latency when hold Left arrow
-    sfClock *right_repeat_clock;  // repeat latency when hold Right arrow
+    uint32_t keys;                          // Bitmap of pressed keys
+    media_timeout_t *down_repeat_timeout;   // Repeat timeout for Down button
+    media_timeout_t *left_repeat_timeout;   // Repeat timeout for Left button
+    media_timeout_t *right_repeat_timeout;  // Repeat timeout for Right button
 };
 
 void controller_gather_window_events(
