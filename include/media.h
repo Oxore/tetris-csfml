@@ -132,6 +132,9 @@ bool media_window_is_focused(const media_window_t *window);
 bool media_window_poll_event(
         const media_window_t *window,
         media_event_t *event);
+bool media_window_is_open(const media_window_t *window);
+void media_window_close(media_window_t *window);
+void media_window_destroy(media_window_t *window);
 
 media_timeout_t *media_timeout_new(uint32_t milliseconds);
 void media_timeout_destroy(media_timeout_t *timeout);

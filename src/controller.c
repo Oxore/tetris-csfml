@@ -43,7 +43,7 @@ void controller_gather_window_events(
 
     while (media_window_poll_event(window, &event)) {
         if (event.type == MEDIA_EVENT_WINDOW_CLOSED) {
-            sfRenderWindow_close(window);
+            media_window_close(window);
             return;
 
         } else if (events && !events_array_is_full(events)) {

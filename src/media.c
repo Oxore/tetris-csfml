@@ -101,3 +101,18 @@ bool media_timeout_is_passed(const struct media_timeout *timeout)
 
     return false;
 }
+
+bool media_window_is_open(const media_window_t *window)
+{
+    return sfRenderWindow_isOpen(window) == sfTrue ? true : false;
+}
+
+void media_window_close(media_window_t *window)
+{
+    sfRenderWindow_close(window);
+}
+
+void media_window_destroy(media_window_t *window)
+{
+    sfRenderWindow_destroy(window);
+}

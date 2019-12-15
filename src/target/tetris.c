@@ -160,7 +160,7 @@ int main()
     game.texts = texts;
 
     transition_init(&game);
-    while (sfRenderWindow_isOpen(window)) {
+    while (media_window_is_open(window)) {
         struct events_array events = {0};
         memset(&events, 0, sizeof(events));
         controller_gather_window_events(window, &events);
@@ -182,7 +182,7 @@ cleanup_load_texts:
     painter_destroy_drawables();
 
     if (window) {
-        sfRenderWindow_destroy(window);
+        media_window_destroy(window);
         window = 0;
     }
 
