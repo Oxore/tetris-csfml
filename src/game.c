@@ -561,24 +561,18 @@ static void transition_game_start(struct game *game)
 }
 
 #define MENU_LOOP_GAME_START 1
-static int menu_loop(struct game *game, const struct events_array *events)
+static int menu_loop(struct game *game, const struct input_event *event)
 {
     if (sfClock_getElapsedTime(game->menu_clock).microseconds
      >= CFG_MENU_CLOCK_PERIOD)
         menu_tick(game);
 
-    if (events == NULL)
+    if (event == NULL)
         return 0;
 
-    for (size_t i = 0; i < events->ptr; i++) {
-        struct event e = events->events[i];
-        if (e.type == EVENT_INPUT) {
-            const struct input_event ie = e.input;
-            if (ie.type == INPUT_EVENT_ACTION) {
-                if (ie.action.id == ACTION_ID_START) {
-                    return MENU_LOOP_GAME_START;
-                }
-            }
+    if (event->type == INPUT_EVENT_ACTION) {
+        if (event->action.id == ACTION_ID_START) {
+            return MENU_LOOP_GAME_START;
         }
     }
 
@@ -587,67 +581,58 @@ static int menu_loop(struct game *game, const struct events_array *events)
 
 #define GAME_LOOP_PAUSE 1
 #define GAME_LOOP_GAME_OVER 2
-static int game_loop(struct game *game, const struct events_array *events)
+static int game_loop(struct game *game, const struct input_event *event)
 {
     int ret = 0;
     struct field *fld = game->fld;
     struct field *nxt = game->nxt;
 
+    if (event != NULL && event->type == INPUT_EVENT_ACTION) {
+        // TODO: Elaborate on precedence of timers and ctl->keys
+        // checking Here should be only one return statement - at
+        // the end of the function
 
-    if (events != NULL) {
-        for (size_t i = 0; i < events->ptr; i++) {
-            struct event e = events->events[i];
-            if (e.type == EVENT_INPUT) {
-                const struct input_event ie = e.input;
-                if (ie.type == INPUT_EVENT_ACTION) {
-                    // TODO: Elaborate on precedence of timers and ctl->keys
-                    // checking Here should be only one return statement - at
-                    // the end of the function
+        if (event->action.id == ACTION_ID_PAUSE) {
+            ret = GAME_LOOP_PAUSE;
+            sfClock_restart(game->put_clock);
+        }
 
-                    if (ie.action.id == ACTION_ID_PAUSE) {
-                        ret = GAME_LOOP_PAUSE;
-                        sfClock_restart(game->put_clock);
-                    }
+        if (event->action.id == ACTION_ID_ROTATE_RIGHT) {
+            signal_rotate_right(game);
+        }
 
-                    if (ie.action.id == ACTION_ID_ROTATE_RIGHT) {
-                        signal_rotate_right(game);
-                    }
+        if (event->action.id == ACTION_ID_ROTATE_LEFT) {
+            signal_rotate_left(game);
+        }
 
-                    if (ie.action.id == ACTION_ID_ROTATE_LEFT) {
-                        signal_rotate_left(game);
-                    }
+        if (event->action.id == ACTION_ID_MOVE_DOWN) {
+            signal_down(game);
+        }
 
-                    if (ie.action.id == ACTION_ID_MOVE_DOWN) {
-                        signal_down(game);
-                    }
+        if (event->action.id == ACTION_ID_DROP) {
+            struct field *fld = game->fld;
 
-                    if (ie.action.id == ACTION_ID_DROP) {
-                        struct field *fld = game->fld;
+            while (field_move_shape_down(fld, 1))
+                game->score++;
 
-                        while (field_move_shape_down(fld, 1))
-                            game->score++;
+            sfClock_restart(game->game_clock);
+            sfClock_restart(game->put_clock);
 
-                        sfClock_restart(game->game_clock);
-                        sfClock_restart(game->put_clock);
-
-                        if (field_shape_out_of_bounds(
-                                    fld,
-                                    &fld->shape[ACTIVE_SHAPE_INDEX])) {
-                            return GAME_LOOP_GAME_OVER;
-                        } else {
-                            transition_put_shape(game);
-                        }
-                    }
-
-                    if (ie.action.id == ACTION_ID_MOVE_LEFT) {
-                        signal_left(game);
-                    }
-
-                    if (ie.action.id == ACTION_ID_MOVE_RIGHT) {
-                        signal_right(game);
-                    }
-                }
+            if (field_shape_out_of_bounds(
+                        fld,
+                        &fld->shape[ACTIVE_SHAPE_INDEX])) {
+                return GAME_LOOP_GAME_OVER;
+            } else {
+                transition_put_shape(game);
             }
+        }
+
+        if (event->action.id == ACTION_ID_MOVE_LEFT) {
+            signal_left(game);
+        }
+
+        if (event->action.id == ACTION_ID_MOVE_RIGHT) {
+            signal_right(game);
         }
     }
 
@@ -692,20 +677,14 @@ static int game_over_wait_loop(struct game *game)
 }
 
 #define GAME_OVER_LOOP_HIGHSCORES_INPUT 1
-static int game_over_loop(const struct events_array *events)
+static int game_over_loop(const struct input_event *event)
 {
-    if (events == NULL)
+    if (event == NULL)
         return 0;
 
-    for (size_t i = 0; i < events->ptr; i++) {
-        struct event e = events->events[i];
-        if (e.type == EVENT_INPUT) {
-            const struct input_event ie = e.input;
-            if (ie.type == INPUT_EVENT_ACTION) {
-                if (ie.action.id == ACTION_ID_ANYKEY_PRESSED) {
-                    return GAME_OVER_LOOP_HIGHSCORES_INPUT;
-                }
-            }
+    if (event->type == INPUT_EVENT_ACTION) {
+        if (event->action.id == ACTION_ID_ANYKEY_PRESSED) {
+            return GAME_OVER_LOOP_HIGHSCORES_INPUT;
         }
     }
 
@@ -715,33 +694,27 @@ static int game_over_loop(const struct events_array *events)
 #define HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE 1
 static int highscores_input_loop(
         struct game *game,
-        const struct events_array *events)
+        const struct input_event *event)
 {
 #define UTF8_BACKSPACE '\b'
-    if (!events)
+    if (event == NULL)
         return 0;
 
-    for (size_t i = 0; i < events->ptr; i++) {
-        struct event e = events->events[i];
-        if (e.type == EVENT_INPUT) {
-            const struct input_event ie = e.input;
-            if (ie.type == INPUT_EVENT_TEXT_INPUT) {
-                if (ie.text.codepoint[0] == UTF8_BACKSPACE) {
-                    input_rm_last_char(&game->input_name);
-                } else {
-                    input_append_cstring_n(
-                            &game->input_name,
-                            ie.text.codepoint,
-                            sizeof(ie.text.codepoint));
-                }
+    if (event->type == INPUT_EVENT_TEXT_INPUT) {
+        if (event->text.codepoint[0] == UTF8_BACKSPACE) {
+            input_rm_last_char(&game->input_name);
+        } else {
+            input_append_cstring_n(
+                    &game->input_name,
+                    event->text.codepoint,
+                    sizeof(event->text.codepoint));
+        }
 
-                painter_update_input(game->input_name.id, &game->input_name);
+        painter_update_input(game->input_name.id, &game->input_name);
 
-            } else if (ie.type == INPUT_EVENT_ACTION) {
-                if (ie.action.id == ACTION_ID_FINISH_INPUT) {
-                    return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
-                }
-            }
+    } else if (event->type == INPUT_EVENT_ACTION) {
+        if (event->action.id == ACTION_ID_FINISH_INPUT) {
+            return HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE;
         }
     }
 
@@ -749,20 +722,14 @@ static int highscores_input_loop(
 }
 
 #define HIGHSCORES_TABLE_LOOP_MENU 1
-static int highscores_table_loop(const struct events_array *events)
+static int highscores_table_loop(const struct input_event *event)
 {
-    if (events == NULL)
+    if (event == NULL)
         return 0;
 
-    for (size_t i = 0; i < events->ptr; i++) {
-        struct event e = events->events[i];
-        if (e.type == EVENT_INPUT) {
-            const struct input_event ie = e.input;
-            if (ie.type == INPUT_EVENT_ACTION) {
-                if (ie.action.id == ACTION_ID_START) {
-                    return HIGHSCORES_TABLE_LOOP_MENU;
-                }
-            }
+    if (event->type == INPUT_EVENT_ACTION) {
+        if (event->action.id == ACTION_ID_START) {
+            return HIGHSCORES_TABLE_LOOP_MENU;
         }
     }
 
@@ -770,32 +737,26 @@ static int highscores_table_loop(const struct events_array *events)
 }
 
 #define PAUSE_LOOP_UNPAUSE 1
-static int pause_loop(const struct events_array *events)
+static int pause_loop(const struct input_event *event)
 {
-    if (events == NULL)
+    if (event == NULL)
         return 0;
 
-    for (size_t i = 0; i < events->ptr; i++) {
-        struct event e = events->events[i];
-        if (e.type == EVENT_INPUT) {
-            const struct input_event ie = e.input;
-            if (ie.type == INPUT_EVENT_ACTION) {
-                if (ie.action.id == ACTION_ID_PAUSE) {
-                    return PAUSE_LOOP_UNPAUSE;
-                }
-            }
+    if (event->type == INPUT_EVENT_ACTION) {
+        if (event->action.id == ACTION_ID_PAUSE) {
+            return PAUSE_LOOP_UNPAUSE;
         }
     }
 
     return 0;
 }
 
-void main_loop(struct game *game, const struct events_array *events)
+void main_loop(struct game *game, const struct input_event *event)
 {
     int ret;
     switch (game->state) {
     case GS_STARTED:
-        ret = game_loop(game, events);
+        ret = game_loop(game, event);
         if (ret == GAME_LOOP_GAME_OVER)
             transition_game_over_wait(game);
         else if (ret == GAME_LOOP_PAUSE)
@@ -803,13 +764,13 @@ void main_loop(struct game *game, const struct events_array *events)
         break;
 
     case GS_PAUSED:
-        ret = pause_loop(events);
+        ret = pause_loop(event);
         if (ret == PAUSE_LOOP_UNPAUSE)
             transition_unpause(game);
         break;
 
     case GS_GAME_OVER:
-        ret = game_over_loop(events);
+        ret = game_over_loop(event);
         if (ret == GAME_OVER_LOOP_HIGHSCORES_INPUT)
             transition_highscores_input(game);
         break;
@@ -821,24 +782,22 @@ void main_loop(struct game *game, const struct events_array *events)
         break;
 
     case GS_HIGHSCORES_INPUT:
-        ret = highscores_input_loop(game, events);
+        ret = highscores_input_loop(game, event);
         if (ret == HIGHSCORES_INPUT_LOOP_HIGHSCORES_TABLE)
             transition_highscores_table(game);
         break;
 
     case GS_HIGHSCORES_TABLE:
-        ret = highscores_table_loop(events);
+        ret = highscores_table_loop(event);
         if (ret == HIGHSCORES_TABLE_LOOP_MENU)
             transition_menu(game);
         break;
 
     case GS_MAIN_MENU:
     default:
-        ret = menu_loop(game, events);
+        ret = menu_loop(game, event);
         if (ret == MENU_LOOP_GAME_START)
             transition_game_start(game);
         break;
     }
-
-    painter_draw();
 }

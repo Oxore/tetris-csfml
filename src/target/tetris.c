@@ -169,7 +169,22 @@ int main()
                 &g_config,
                 &controls,
                 &events);
-        main_loop(&game, &events);
+
+        for (size_t i = 0; i < events.ptr; i++) {
+            struct event e = events.events[i];
+            if (e.type == EVENT_INPUT) {
+                main_loop(&game, &e.input);
+            }
+        }
+
+        /* FIXME: Workaround, because timers for tetramino advancing steps are
+         * inside the `game` structure. Probably this is kinda OK way. */
+        main_loop(&game, NULL);
+
+        /* Effectively this is the only blocking function call in the whole
+         * program. It is blocking because underlying graphics library strives
+         * to ensure 60 FPS by blocking on drawing procedure. */
+        painter_draw();
     }
 
     SLIST_FOREACH(texts, text) {

@@ -1,7 +1,7 @@
 struct field;
 struct idlist;
 struct slist;
-struct events_array;
+struct input_event;
 typedef void media_window_t;
 
 enum game_state {
@@ -39,4 +39,4 @@ struct game {
 };
 
 void transition_init(struct game *game);
-void main_loop(struct game *game, const struct events_array *events);
+void main_loop(struct game *game, const struct input_event *event);
