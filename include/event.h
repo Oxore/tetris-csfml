@@ -10,45 +10,42 @@ _Static_assert(
 
 /* Data types */
 
+/// Actions are used to control (rotate and move) the falling tetramino.
 enum action_id {
     ACTION_ID_UNDEFINED = 0,
     ACTION_ID_FINISH_INPUT,
 };
 
-enum input_event_type {
-    INPUT_EVENT_UNDEFINED = 0,
-    INPUT_EVENT_TEXT_INPUT,
-    INPUT_EVENT_ACTION,
-};
-
-enum event_type {
-    EVENT_UNDEFINED = 0,
-    EVENT_INPUT,
-};
-
-struct input_event_text {
-    char codepoint[8];
-};
-
-struct input_event_action {
-    enum action_id id;
-};
-
+/// Input event type regarding to game logic FSM.
 struct input_event {
-    enum input_event_type type;
+    enum input_event_type {
+        INPUT_EVENT_UNDEFINED = 0,
+        INPUT_EVENT_TEXT_INPUT,
+        INPUT_EVENT_ACTION,
+    } type;
     union {
-        struct input_event_text text;
-        struct input_event_action action;
+        struct input_event_text {
+            char codepoint[8];
+        } text;
+        struct input_event_action {
+            enum action_id id;
+        } action;
     };
 };
 
+/// The event type.
+/// Event can be either input or output regarding to game logic FSM.
 struct event {
-    enum event_type type;
+    enum event_type {
+        EVENT_UNDEFINED = 0,
+        EVENT_INPUT,
+    } type;
     union {
         struct input_event input;
     };
 };
 
+/// Comprehensive data structure for filling it with events
 struct events_array {
     size_t ptr;
     struct event events[INPUT_EVENTS_ARRAY_SIZE];
