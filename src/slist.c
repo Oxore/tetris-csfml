@@ -11,9 +11,10 @@ struct snode *slist_append(struct slist *list)
     if (list == NULL)
         return NULL;
 
-    /* At this point it does not matter what calloc returns */
-
     struct snode *current = calloc(1, sizeof(struct snode));
+
+    if (current == NULL)
+        return NULL;
 
     if (list->last) {
         list->last->next = current;
