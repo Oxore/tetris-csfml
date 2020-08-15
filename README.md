@@ -16,15 +16,83 @@ This is unfinished tetris project written in pure C with CSFML library. It is un
 - [`munit`](https://github.com/nemequ/munit) - Testing framework (submodule)
 - [`libf8`](https://github.com/Oxore/libf8) - Unicode helper functions (submodule)
 
-## Compilation and usage
+Get repository with all dependencies by using the following command:
 
-Compilation process currently is a terrible thing, because I am suffering from
-and struggling with my love to `make` and it's ugliness, `cmake` limitations and
-CSFML slow-pace development. See `.travis.yml` for building instructions on
-Linux or OSX and `.appveyor.yml` and `scripts/appveyor-build-static.bash` for
-building instructions on Windows. For Windows though you can take already built
+    git clone --recurse-submodules https://github.com/Oxore/tetris-csfml.git
+
+Or if you already did `git clone` without `--recurse-submodules`, then run:
+
+    git submodule update --init --recursive
+
+## Build instructions
+
+See `.travis.yml` for building instructions on Linux or OSX used by CI jobs and
+`.appveyor.yml` and `scripts/appveyor-build-static.bash` for building
+instructions on Windows. For Windows though you can take already built
 [artifacts](https://ci.appveyor.com/project/Oxore/tetris-csfml/build/artifacts)
 from Appveyor.
+
+Here are instructions for building on OSX or GNU/Linux system:
+
+You will need `make` and C/C++ compiler (`gcc` or `clang`) installed on your
+system.
+
+Assuming your current working directory is a cloned `tetris-csfml` repository.
+
+If you already have SFML and CSFML installed on your system, then just run
+
+    make
+
+But chances you have SFML and CSFML installed are low. You may not even have
+CSFML and SFML available in your system package manager repositories. Then you
+need to build them from sources and install in prefix. You will need `cmake`
+installed on your system for building SFML and CSFML.
+
+Define `PREFIX` shell environment variable:
+
+    export PREFIX=$(pwd)/prefix
+
+Prefix is just a directory with other directories like `lib`, `bin`, `include`
+and so on, that repeats directory structure of your system. It is used to
+install CSFML and SFML for current user only without need to pollute the system
+by installing them bypassing the system package manager.
+
+Create directories that are necessary to build SFML and CSFML:
+
+    mkdir -p $PREFIX deps/SFML/build deps/CSFML/build
+
+Build SFML and install it in `$PREFIX`
+
+    pushd deps/SFML/build \
+            && cmake \
+              -DBUILD_SHARED_LIBS=OFF \
+              -DCMAKE_INSTALL_PREFIX=$PREFIX \
+              -DSFML_MISC_INSTALL_PREFIX=$PREFIX \
+              -DSFML_DEPENDENCIES_INSTALL_PREFIX=$PREFIX \
+              .. \
+            && make install \
+            && popd
+
+Build CSFML bindings and install it in `$PREFIX`
+
+    pushd deps/CSFML/build \
+            && cmake \
+              -DBUILD_SHARED_LIBS=OFF \
+              -DCSFML_LINK_SFML_STATICALLY=TRUE \
+              -DCMAKE_PREFIX_PATH=$PREFIX -DCMAKE_INSTALL_PREFIX=$PREFIX \
+              .. \
+            && make install \
+            && popd
+
+Finally build `tetris` executable, statically linked against SFML and CSFML
+that are installed in `$PREFIX`:
+
+    make PREFIX=$PREFIX SFML_STATIC=y
+
+After build finishes you get the desired `tetris` executable file in the
+current directory.
+
+## Usage
 
 Default key bindings:
 
