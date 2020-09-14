@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set +e
 
 FREETYPE_DIR=$(pwd)/deps/freetype
