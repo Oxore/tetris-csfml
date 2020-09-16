@@ -5,6 +5,8 @@
 
 This is unfinished tetris project written in pure C with CSFML library. It is under development. Basically I am learning some techniques and patterns for C and trying to use them here.
 
+Archived, because it no longer serves it's purpose. I have already learned C to the level I wanted and I don't want to develop this Tetris in C anymore. I'm done. I wanted to see how far can I go with it and it's this far. And one of the most significant part of why I abandon this project is multiplatform build support. I wanted it to be available for my friends on Windows and OSX without need for thinking about dependency management - just pull binaries from CI that have everything linked statically. And it is hard for me to maintain builds of this project for any platform except GNU/Linux.
+
 ![Main menu](https://i.imgur.com/kOKz2Qk.png "Main menu")
 
 ![In game](https://i.imgur.com/UmZGEOD.png "In game")
